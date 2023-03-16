@@ -1,0 +1,5 @@
+name: wave_cli
+packages:
+  - path: ''
+language: javascript
+appmap_dir: tmp/appmap

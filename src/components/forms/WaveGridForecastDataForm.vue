@@ -1,0 +1,268 @@
+<template>
+	<div v-draggable id="wave_form" class="right-station-surge-form" v-show="getIsShow">
+		<div class="my-detail-form">
+			<div class="sub-titles">
+				<div
+					:class="[
+						index == subTitleIndex ? 'actived my-sub-title' : 'unactived my-sub-title',
+						item.disabled ? 'disabled' : '',
+					]"
+					:key="index"
+					@click="checkSubTitle(index)"
+					v-for="(item, index) in subTitles"
+				>
+					{{ item.title }}
+				</div>
+				<div class="my-sub-title right" @click="setExpanded()">最小化</div>
+			</div>
+			<div class="detail-content">
+				<component :is="getActiveCompName" :toResize="toResize"></component>
+			</div>
+		</div>
+	</div>
+</template>
+<script lang="ts">
+import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Getter, Mutation, State, namespace } from 'vuex-class'
+
+import * as echarts from 'echarts'
+import moment from 'moment'
+import {
+	DEFAULT_STATION_CODE,
+	DEFAULT_STATION_NAME,
+	DEFAULT_TY_CODE,
+	DEFAULT_TY_NUM,
+} from '@/const/default'
+import {
+	GET_COMPLEX_OPTS_CURRENT_STATION,
+	GET_SHOW_STATION_DETAIL_FORM,
+	GET_SHOW_TY_SEARCH_FORM,
+	SET_SHOW_STATION_DETAIL_FORM,
+	SET_SHOW_TY_SEARCH_FORM,
+} from '@/store/types'
+import WaveForecastDataChartsView from '@/components/charts/waveForecastDataCharts.vue'
+// 工具类
+import { stickyTopic, reduceTopic } from '@/util/styleUtil'
+import { faL, faLessThanEqual } from '@fortawesome/free-solid-svg-icons'
+// enum
+import { IExpandEnum } from '@/enum/common'
+import { TO_LOAD_FORECASTDATALIST_COORDS } from '@/bus/types'
+import { EventBus } from '@/bus/BUS'
+import { LayerTypeEnum } from '@/enum/map'
+@Component({
+	directives: {
+		// drag: Draggable
+	},
+	components: {
+		WaveForecastDataChartsView,
+	},
+})
+export default class TabContent extends Vue {
+	isExpanded = false
+	ableExpaned = false
+	screenHeight = 0
+	screenWidth = 0
+	defaultFormId = 'wave_form'
+	defaultStationCode = DEFAULT_STATION_CODE
+	defaultStationName = DEFAULT_STATION_NAME
+	size: { divWidth: number; divHeight: number } = {
+		divWidth: 0,
+		divHeight: 0,
+	}
+	sizeDefault: { divWidth: number; divHeight: number } = {
+		divWidth: 660,
+		divHeight: 445,
+	}
+	subTitles: Array<{
+		title: string
+		index: number
+		componetName: string
+		isGroup: boolean
+		disabled: boolean
+	}> = [
+		{
+			title: '格点单点数据',
+			index: 0,
+			componetName: 'WaveForecastDataChartsView',
+			isGroup: false,
+			disabled: false,
+		},
+	]
+	toResize = false
+	subTitleIndex = 0
+	// @Prop({ default: DEFAULT_STATION_CODE })
+	stationCode = DEFAULT_STATION_CODE
+
+	// @Prop({ default: DEFAULT_STATION_NAME })
+	stationName: string = DEFAULT_STATION_NAME
+
+	// @Prop({ default: DEFAULT_TY_CODE })
+	tyCode: string = DEFAULT_TY_CODE
+
+	// @Prop({ default: DEFAULT_TY_NUM })
+	tyNum: string = DEFAULT_TY_NUM
+
+	myChart: echarts.ECharts = null
+
+	isGroup = false
+
+	get getIsShow(): boolean {
+		let isShow = false
+		switch (this.getShowStationForm) {
+			case IExpandEnum.UN_EXPANDED:
+				isShow = false
+				break
+			case IExpandEnum.EXPANDED:
+				isShow = true
+				break
+			case IExpandEnum.UN_SELECTED:
+				isShow = !(this.stationName === DEFAULT_STATION_NAME)
+				break
+		}
+		return isShow
+	}
+	mounted() {
+		const that = this
+		this.screenHeight = window.innerHeight
+		this.screenWidth = window.innerWidth
+		this.resetSize()
+		window.onresize = () => {
+			return () => {
+				that.screenHeight = window.innerHeight
+				that.screenWidth = window.innerWidth
+			}
+		}
+	}
+
+	checkSubTitle(index: number): void {
+		if (!this.subTitles[index].disabled) {
+			this.subTitleIndex = index
+		}
+	}
+
+	drag(): void {
+		// this.dragCls.drag({ divId: 'wave_form' })
+	}
+
+	// 重置当前 form 的大小(使用修改style的 height 与 width)
+	resetSize(): void {
+		const targetDiv: HTMLElement | null = document.getElementById(this.defaultFormId)
+		if (targetDiv) {
+			targetDiv.style.width = this.sizeDefault.divWidth + 'px'
+			targetDiv.style.height = this.sizeDefault.divHeight + 'px'
+		}
+	}
+
+	@Watch('isExpanded')
+	onIsExpanded(val: boolean): void {
+		// 收起时触发将 form 重置大小的操作
+		this.toResize = !val
+		if (this.toResize) {
+			this.resetSize()
+		}
+	}
+
+	@Watch('size', { immediate: true, deep: true })
+	onSize(val: { divWidth: number; divHeight: number }) {
+		console.log(`TabContent监听到width:${val.divWidth},height:${val.divHeight}`)
+		if (this.myChart) {
+			this.myChart.resize()
+		}
+	}
+
+	get getActiveCompName() {
+		this.isGroup = this.subTitles[this.subTitleIndex].isGroup
+		return this.subTitles[this.subTitleIndex].componetName
+	}
+
+	setIsExpanded(val: boolean): void {
+		if (this.checkAbleExpaned()) {
+			this.isExpanded = !val
+			// return true
+		} else {
+			this.isExpanded = false
+			// return false
+		}
+	}
+	checkAbleExpaned(): boolean {
+		let isOk = false
+		return isOk
+	}
+
+	toTopic(ele: MouseEvent): void {
+		// TODO:[*] 22-10-06 注意此处存在一个bug，即若鼠标移入的是 ty_search_form 中的子div，则ele会是子div对象
+		const ELE_ID = 'wave_form'
+		// const dom = ele.target
+
+		stickyTopic(ELE_ID)
+	}
+
+	reduceTopic(ele: HTMLElement): void {
+		const ELE_ID = 'wave_form'
+		reduceTopic(ELE_ID)
+	}
+
+	/** 获取当前选中的海洋站的 opts */
+	@Getter(GET_COMPLEX_OPTS_CURRENT_STATION, { namespace: 'complex' })
+	getterComplexOptsCurrentStation: {
+		tyNum: string
+		tyCode: string
+		stationName: string
+		stationCode: string
+	}
+
+	/** 设置当前窗口是否展开 */
+	setExpanded(): void {
+		this.setShowTySearchForm(IExpandEnum.UN_EXPANDED)
+	}
+
+	@Mutation(SET_SHOW_TY_SEARCH_FORM, { namespace: 'common' })
+	setShowTySearchForm: { (val: IExpandEnum): void }
+
+	/** 是否显示窗口 t:显示 */
+	@Getter(GET_SHOW_TY_SEARCH_FORM, { namespace: 'common' })
+	getShowStationForm: IExpandEnum
+
+	@Watch('getterComplexOptsCurrentStation')
+	onCurrentStationOpts(val: {
+		tyNum: string
+		tyCode: string
+		stationName: string
+		stationCode: string
+	}): void {
+		// this.stationCode = val.stationName
+		console.log(
+			`监听到 station complex 发生变化: num:${val.tyNum}, code:${val.tyCode}, station name:${val.stationName},station code:${val.stationCode}`
+		)
+		this.stationName = val.stationName
+		this.stationCode = val.stationCode
+		this.tyCode = val.tyCode
+		this.tyNum = val.tyNum
+	}
+}
+</script>
+<style lang="less">
+@import '../../styles/station/station-chart';
+// + 21-12-06 加入重写的 emelemtnui 样式
+@import '../../styles/my-elementui/common';
+@import '../../styles/base-form.less';
+.test {
+	background: rgb(252, 182, 31);
+	color: rgb(235, 232, 70);
+}
+
+#wave_form {
+	min-height: 495px;
+	min-width: 556px;
+	// height: 100%;
+	height: 500px;
+	position: absolute;
+	z-index: 9999;
+	top: 50px;
+	left: 180px;
+	// @form-base-background();
+}
+.detail-content {
+	@form-base-background();
+}
+</style>
