@@ -227,6 +227,7 @@ export default class MainMapView extends Vue {
 
 	/** 浪向 canvas layer */
 	waveArrowCanvasLayer = null
+	now: Date = new Date()
 
 	/** TODO:[-] 23-02-02 注意修改为通过监听 预报时间戳来执行加载操作(监听 预报Date 会出现多次赋相同值触发多次的问题) */
 	forecastTimestamp = 0
