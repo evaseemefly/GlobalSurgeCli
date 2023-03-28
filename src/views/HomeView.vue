@@ -10,7 +10,7 @@
 		<!-- <StationLayoutView :tyNum="tyNum"></StationLayoutView> -->
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
 		<ThumbListView></ThumbListView>
-		<HeaderLogoView title="海浪数值预报系统"></HeaderLogoView>
+		<HeaderLogoView title="全球潮位站系统"></HeaderLogoView>
 		<LegendListView></LegendListView>
 	</div>
 </template>

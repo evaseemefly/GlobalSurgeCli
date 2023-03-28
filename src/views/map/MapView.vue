@@ -160,8 +160,18 @@ import { Sosurface } from './isosurface'
 import { DEFAULT_COLOR_SCALE } from '@/const/colorBar'
 import wave from '@/store/modules/wave'
 import { WaveArrow } from './arrow'
+import { StationBaseInfo } from './station'
 import { WaveBarOptType } from '@/middle_model/geo'
 
+// - 23-03-27 api
+import { loadSurgeListByRecently } from '@/api/surge' // 获取所有潮位站距离当前最近的潮值
+import { StationBaseInfoMidModel } from '@/middle_model/station'
+
+/**
+ * - 23-03-27 继承之前海浪可视化系统的 cli
+ * - 23-03-27 逐步剔除之前海浪可视化的部分代码
+ *
+ */
 @Component({
 	components: {
 		// LMarker,
@@ -239,6 +249,12 @@ export default class MainMapView extends Vue {
 		backgroundOpacity: 0.7,
 	}
 
+	/** 当前的海洋站潮位list */
+	surgeStationList: IStationInfo[] = []
+
+	/** 海洋站基础信息 集合 */
+	stationBaseInfoList: StationBaseInfoMidModel[] = []
+
 	/** true:进行地图打点操作 */
 	@Getter(GET_IS_SELECT_LOOP, { namespace: 'map' }) getSelectLoop: boolean
 
@@ -250,13 +266,9 @@ export default class MainMapView extends Vue {
 
 	mounted() {
 		const self = this
-		// TODO:[-] 23-02-03 此处修改为加载地图完毕后只要点击地图就记录当前点击所在位置
-		const mymap: L.Map = this.$refs.basemap['mapObject']
-		mymap.on('click', (e: L.LeafletMouseEvent) => {
-			// @ts-ignore
-			self.currentLatlng = e.latlng
-			this.setBoxLoopLatlng(e.latlng)
-		})
+
+		this.loadBaseStationList()
+		this.loadSurgeStationList()
 	}
 
 	/** 清除当前选定的圈选位置的中心点 */
@@ -318,10 +330,6 @@ export default class MainMapView extends Vue {
 	@Getter(GET_WAVE_PRODUCT_ISSUE_TIMESTAMP, { namespace: 'wave' })
 	getWaveProductIssueTimestamp: number
 
-	/** 获取当前选中的海浪产品图层 */
-	@Getter(GET_WAVE_PRODUCT_LAYER_TYPE, { namespace: 'wave' })
-	getWaveProductLayerType: LayerTypeEnum
-
 	/** 获取当前的预报时间(不再监听此变量，改为监听forecastTimestamp. ts=Date.getTime() ) */
 	@Getter(GET_CURRENT_FORECAST_DT, { namespace: 'common' })
 	getForecastDt: Date
@@ -335,185 +343,61 @@ export default class MainMapView extends Vue {
 	@Getter(GET_SCALAR_SHOW_TYPE, { namespace: 'common' })
 	getScalarShowType: ScalarShowTypeEnum
 
-	/** 海浪标量场配置项 */
-	get waveScalarOpts(): {
-		getWaveProductIssueTimestamp: number
-		getWaveProductLayerType: LayerTypeEnum
-		forecastTimestamp: number
-		getScalarShowType: ScalarShowTypeEnum
-	} {
-		const {
-			getWaveProductIssueTimestamp,
-			getWaveProductLayerType,
-			forecastTimestamp,
-			getScalarShowType,
-		} = this
-		return {
-			getWaveProductIssueTimestamp,
-			getWaveProductLayerType,
-			forecastTimestamp,
-			getScalarShowType,
-		}
-	}
-
 	/** 设置当前圈选中心位置 */
 	@Mutation(SET_BOX_LOOP_LATLNG, { namespace: 'map' }) setBoxLoopLatlng: (val: L.LatLng) => void
 
-	/** 监听海浪标量场配置项 */
-	@Watch('waveScalarOpts')
-	async onWaveScalarOpts(val: {
-		getWaveProductIssueTimestamp: number
-		getWaveProductLayerType: LayerTypeEnum
-		getScalarShowType: ScalarShowTypeEnum
-		forecastTimestamp: number
-	}): Promise<void> {
-		this.queue.push(val)
-	}
-
-	/** + 23-02-02 加载标量及矢量图层 */
-	async asyncLoadScalarLayer(val: {
-		getWaveProductIssueTimestamp: number
-		getWaveProductLayerType: LayerTypeEnum
-		getScalarShowType: ScalarShowTypeEnum
-		forecastTimestamp: number
-	}): Promise<void> {
-		// @ts-ignore
-		const mymap = this.$refs.basemap.mapObject
-		const self = this
-		const forecastDt: Date = new Date(this.forecastTimestamp)
-		// TODO:[*] 23-02-02
-		if (
-			val.getWaveProductIssueTimestamp != DEFAULT_TIMESTAMP &&
-			val.getWaveProductLayerType != LayerTypeEnum.UN_LAYER &&
-			val.forecastTimestamp != DEFAULT_DATE.getTime()
-		) {
-			// this.clearScalarLayer()
-			// this.clearSosurfaceLayer()
-			// this.clearGridTitlesLayer()
-			// this.clearWaveArrowCanvasLayer()
-			this.clearAllWaveLayers()
-			if (
-				[
-					LayerTypeEnum.RASTER_LAYER_WVE,
-					LayerTypeEnum.RASTER_LAYER_SHWW,
-					LayerTypeEnum.RASTER_LAYER_MWP,
-					LayerTypeEnum.RASTER_LAYER_MWP,
-				].findIndex((temp) => {
-					return temp === val.getWaveProductLayerType
-				}) >= 0
-			) {
-				// if (val.getWaveProductLayerType === LayerTypeEnum.RASTER_LAYER_WVE) {
-
-				// TODO:[*] 23-02-02 当从其他标量图层并选定时间后切换为其他标量图层会执行两次 。 一次 起始时刻 ， 一次当前选中的时刻
-				console.log(
-					`加载当前:${new Date(val.forecastTimestamp)}栅格,类型:${
-						val.getWaveProductLayerType
-					}`
-				)
-				const waveRasterLayer: WaveRasterGeoLayer = new WaveRasterGeoLayer({
-					issueTimestamp: val.getWaveProductIssueTimestamp.toString(),
-					scaleList: [
-						'#153C83',
-						'#4899D9',
-						'#FFFB58',
-						'#F1C712',
-						'#E79325',
-						'#F22015',
-						'#C40E0F',
-					],
-				})
-				/** tif 的绝对路径 */
-				const abstractTifUrl = await waveRasterLayer.loadTifUrl(
-					forecastDt,
-					val.getWaveProductLayerType
-				)
-
-				// 根据 标量场的展示类型 -> 加载栅格图层
-				//					   -> 加载等值面
-				switch (val.getScalarShowType) {
-					case ScalarShowTypeEnum.RASTER:
-						await waveRasterLayer
-							.add2map(
-								mymap,
-								() => {
-									// console.log(`执行加载raster的清除当前全部涂层的回调函数@`)
-									self.clearAllWaveLayers()
-								},
-								true,
-								forecastDt,
-								val.getWaveProductLayerType
-							)
-							.then((_id) => {
-								console.log(`${_id}栅格图层加载完毕!`)
-								this.scalarLayerId = _id
+	/** + 23-03-27 加载 指定时间|当前时间 的全部潮位站 */
+	loadSurgeStationList(is_recent = true, now: Date = new Date()): void {
+		const mymap: L.Map = this.$refs.basemap['mapObject']
+		if (is_recent) {
+			this.surgeStationList = []
+			loadSurgeListByRecently(now)
+				.then(
+					(
+						res: IHttpResponse<
+							{
+								station_code: string
+								gmt_realtime: Date
+								surge: number
+								tid: number
+								lat: number
+								lon: number
+							}[]
+						>
+					) => {
+						let tempStationList = []
+						res.data.forEach((temp) => {
+							tempStationList.push({
+								station_code: temp.station_code,
+								gmt_realtime: temp.gmt_realtime,
+								lat: temp.lat,
+								lon: temp.lon,
+								surge: temp.surge,
 							})
-						break
-					case ScalarShowTypeEnum.ISOSURFACE:
-						const waveSosurface: Sosurface = new Sosurface(abstractTifUrl)
-						// TODO:[*] 23-02-03 在加载等值面之前执行清除海浪全部图层的操作
-						self.clearAllWaveLayers()
-						const sosurfaceOpts = await waveSosurface.addSosurface2MapbyScale(
-							mymap,
-							self.$message,
-							() => {
-								self.clearAllWaveLayers()
-							},
-							true
-						)
-						// @ts-ignore
-						self.sosurfaceLayerId = waveSosurface.getLayerId()
-						self.gridTitlesLayerId = waveSosurface.getPointsTitleLayerId()
-						break
-					default:
-						break
-				}
-			} else if (val.getWaveProductLayerType === LayerTypeEnum.RASTER_LAYER_MWD) {
-				const waveArrow = new WaveArrow()
-
-				// TODO:[-] 23-01-16 注意 moment().valueOf() 单位为 ms 需要转换为 s
-				// 清除海浪箭头图层
-				this.clearWaveArrowCanvasLayer()
-				this.waveArrowCanvasLayer = await waveArrow.add2map(
-					mymap,
-					new WaveBarOptType(
-						(moment(forecastDt).valueOf() / MS_UNIT).toString(),
-						val.getWaveProductIssueTimestamp.toString(),
-						4
-					)
+						})
+						this.surgeStationList = tempStationList
+					}
 				)
-			}
+				.then((_) => {
+					addStationIcon2Map(
+						mymap,
+						this.surgeStationList,
+						10,
+						[{ name: '123', chname: '' }],
+						(_) => {},
+						IconTypeEnum.CIRCLE_ICON
+					)
+				})
 		}
 	}
 
-	@Watch('queue')
-	async onQueue(
-		val: {
-			getWaveProductIssueTimestamp: number
-			getWaveProductLayerType: LayerTypeEnum
-			getScalarShowType: ScalarShowTypeEnum
-			forecastTimestamp: number
-		}[]
-	): Promise<void> {
-		const self = this
-		// console.log(`监听到queue发生变化!${val}`)
-
-		for (let _ of this.queue) {
-			let fn = this.queue.pop()
-			await self.asyncLoadScalarLayer(fn)
-			// console.log(fn)
-		}
-		// val.forEach((temp) => {
-
-		// })
+	/** + 23-03-27 加载 潮位站基础信息集合 -> 生成一个集合 */
+	async loadBaseStationList(): Promise<void> {
+		this.stationBaseInfoList = []
+		const stationBaseInfo = new StationBaseInfo()
+		await stationBaseInfo.getAllStationInfo()
+		this.stationBaseInfoList = stationBaseInfo.allStationBaseInfoList
 	}
-
-	/** 加载图层通道 */
-	queue: {
-		getWaveProductIssueTimestamp: number
-		getWaveProductLayerType: LayerTypeEnum
-		getScalarShowType: ScalarShowTypeEnum
-		forecastTimestamp: number
-	}[] = []
 
 	@Watch('getSelectLoop')
 	onSelectLoop(val: boolean): void {

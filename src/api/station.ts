@@ -8,7 +8,7 @@ import { ITyphoonParams4Station } from '@/interface/station'
 // export const host = host
 axios.defaults.withCredentials = true
 
-const area = '/gis'
+const area = '/station'
 
 /**
  * 获取指定站点的过程增水集合
@@ -93,10 +93,31 @@ const loadStationNameDict = () => {
 	})
 }
 
+/**
+ * - 23-03-28 获取潮位站基础信息集合
+ * @returns [
+ * 	{
+    "station_code": "hana",
+    "station_name": "DEFAULT",
+    "lat": 43.28,
+    "lon": 145.57,
+    "rid": 112
+  	},
+ * ]
+ */
+const loadStationBaseInfoList = () => {
+	const url = `${host}${area}/base/list`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: {},
+	})
+}
+
 export {
 	loadStationDetailDataList,
 	loadStationExtremumDataList,
 	loadStationNameDict,
 	loadStationAlertLevelDataList,
 	loadStationExtremumRealDataist,
+	loadStationBaseInfoList,
 }

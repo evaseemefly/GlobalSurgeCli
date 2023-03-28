@@ -7,7 +7,7 @@ import { MenuType } from '@/enum/menu'
  * @date 2022/07/27
  * @export {
  *  id: number
-	code: string
+	station_code: string
 	name: string
 	lat: number
 	lon: number
@@ -16,9 +16,11 @@ import { MenuType } from '@/enum/menu'
  * @interface IStationInfo
  */
 export interface IStationInfo {
-	id: number
-	code: string
-	name: string
+	// id: number
+	station_code: string
+	name?: string
+	/** 当前时刻 */
+	gmt_realtime: Date
 	lat: number
 	lon: number
 	/** 增水(unit:cm) */

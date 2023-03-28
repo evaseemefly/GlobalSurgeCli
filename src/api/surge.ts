@@ -9,7 +9,7 @@ import { LayerTypeEnum } from '@/enum/map'
 // export const host = host
 axios.defaults.withCredentials = true
 
-const area = '/surge'
+const area = '/station'
 
 /**
  * 获取所有潮位站距离当前最近的潮值
@@ -17,9 +17,10 @@ const area = '/surge'
  * @returns
  */
 const loadSurgeListByRecently = (now: Date) => {
-	const url = `${host}${area}/list/recent`
+	const url = `${host}${area}/surge/list/recent`
 	return axios.get(url, {
 		headers: authHeader(),
+		params: { now: now },
 	})
 }
 

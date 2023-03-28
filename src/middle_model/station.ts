@@ -540,6 +540,28 @@ class StationSurgeMidModel {
 	}
 }
 
+/**
+ * @description 海洋站基础信息 mid model
+ * @author evaseemefly
+ * @date 2023/03/28
+ * @class StationBaseInfoMidModel
+ */
+class StationBaseInfoMidModel {
+	rid: number
+	stationCode: string
+	stationName: string
+	lat: number
+	lon: number
+
+	constructor(rid: number, code: string, name: string, lat: number, lon: number) {
+		this.rid = rid
+		this.stationCode = code
+		this.stationName = name
+		this.lat = lat
+		this.lon = lon
+	}
+}
+
 export {
 	IconFormStationDetialedMidModel,
 	IconFormDefaultMidModel,
@@ -548,4 +570,5 @@ export {
 	StationSurgeMiModel,
 	SurgeStationGroupMidModel,
 	StationSurgeMidModel,
+	StationBaseInfoMidModel,
 }

@@ -30,16 +30,22 @@ const iconPlusingDefaultOptions = {
 	iconType: IconTypeEnum.TY_PULSING_ICON,
 }
 
+/** @type {*} 圆形不带脉冲效果的icon */
+const iconCircleDefaultOptions = {
+	min: 1,
+	max: 10,
+	radius: 20,
+	iconType: IconTypeEnum.CIRCLE_ICON,
+}
+
 /**
- * 实现方式1
- * 功能：根据传入的值，动态调整脉冲边缘的半径以及脉冲圆点的半径大小
- * 具体实现：
- * r=20px
- * math.abs(val-min)/math.abs(max-min) * r
+ * @description 圆形ico的抽象父类
  * @author evaseemefly
- * @class IconCirlePulsing
+ * @date 2023/03/28
+ * @abstract
+ * @class AbsIconCirle
  */
-class IconCirlePulsing {
+abstract class AbsIconCirle {
 	// radiusUnit:number=
 	// x 与 y 的偏移量
 	shiftX = 0
@@ -58,32 +64,18 @@ class IconCirlePulsing {
 	config: IIconPlusingOptions
 	constructor(options: IIconPlusingOptions) {
 		// Object.assign(this, { max: 10, min: 1, radius: 10 }, options)
-		this.config = { ...iconPlusingDefaultOptions, ...options }
+		this.config = { ...iconCircleDefaultOptions, ...options }
 	}
-	toHtml(): string {
-		const that = this
-		// TODO:[-] 22-05-16 注意此处若为 海洋站静态位置 则 宽高都为 NaN
-		// 海洋站icon的宽高
-		const iconPulsingWidth = that.getPlusingIconRectangle()[0]
-		const iconPulsingHeight = that.getPlusingIconRectangle()[1]
-		// icon 的外侧脉冲的宽高
-		const iconBorderWidth = that.getPlusingIconBorderRectangle()[0]
-		const iconBorderHeight = that.getPlusingIconBorderRectangle()[1]
-		// - 22-03-08 注意由于在 /styles/map/my-leaflet.less -> my-leaflet-icon-border 中对box-shadow 设置了3px的阴影宽度，但 box的border是不会向内挤占空间的
-		const borderUnit = 3 / 2
-		// 第一个div是外侧脉冲,第二个div是内部的icon
-		// TODO:[*] 22-03-07 注意此处 my-leaflet-icon-border orange 会有一个 3px的border的距离，但外侧的border是不会影响内部的定位，所以不需要加入对该border边距的计算
-		// 最终: 只需要平移 (-r/2,-r/2)
-		const divHtml = `<div class="my-leaflet-pulsing-marker" >
-              <div class="my-leaflet-icon-border ${this.getAlarmColor()}" style="width: ${iconBorderWidth}px;height:${iconBorderHeight}px;left:${
-			-iconBorderWidth / 2
-		}px;top:${-iconBorderHeight / 2}px"></div>
-              <div class="my-leaflet-pulsing-icon ${this.getAlarmColor()}" style="width: ${iconPulsingWidth}px;height:${iconPulsingHeight}px;left:${
-			-iconPulsingWidth / 2
-		}px;top:${-iconPulsingHeight / 2}px"></div>
-            </div>`
-		return divHtml
-	}
+
+	/**
+	 * @description 需要子类重写的 生成 html 的方法
+	 * @author evaseemefly
+	 * @date 2023/03/28
+	 * @abstract
+	 * @returns {*}  {string}
+	 * @memberof AbsIconCirle
+	 */
+	abstract toHtml(): string
 
 	/**
 	 * 获取当前 surge 在 min - max 的百分位数
@@ -98,6 +90,26 @@ class IconCirlePulsing {
 			Math.abs(this.config.val - this.config.min) /
 			Math.abs(this.config.max - this.config.min)
 		return isNaN(val) ? defaultVal : val
+	}
+
+	getPlusingIconBorderAbsRadius(): number {
+		// 半径的最大 px
+		const radiusMaxVal = 16
+		// 半径的最小 px
+		// const radiusMinVal = 10
+		const radiusMinVal = 8
+		// 半径最大与最小的差值 px
+		const radiusDiffVal = radiusMaxVal - radiusMinVal
+		// 半径差值的绝对值
+		const radiusDiffAbsVal = radiusDiffVal * this.getRadius()
+		return radiusMinVal + radiusDiffAbsVal
+	}
+
+	getPlusingIconBorderRectangle(): number[] {
+		const confficient = 1.5
+		const width = confficient * this.getPlusingIconBorderAbsRadius()
+		const height = confficient * this.getPlusingIconBorderAbsRadius()
+		return [width, height]
 	}
 
 	/**
@@ -131,27 +143,7 @@ class IconCirlePulsing {
 		return [width, height]
 	}
 
-	getPlusingIconBorderAbsRadius(): number {
-		// 半径的最大 px
-		const radiusMaxVal = 16
-		// 半径的最小 px
-		// const radiusMinVal = 10
-		const radiusMinVal = 8
-		// 半径最大与最小的差值 px
-		const radiusDiffVal = radiusMaxVal - radiusMinVal
-		// 半径差值的绝对值
-		const radiusDiffAbsVal = radiusDiffVal * this.getRadius()
-		return radiusMinVal + radiusDiffAbsVal
-	}
-
-	getPlusingIconBorderRectangle(): number[] {
-		const confficient = 1.5
-		const width = confficient * this.getPlusingIconBorderAbsRadius()
-		const height = confficient * this.getPlusingIconBorderAbsRadius()
-		return [width, height]
-	}
-
-	private getAlarmColor(): string {
+	protected getAlarmColor(): string {
 		// TODO:[-] 21-06-08 此处代码与 middle_model -> stations.ts -> IconFormMinStationSurgeMidModel -> getAlarmColor 重复
 		const surge = this.config.val
 		let colorStr = 'green'
@@ -179,6 +171,79 @@ class IconCirlePulsing {
 		}
 
 		return colorStr
+	}
+}
+
+/**
+ * 实现方式1
+ * 功能：根据传入的值，动态调整脉冲边缘的半径以及脉冲圆点的半径大小
+ * 具体实现：
+ * r=20px
+ * math.abs(val-min)/math.abs(max-min) * r
+ * @author evaseemefly
+ * @class IconCirlePulsing
+ */
+class IconCirlePulsing extends AbsIconCirle {
+	constructor(options: IIconPlusingOptions) {
+		super(options)
+		// Object.assign(this, { max: 10, min: 1, radius: 10 }, options)
+		// this.config = { ...iconPlusingDefaultOptions, ...options }
+	}
+	toHtml(): string {
+		const that = this
+		// TODO:[-] 22-05-16 注意此处若为 海洋站静态位置 则 宽高都为 NaN
+		// 海洋站icon的宽高
+		const iconPulsingWidth = that.getPlusingIconRectangle()[0]
+		const iconPulsingHeight = that.getPlusingIconRectangle()[1]
+		// icon 的外侧脉冲的宽高
+		const iconBorderWidth = that.getPlusingIconBorderRectangle()[0]
+		const iconBorderHeight = that.getPlusingIconBorderRectangle()[1]
+		// - 22-03-08 注意由于在 /styles/map/my-leaflet.less -> my-leaflet-icon-border 中对box-shadow 设置了3px的阴影宽度，但 box的border是不会向内挤占空间的
+		const borderUnit = 3 / 2
+		// 第一个div是外侧脉冲,第二个div是内部的icon
+		// TODO:[*] 22-03-07 注意此处 my-leaflet-icon-border orange 会有一个 3px的border的距离，但外侧的border是不会影响内部的定位，所以不需要加入对该border边距的计算
+		// 最终: 只需要平移 (-r/2,-r/2)
+		const divHtml = `<div class="my-leaflet-pulsing-marker" >
+              <div class="my-leaflet-icon-border ${this.getAlarmColor()}" style="width: ${iconBorderWidth}px;height:${iconBorderHeight}px;left:${
+			-iconBorderWidth / 2
+		}px;top:${-iconBorderHeight / 2}px"></div>
+              <div class="my-leaflet-pulsing-icon ${this.getAlarmColor()}" style="width: ${iconPulsingWidth}px;height:${iconPulsingHeight}px;left:${
+			-iconPulsingWidth / 2
+		}px;top:${-iconPulsingHeight / 2}px"></div>
+            </div>`
+		return divHtml
+	}
+}
+
+/**
+ * @description 圆形icon(不带脉冲效果)
+ * copy 自 IconCirlePulsing
+ * @author evaseemefly
+ * @date 2023/03/28
+ * @class IconCirle
+ */
+class IconCirle extends AbsIconCirle {
+	constructor(options: IIconPlusingOptions) {
+		super(options)
+	}
+	toHtml(): string {
+		const that = this
+		// TODO:[-] 22-05-16 注意此处若为 海洋站静态位置 则 宽高都为 NaN
+		// 海洋站icon的宽高
+		const iconPulsingWidth = that.getPlusingIconRectangle()[0]
+		const iconPulsingHeight = that.getPlusingIconRectangle()[1]
+		// - 22-03-08 注意由于在 /styles/map/my-leaflet.less -> my-leaflet-icon-border 中对box-shadow 设置了3px的阴影宽度，但 box的border是不会向内挤占空间的
+		const borderUnit = 3 / 2
+		// 第一个div是外侧脉冲,第二个div是内部的icon
+		// TODO:[*] 22-03-07 注意此处 my-leaflet-icon-border orange 会有一个 3px的border的距离，但外侧的border是不会影响内部的定位，所以不需要加入对该border边距的计算
+		// 最终: 只需要平移 (-r/2,-r/2)
+		// TODO:[-] 23-03-28 只保留了圆形icon，去掉了脉冲div
+		const divHtml = `<div class="my-leaflet-pulsing-marker" >              
+              <div class="my-leaflet-pulsing-icon ${this.getAlarmColor()}" style="width: ${iconPulsingWidth}px;height:${iconPulsingHeight}px;left:${
+			-iconPulsingWidth / 2
+		}px;top:${-iconPulsingHeight / 2}px"></div>
+            </div>`
+		return divHtml
 	}
 }
 
@@ -510,11 +575,12 @@ const addStationIcon2Map = (
 	stationList: IStationInfo[],
 	surgeMax: number,
 	stationNameDict: { name: string; chname: string }[],
-	callbackFunc: (stationTemp: { code: string; name: string }) => void
+	callbackFunc: (stationTemp: { code: string; name: string }) => void,
+	iconType: IconTypeEnum = IconTypeEnum.TY_PULSING_ICON
 ): number[] => {
 	const zoom = 7
 	const self = this
-	const iconArr: IconCirlePulsing[] = []
+	const iconArr: AbsIconCirle[] = []
 	const iconSurgeMinArr: IToHtml[] = []
 	const stationArr: StationSurgeMidModel[] = []
 	const layerItemsList: IStationIcon[] = []
@@ -524,26 +590,48 @@ const addStationIcon2Map = (
 	// 获取极值
 	stationList.forEach((temp) => {
 		/** 海洋站 icon */
-		const icon = new IconCirlePulsing({
-			val: temp.surge,
-			max: surgeMax,
-			min: 0,
-			iconType: IconTypeEnum.TY_PULSING_ICON,
-		})
+		// TODO:[-] 23-03-28 此处加入根据传入的 iconType 生成不同的 station icon 实现
+		let icon: AbsIconCirle = null
+		switch (iconType) {
+			case IconTypeEnum.CIRCLE_ICON:
+				icon = new IconCirle({
+					val: temp.surge,
+					max: surgeMax,
+					min: 0,
+					iconType: iconType,
+				})
+				break
+			case IconTypeEnum.TY_PULSING_ICON:
+				icon = new IconCirlePulsing({
+					val: temp.surge,
+					max: surgeMax,
+					min: 0,
+					iconType: iconType,
+				})
+				break
+			default:
+				icon = new IconCirlePulsing({
+					val: temp.surge,
+					max: surgeMax,
+					min: 0,
+					iconType: iconType,
+				})
+				break
+		}
 		/** 当前站点英文名 */
 		const stationNameEn = temp.name
 		/** 当前站点中文名 */
 		const stationNameCh = filterStationNameCh(stationNameEn, stationNameDict)
 		const tempStationSurge = new StationSurgeMidModel(
-			stationNameCh,
-			temp.code,
+			temp.station_code,
+			temp.station_code,
 			'',
 			'',
 			new Date()
 		)
 		const iconSurgeMin = tempStationSurge.getImplements(zoom, {
-			stationName: stationNameCh,
-			stationCode: temp.code,
+			stationName: temp.station_code,
+			stationCode: temp.station_code,
 			surgeMax: surgeMax,
 			surgeMin: 0,
 			surgeVal: temp.surge,
@@ -624,6 +712,7 @@ const addStationIcon2Map = (
 
 export {
 	IconCirlePulsing,
+	IconCirle,
 	IconMinStationSurge,
 	IconDetailedStationSurge,
 	IconTyphoonCirlePulsing,

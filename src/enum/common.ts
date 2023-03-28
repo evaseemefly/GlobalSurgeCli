@@ -6,9 +6,13 @@
  */
 export enum IconTypeEnum {
 	/**
-	 * 台风当前所在位置脉冲 icon
+	 * 脉冲 icon
 	 */
 	TY_PULSING_ICON,
+	/**
+	 * 圆圈 icon,非脉冲 icon
+	 */
+	CIRCLE_ICON,
 
 	/**
 	 * 台风路径示意 icon
