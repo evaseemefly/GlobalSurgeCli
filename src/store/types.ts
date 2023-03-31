@@ -172,6 +172,11 @@ export const SET_SHOW_TY_SEARCH_FORM = 'SET_SHOW_TY_SEARCH_FORM'
 /** 获取 显示台风搜索窗口 */
 export const GET_SHOW_TY_SEARCH_FORM = 'GET_SHOW_TY_SEARCH_FORM'
 
+/** 设置 显示潮位站潮位窗口 */
+export const SET_SHOW_STATION_SURGE_FORM = 'SET_SHOW_STATION_SURGE_FORM'
+/** 获取 显示潮位站潮位窗口 */
+export const GET_SHOW_STATION_SURGE_FORM = 'GET_SHOW_STATION_SURGE_FORM'
+
 /** 设置 显示海洋站过程极致窗口 */
 export const SET_SHOW_STATION_EXTREMUM_FORM = 'SET_SHOW_STATION_EXTREMUM_FORM'
 /** 获取 显示海洋站过程极致窗口 */

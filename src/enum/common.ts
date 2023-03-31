@@ -10,9 +10,14 @@ export enum IconTypeEnum {
 	 */
 	TY_PULSING_ICON,
 	/**
-	 * 圆圈 icon,非脉冲 icon
+	 * 圆圈 icon,非脉冲 icon,动态半径
 	 */
-	CIRCLE_ICON,
+	DYNAMIC_CIRCLE_ICON,
+
+	/**
+	 * 圆圈 icon,非脉冲icon,静态半径
+	 */
+	FIXED_CIRCLE_ICON,
 
 	/**
 	 * 台风路径示意 icon
@@ -20,6 +25,23 @@ export enum IconTypeEnum {
 	TY_PATH_ICON,
 }
 
+/**
+ * @description 潮位站icon显示枚举
+ * @author evaseemefly
+ * @date 2023/03/29
+ * @export
+ * @enum {number}
+ */
+export enum StationIconShowTypeEnum {
+	/**
+	 * 显示海洋站icon及数值
+	 */
+	SHOW_SURGE_VAL,
+	/**
+	 * 显示海洋站状态
+	 */
+	SHOW_STATION_STATUS,
+}
 /**
  * + 23-01-06 标量场-图层展示类型
  */

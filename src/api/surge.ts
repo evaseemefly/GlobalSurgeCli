@@ -24,4 +24,19 @@ const loadSurgeListByRecently = (now: Date) => {
 	})
 }
 
-export { loadSurgeListByRecently }
+/**
+ * 获取指定 code 的站点的 >= start , <=end 时间范围的surge list
+ * @param code
+ * @param start
+ * @param end
+ * @returns
+ */
+const loadTargetStationSurgeRealdataList = (code: string, start: Date, end: Date) => {
+	const url = `${host}${area}/surge/one/`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: { station_code: code, start_dt: start, end_dt: end },
+	})
+}
+
+export { loadSurgeListByRecently, loadTargetStationSurgeRealdataList }

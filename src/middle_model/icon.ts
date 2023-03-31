@@ -6,7 +6,7 @@
 
 import * as L from 'leaflet'
 
-import { IconTypeEnum } from '@/enum/common'
+import { IconTypeEnum, StationIconShowTypeEnum } from '@/enum/common'
 // 待实现的接口
 import { IStationInfo, IStationIcon } from '@/interface/station'
 import { IToHtml } from '@/interface/leaflet_icon'
@@ -14,6 +14,7 @@ import { IToHtml } from '@/interface/leaflet_icon'
 import { StationSurgeMidModel } from '@/middle_model/station'
 // filter
 import { filterStationNameCh } from '@/util/filter'
+import { getDateDiffMs } from '@/util/dateUtil'
 
 interface IIconPlusingOptions {
 	val?: number
@@ -21,6 +22,14 @@ interface IIconPlusingOptions {
 	max?: number
 	radius?: number
 	iconType: IconTypeEnum
+	/**
+	 * 实况时刻(utc)
+	 */
+	gmtRealTime?: Date
+	/**
+	 * 需要比对的当前时间(utc)
+	 */
+	gmtNow?: Date
 }
 
 const iconPlusingDefaultOptions = {
@@ -35,7 +44,7 @@ const iconCircleDefaultOptions = {
 	min: 1,
 	max: 10,
 	radius: 20,
-	iconType: IconTypeEnum.CIRCLE_ICON,
+	iconType: IconTypeEnum.DYNAMIC_CIRCLE_ICON,
 }
 
 /**
@@ -216,13 +225,13 @@ class IconCirlePulsing extends AbsIconCirle {
 }
 
 /**
- * @description 圆形icon(不带脉冲效果)
+ * @description 动态(根据surge动态设置半径)圆形icon(不带脉冲效果)
  * copy 自 IconCirlePulsing
  * @author evaseemefly
  * @date 2023/03/28
  * @class IconCirle
  */
-class IconCirle extends AbsIconCirle {
+class DynamicIconCirle extends AbsIconCirle {
 	constructor(options: IIconPlusingOptions) {
 		super(options)
 	}
@@ -244,6 +253,71 @@ class IconCirle extends AbsIconCirle {
 		}px;top:${-iconPulsingHeight / 2}px"></div>
             </div>`
 		return divHtml
+	}
+}
+
+/**
+ * @description 固定宽度(icon半径固定)圆形icon(且不带脉冲效果)
+ * @author evaseemefly
+ * @date 2023/03/29
+ * @class FixedIconCirle
+ * @extends {AbsIconCirle}
+ */
+class FixedIconCirle extends AbsIconCirle {
+	constructor(options: IIconPlusingOptions) {
+		super(options)
+	}
+
+	toHtml(): string {
+		// 固定宽度 cirle icon 半径和高度为固定值
+		const fixedRadius = 8
+		const divHtml = `<div class="my-leaflet-pulsing-marker" >              
+              <div class="my-leaflet-pulsing-icon ${this.getAlarmColor()}" style="width: ${fixedRadius}px;height:${fixedRadius}px;left:${
+			-fixedRadius / 2
+		}px;top:${-fixedRadius / 2}px"></div>
+            </div>`
+		return divHtml
+	}
+
+	/**
+	 * @description 重写抽象父类中的实现方法——改为由当前的gmt_realtime 与 比对的时间计算时间差获取对应的状态color
+	 * @author evaseemefly
+	 * @date 2023/03/29
+	 * @protected
+	 * @returns {*}  {string}
+	 * @memberof FixedIconCirle
+	 */
+	protected getAlarmColor(): string {
+		// TODO:[-] 21-06-08 此处代码与 middle_model -> stations.ts -> IconFormMinStationSurgeMidModel -> getAlarmColor 重复
+		const surge = this.config.val
+		let colorStr = 'green'
+		/** 获取 now-realtime(ms) */
+		const diffDt: number = getDateDiffMs(this.config.gmtNow, this.config.gmtRealTime)
+		if (diffDt) {
+			switch (true) {
+				// < 1h
+				case diffDt <= 1 * 60 * 60 * 1000:
+					colorStr = 'green-icon'
+					break
+				// < 2h
+				case surge <= 2 * 60 * 60 * 1000:
+					colorStr = 'blue'
+					break
+				// < 6h
+				case surge <= 6 * 60 * 60 * 1000:
+					colorStr = 'yellow'
+					break
+				// < 24h
+				case surge <= 24 * 60 * 60 * 1000:
+					colorStr = 'orange'
+					break
+				case surge > 24 * 60 * 60 * 1000:
+					colorStr = 'red'
+					break
+			}
+		}
+
+		return colorStr
 	}
 }
 
@@ -576,7 +650,8 @@ const addStationIcon2Map = (
 	surgeMax: number,
 	stationNameDict: { name: string; chname: string }[],
 	callbackFunc: (stationTemp: { code: string; name: string }) => void,
-	iconType: IconTypeEnum = IconTypeEnum.TY_PULSING_ICON
+	iconType: IconTypeEnum = IconTypeEnum.TY_PULSING_ICON,
+	stationIconShowType: StationIconShowTypeEnum = StationIconShowTypeEnum.SHOW_SURGE_VAL
 ): number[] => {
 	const zoom = 7
 	const self = this
@@ -587,18 +662,30 @@ const addStationIcon2Map = (
 
 	const pulsingMarkers: L.Marker[] = []
 	const divMarkers: L.Marker[] = []
+	const now: Date = new Date('2023-03-03 07:33:00')
 	// 获取极值
 	stationList.forEach((temp) => {
 		/** 海洋站 icon */
 		// TODO:[-] 23-03-28 此处加入根据传入的 iconType 生成不同的 station icon 实现
 		let icon: AbsIconCirle = null
 		switch (iconType) {
-			case IconTypeEnum.CIRCLE_ICON:
-				icon = new IconCirle({
+			case IconTypeEnum.DYNAMIC_CIRCLE_ICON:
+				icon = new DynamicIconCirle({
 					val: temp.surge,
 					max: surgeMax,
 					min: 0,
 					iconType: iconType,
+				})
+				break
+			// - 23-03-29 固定的圆形icon,需要传入gmt_realtime
+			case IconTypeEnum.FIXED_CIRCLE_ICON:
+				icon = new FixedIconCirle({
+					val: temp.surge,
+					max: surgeMax,
+					min: 0,
+					iconType: iconType,
+					gmtRealTime: temp.gmt_realtime,
+					gmtNow: now,
 				})
 				break
 			case IconTypeEnum.TY_PULSING_ICON:
@@ -635,6 +722,7 @@ const addStationIcon2Map = (
 			surgeMax: surgeMax,
 			surgeMin: 0,
 			surgeVal: temp.surge,
+			stationIconShowType: stationIconShowType,
 		})
 		iconArr.push(icon)
 		iconSurgeMinArr.push(iconSurgeMin)
@@ -712,7 +800,8 @@ const addStationIcon2Map = (
 
 export {
 	IconCirlePulsing,
-	IconCirle,
+	DynamicIconCirle,
+	FixedIconCirle,
 	IconMinStationSurge,
 	IconDetailedStationSurge,
 	IconTyphoonCirlePulsing,

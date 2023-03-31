@@ -34,6 +34,10 @@ const formatDate2MD = (now: Date): string => {
 const formatDate2HM = (now: Date): string => {
 	return moment(now).format('HH:mm')
 }
+
+const formatDate2DayHM = (now: Date): string => {
+	return moment(now).format('DD HH:mm')
+}
 const fortmatDate = (now: Date, formatStr: string) => {
 	if (now === DEFAULT_DATE) {
 		return '-'
@@ -345,6 +349,7 @@ export {
 	formatDate2YMD,
 	formatDate2MD,
 	formatDate2HM,
+	formatDate2DayHM,
 	formatTyLevel2Str,
 	formatTyLevel2Cls,
 	fortmatData2MDHM,

@@ -1,5 +1,6 @@
 import { formatPadRightstr, formatDate2YMD, formatDate2HM } from '@/util/filter'
 import { IToHtml } from '@/interface/leaflet_icon'
+import { StationIconShowTypeEnum } from '@/enum/common'
 
 class IconFormDefaultMidModel implements IToHtml {
 	toHtml(): string {
@@ -327,6 +328,81 @@ class IconFormTitleStationSurgeMidModel implements IToHtml {
 	}
 }
 
+/**
+ * @description 潮位站只显示 title icon 不显示对应的值
+ * @author evaseemefly
+ * @date 2023/03/29
+ * @class IconFormOnlyTitleStationSurgeMidModel
+ * @implements {IToHtml}
+ */
+class IconFormOnlyTitleStationSurgeMidModel implements IToHtml {
+	stationName: string
+	stationCode: string
+	surge: number
+	productTypeStr: string
+	isChecked: boolean
+	constructor(
+		stationName: string,
+		stationCode: string,
+		surge: number,
+		productTypeStr = '潮位',
+		isChecked = false
+	) {
+		this.stationName = stationName
+		this.stationCode = stationCode
+		this.surge = surge
+		this.productTypeStr = productTypeStr
+		this.isChecked = isChecked
+	}
+	toHtml(): string {
+		const divHtml = `<div class="my-station-title-surge-div">
+        <div class="station-title-div-title">${this.stationName}</div>
+        </div>`
+		return divHtml
+	}
+
+	/**
+	 * @description 获取 class 字符串
+	 * @author evaseemefly
+	 * @date 2022/07/26
+	 * @returns {*}  {string}
+	 * @memberof IconFormTitleStationSurgeMidModel
+	 */
+	getClassName(): string {
+		return `station-surge-icon-onlytitle `
+	}
+	getStationCode(): string {
+		return this.stationCode
+	}
+	/**
+	 * @description 获取全部动态 class string
+	 * @author evaseemefly
+	 * @date 2022/07/26
+	 * @param {boolean} [isChecked=false]
+	 * @returns {*}  {string}
+	 * @memberof IconFormTitleStationSurgeMidModel
+	 */
+	allCls(isChecked = false): string {
+		// let clsStr=''
+		const checkedCls = this.getCheckedCls(isChecked)
+		const clsStr = `${checkedCls}`
+		return clsStr
+	}
+
+	/**
+	 * @description 根据是否选中添加 checked cls
+	 * @author evaseemefly
+	 * @date 2022/07/26
+	 * @private
+	 * @param {boolean} [isChecked=false]
+	 * @returns {*}  {string}
+	 * @memberof IconFormTitleStationSurgeMidModel
+	 */
+	private getCheckedCls(isChecked = false): string {
+		return isChecked ? 'checked' : ''
+	}
+}
+
 /** + 22-09-14 海洋站潮位集群 mid model */
 class SurgeStationGroupMidModel {
 	/** 海洋站name */
@@ -464,6 +540,7 @@ class StationSurgeMidModel {
 	forecastDt: Date
 	stationName: string
 	stationCode: string
+	// stationIconShowType: StationIconShowTypeEnum
 	// stationIcons: IconFormStationDetialedMidModel[] = []
 
 	constructor(
@@ -472,12 +549,14 @@ class StationSurgeMidModel {
 		tyCode: string,
 		timeStampStr: string,
 		forecastDt: Date
+		// stationIconShowType: StationIconShowTypeEnum
 	) {
 		this.stationName = stationName
 		this.stationCode = stationCode
 		this.tyCode = tyCode
 		this.timeStampStr = timeStampStr
 		this.forecastDt = forecastDt
+		// this.stationIconShowType = stationIconShowType
 	}
 
 	/**
@@ -495,12 +574,24 @@ class StationSurgeMidModel {
 			surgeMin?: number
 			surgeVal: number
 			isChecked?: boolean
+			stationIconShowType?: StationIconShowTypeEnum
 		}
 	): IToHtml {
 		// const stationIcons: IconFormStationDetialedMidModel[] = []
 		// 若放大的倍数大于五，则返回 详细的 station icon
 		let iToHtml = new IconFormDefaultMidModel()
 		const that = this
+		if (
+			options['stationIconShowType'] !== undefined &&
+			options.stationIconShowType === StationIconShowTypeEnum.SHOW_STATION_STATUS
+		) {
+			iToHtml = new IconFormOnlyTitleStationSurgeMidModel(
+				options.stationName,
+				options.stationCode,
+				options.surgeVal
+			)
+			return iToHtml
+		}
 		if (zoom > 10) {
 			iToHtml = new IconFormStationDetialedMidModel(
 				options.stationName,
@@ -534,6 +625,7 @@ class StationSurgeMidModel {
 			surgeMax: number
 			surgeMin: number
 			surgeVal: number
+			stationIconShowType?: StationIconShowTypeEnum
 		}
 	): IToHtml {
 		return this.getStationIconImplements(zoom, options)

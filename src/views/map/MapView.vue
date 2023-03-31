@@ -113,7 +113,7 @@ import {
 	DEFAULT_TIMESTAMP,
 } from '@/const/default'
 // enum
-import { IconTypeEnum, ScalarShowTypeEnum } from '@/enum/common'
+import { IconTypeEnum, ScalarShowTypeEnum, StationIconShowTypeEnum } from '@/enum/common'
 import { MenuType, TyScatterMenuType } from '@/enum/menu'
 import { LayerTypeEnum, MapLayerEnum } from '@/enum/map'
 
@@ -357,7 +357,7 @@ export default class MainMapView extends Vue {
 						res: IHttpResponse<
 							{
 								station_code: string
-								gmt_realtime: Date
+								gmt_realtime: string
 								surge: number
 								tid: number
 								lat: number
@@ -365,11 +365,11 @@ export default class MainMapView extends Vue {
 							}[]
 						>
 					) => {
-						let tempStationList = []
+						let tempStationList: IStationInfo[] = []
 						res.data.forEach((temp) => {
 							tempStationList.push({
 								station_code: temp.station_code,
-								gmt_realtime: temp.gmt_realtime,
+								gmt_realtime: new Date(temp.gmt_realtime), // 注意此处为str->date
 								lat: temp.lat,
 								lon: temp.lon,
 								surge: temp.surge,
@@ -384,8 +384,11 @@ export default class MainMapView extends Vue {
 						this.surgeStationList,
 						10,
 						[{ name: '123', chname: '' }],
-						(_) => {},
-						IconTypeEnum.CIRCLE_ICON
+						(msg: { code: string; name: string }) => {
+							console.log(`当前点击了code:${msg.code},name:${msg.name}`)
+						},
+						IconTypeEnum.FIXED_CIRCLE_ICON,
+						StationIconShowTypeEnum.SHOW_STATION_STATUS
 					)
 				})
 		}

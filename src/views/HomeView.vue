@@ -5,7 +5,8 @@
 			<div class="layout-right"><MainMapView></MainMapView></div>
 		</div>
 		<div class="layout-bottom"><SubNavMenuView></SubNavMenuView></div>
-		<WaveGridForecastDataFormView></WaveGridForecastDataFormView>
+		<!-- <WaveGridForecastDataFormView></WaveGridForecastDataFormView> -->
+		<StationSurgeDataFormView></StationSurgeDataFormView>
 		<!-- <div><StationTideFormView></StationTideFormView></div> -->
 		<!-- <StationLayoutView :tyNum="tyNum"></StationLayoutView> -->
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
@@ -26,6 +27,7 @@ import ThumbListView from '@/components/thumbs/thumbListView.vue'
 import HeaderLogoView from '@/components/header/headerLogoView.vue'
 import LegendListView from '@/components/toolsBar/legendListView.vue'
 import WaveGridForecastDataFormView from '@/components/forms/WaveGridForecastDataForm.vue'
+import StationSurgeDataFormView from '@/components/forms/StationSurgeDataFormView.vue'
 
 // 默认值
 import { DEFAULT_DATE, DEFAULT_TIMESTAMP, DEFAULT_TY_NUM } from '@/const/default'
@@ -51,6 +53,7 @@ import moment from 'moment'
 		HeaderLogoView,
 		LegendListView,
 		WaveGridForecastDataFormView,
+		StationSurgeDataFormView,
 	},
 })
 export default class HomeView extends Vue {
