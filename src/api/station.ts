@@ -109,7 +109,41 @@ const loadStationBaseInfoList = () => {
 	const url = `${host}${area}/base/list`
 	return axios.get(url, {
 		headers: authHeader(),
-		params: {},
+	})
+}
+
+/**
+ * + 23-04-03 获取指定站点的状态
+ * @param code 站点 code
+ * @returns{
+ * {
+	"id": 673,
+	"station_code": "cbmd",
+	"status": 1001,
+	"tid": 51,
+	"is_del": false,
+	"gmt_realtime": "2023-03-03T07:18:00"
+	}
+ * }
+ */
+const loadStationStaus = (code: string) => {
+	const url = `${host}${area}/status/one/`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: { station_code: code },
+	})
+}
+
+/**
+ *
+ * @param code
+ * @returns
+ */
+const loadStaionRegionCountry = (code: string) => {
+	const url = `${host}${area}/base/contain/region/`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: { code: code },
 	})
 }
 
@@ -120,4 +154,6 @@ export {
 	loadStationAlertLevelDataList,
 	loadStationExtremumRealDataist,
 	loadStationBaseInfoList,
+	loadStationStaus,
+	loadStaionRegionCountry,
 }

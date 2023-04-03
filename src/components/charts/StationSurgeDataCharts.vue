@@ -10,14 +10,24 @@
 			<div class="info-card base-info">
 				<h3>基础信息</h3>
 				<div>
-					<div class="row"><span>所属国家</span><span>-</span></div>
-					<div class="row"><span>所属区域</span><span>-</span></div>
-					<!-- <div class="row"><span>站点</span><span>-</span></div> -->
-					<div class="row"><span>位置</span><span>- | -</span></div>
 					<div class="row">
+						<span>所属国家_en</span><span>{{ stationBaseInfo.country_en }}</span>
+					</div>
+					<div class="row">
+						<span>所属区域_en</span><span>{{ stationBaseInfo.val_en }}</span>
+					</div>
+					<div class="row">
+						<span>所属区域_ch</span><span>{{ stationBaseInfo.val_ch }}</span>
+					</div>
+					<!-- <div class="row"><span>站点</span><span>-</span></div> -->
+					<div class="row">
+						<span>位置</span
+						><span>{{ stationBaseInfo.lat }} | {{ stationBaseInfo.lon }}</span>
+					</div>
+					<!-- <div class="row">
 						<span>最后更新时间</span
 						><span>{{ getWaveIssueDt | fortmatData2YMDHM }}</span>
-					</div>
+					</div> -->
 				</div>
 			</div>
 			<div class="info-card forecast-info">
@@ -59,6 +69,7 @@ import {
 import { IHttpResponse } from '@/interface/common'
 //
 // 枚举
+import { TaskStatusEnum } from '@/enum/status'
 
 import SurgeTableView from '@/components/table/surgeValTableView.vue'
 
@@ -67,6 +78,7 @@ import { GET_CURRENT_FORECAST_DT, GET_WAVE_PRODUCT_ISSUE_DATETIME } from '@/stor
 //
 // api
 import { loadTargetStationSurgeRealdataList } from '@/api/surge'
+import { loadStaionRegionCountry, loadStationStaus } from '@/api/station'
 // 工具方法
 // filter
 import {
@@ -125,6 +137,28 @@ export default class StationSurgeChartView extends Vue {
 	/** 当前选中的位置 */
 	latlng: L.LatLng = DEFAULT_BOX_LOOP_LATLNG
 
+	stationBaseInfo: {
+		station_code: string
+		station_name: string
+		lat: number
+		lon: number
+		rid: number
+		val_en: string
+		val_ch: string
+		cid: number
+		country_en: string
+	} = {
+		station_code: '',
+		station_name: '',
+		lat: 0,
+		lon: 0,
+		rid: 0,
+		val_en: '',
+		val_ch: '',
+		cid: 0,
+		country_en: '',
+	}
+
 	/** 有效波高集合 */
 	valSWHList: number[] = []
 	/** 平均周期集合 */
@@ -134,9 +168,9 @@ export default class StationSurgeChartView extends Vue {
 	/** 风浪波高集合 */
 	valSHWWList: number[] = []
 
-	stationCode = 'darw'
-	startDt: Date = new Date('2023-03-03 14:30:00')
-	endDt: Date = new Date('2023-03-03 15:09:00')
+	stationCode = 'kusm'
+	startDt: Date = new Date('2023-03-02 10:30:00')
+	endDt: Date = new Date('2023-03-03 10:09:00')
 
 	/** 鼠标移入 chart 中的 index */
 	hoverDtIndex = 0
@@ -146,6 +180,7 @@ export default class StationSurgeChartView extends Vue {
 	created() {
 		// EventBus.$on(TO_LOAD_FORECASTDATALIST_COORDS, this.loadWaveForecastDataListbyCoords)
 		this.loadTargetStationSurgeDataList(this.stationCode, this.startDt, this.endDt)
+		this.loadStationRegionCountry(this.stationCode)
 		// console.log(`当前charts窗口大小:${document.getElementById('wave_scalar_chart')}`)
 	}
 
@@ -278,13 +313,51 @@ export default class StationSurgeChartView extends Vue {
 				let surgeList: number[] = []
 				res.data.forEach((element) => {
 					dtList.push(new Date(element.gmt_realtime))
-					surgeList.push(element.surge)
+					let tempSurge = null
+					if (element.surge !== DEFAULT_SURGE_VAL) {
+						tempSurge = element.surge
+					}
+					surgeList.push(tempSurge)
 				})
 				that.dtList = dtList
 				that.surgeList = surgeList
 				that.yAxisMax = Math.max(...surgeList)
 				that.yAxisMin = Math.min(...surgeList)
 				that.initCharts(dtList, [{ fieldName: 'surge', yList: surgeList }], 0)
+			}
+		)
+	}
+
+	/** + 23-04-03 获取当前 code 的站点状态 */
+	loadTargetStationStatus(code: string): void {
+		loadStationStaus(code).then(
+			(
+				res: IHttpResponse<{
+					station_code: string
+					status: TaskStatusEnum
+					tid: number
+					gmt_realtime: Date
+				}>
+			) => {}
+		)
+	}
+
+	loadStationRegionCountry(code: string): void {
+		loadStaionRegionCountry(code).then(
+			(
+				res: IHttpResponse<{
+					station_code: string
+					station_name: string
+					lat: number
+					lon: number
+					rid: number
+					val_en: string
+					val_ch: string
+					cid: number
+					country_en: string
+				}>
+			) => {
+				this.stationBaseInfo = { ...res.data }
 			}
 		)
 	}
@@ -563,47 +636,6 @@ export default class StationSurgeChartView extends Vue {
 		})
 		return filterDtIndex
 	}
-
-	get currentSWH(): number {
-		let val = DEFAULT_SURGE_VAL
-		if (
-			this.currentForecastDtIndex >= 0 &&
-			this.valSWHList.length >= this.currentForecastDtIndex
-		) {
-			val = this.valSWHList[this.currentForecastDtIndex]
-		}
-		return val
-	}
-	get currentMWP(): number {
-		let val = DEFAULT_SURGE_VAL
-		if (
-			this.currentForecastDtIndex >= 0 &&
-			this.valMWPList.length >= this.currentForecastDtIndex
-		) {
-			val = this.valMWPList[this.currentForecastDtIndex]
-		}
-		return val
-	}
-	get currentMWD(): number {
-		let val = DEFAULT_SURGE_VAL
-		if (
-			this.currentForecastDtIndex >= 0 &&
-			this.valMWDList.length >= this.currentForecastDtIndex
-		) {
-			val = this.valMWDList[this.currentForecastDtIndex]
-		}
-		return val
-	}
-	get currentSHWW(): number {
-		let val = DEFAULT_SURGE_VAL
-		if (
-			this.currentForecastDtIndex >= 0 &&
-			this.valSHWWList.length >= this.currentForecastDtIndex
-		) {
-			val = this.valSHWWList[this.currentForecastDtIndex]
-		}
-		return val
-	}
 }
 </script>
 <style scoped lang="less">
@@ -617,7 +649,7 @@ export default class StationSurgeChartView extends Vue {
 	// min-width: 660px;
 	// min-height: 445px;
 	// height: 100%;
-	height: 400px;
+	// height: 500px;
 	// width: 100%;
 	width: 880px;
 	margin-left: 20px;
@@ -626,7 +658,8 @@ export default class StationSurgeChartView extends Vue {
 }
 // 潮位chart
 #surge_scalar_chart {
-	height: 100%;
+	// height: 100%;
+	height: 250px;
 	width: 100%;
 }
 #station_scalar_form {

@@ -336,7 +336,10 @@ const formatSurge2Str = (val: number): string => {
  * @param {number} val
  * @returns {*}  {string}
  */
-const formatSurgeFixed2Str = (val: number): string => {
+const formatSurgeFixed2Str = (val: number | null): string => {
+	if (val === null) {
+		return '-'
+	}
 	const surgeStr = val.toFixed(2)
 	return surgeStr
 }

@@ -44,7 +44,8 @@ const DEFAULT_ALERT_TIDE = -999999
 /** 默认基面差值 @type {*} */
 const DEFAULT_SURGE_DIFF = -999999
 
-const DEFAULT_SURGE_VAL = -9999
+/** 潮位不存在的默认值 与后台对应 */
+const DEFAULT_SURGE_VAL = -9999.99
 
 /** 用于 复杂唯一性查询 的 year 与 month 的默认值 */
 const DEFAULT_COMPLEX_NUM = -1
