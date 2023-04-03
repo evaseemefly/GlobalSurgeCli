@@ -95,6 +95,7 @@ import {
 	GET_CURRENT_FORECAST_DT,
 	SET_BOX_LOOP_LATLNG,
 	GET_SCALAR_SHOW_TYPE,
+	SET_STATION_CODE,
 } from '@/store/types'
 // 默认常量
 import {
@@ -319,6 +320,9 @@ export default class MainMapView extends Vue {
 	/** 设置台风的时间间隔步长 */
 	@Mutation(SET_DATE_STEP, { namespace: 'common' }) setDateStep
 
+	/** 设置当前潮位站 code */
+	@Mutation(SET_STATION_CODE, { namespace: 'station' }) setStationCode
+
 	/** 获取当前地图key */
 	@Getter(GET_BASE_MAP_KEY, { namespace: 'map' }) getBaseMapKey
 
@@ -349,6 +353,7 @@ export default class MainMapView extends Vue {
 	/** + 23-03-27 加载 指定时间|当前时间 的全部潮位站 */
 	loadSurgeStationList(is_recent = true, now: Date = new Date()): void {
 		const mymap: L.Map = this.$refs.basemap['mapObject']
+		const that = this
 		if (is_recent) {
 			this.surgeStationList = []
 			loadSurgeListByRecently(now)
@@ -386,6 +391,7 @@ export default class MainMapView extends Vue {
 						[{ name: '123', chname: '' }],
 						(msg: { code: string; name: string }) => {
 							console.log(`当前点击了code:${msg.code},name:${msg.name}`)
+							that.setStationCode(msg.code)
 						},
 						IconTypeEnum.FIXED_CIRCLE_ICON,
 						StationIconShowTypeEnum.SHOW_STATION_STATUS

@@ -74,7 +74,11 @@ import { TaskStatusEnum } from '@/enum/status'
 import SurgeTableView from '@/components/table/surgeValTableView.vue'
 
 // store
-import { GET_CURRENT_FORECAST_DT, GET_WAVE_PRODUCT_ISSUE_DATETIME } from '@/store/types'
+import {
+	GET_CURRENT_FORECAST_DT,
+	GET_STATION_CODE,
+	GET_WAVE_PRODUCT_ISSUE_DATETIME,
+} from '@/store/types'
 //
 // api
 import { loadTargetStationSurgeRealdataList } from '@/api/surge'
@@ -184,114 +188,6 @@ export default class StationSurgeChartView extends Vue {
 		// console.log(`当前charts窗口大小:${document.getElementById('wave_scalar_chart')}`)
 	}
 
-	/** + 23-01-05 加载海浪指定产品的时序数据 */
-	loadWaveForecastDataListbyCoords(val: {
-		latlng: L.LatLng
-		layerType: LayerTypeEnum
-		issueTimestamp: number
-	}): void {
-		const self = this
-		// 通过 bus 总线获取到传入的 经纬度 | 发布时间 | 图层类型
-		this.productType = val.layerType
-		this.latlng = val.latlng
-		// this.issueDate = new Date(val.issueTimestamp)
-		// TODO:[-] 23-02-06 此处对应后台加入是 矢量场|标量场 的判断
-		/** 转换后的layertype : 矢量|标量 */
-		const convertedLayerType = this.getLayerType(val.layerType)
-		loadWaveProductForecastRealDataList(
-			convertedLayerType,
-			val.issueTimestamp.toString(),
-			val.latlng
-		).then(
-			(
-				res: IHttpResponse<
-					{
-						product_type: number
-						real_list: { time: string; val: number }[]
-					}[]
-				>
-			) => {
-				// console.log(res)
-				/*
-				[
-					{
-						"product_type": 2001,
-						"real_list": [
-							{
-								"swh": 1.2647790541438102,
-								"time": "2022-01-02T00:00:00Z"
-							},
-						]
-					}
-				]
-				*/
-				let xlist: Date[] = []
-				// let ylist: number[] = []
-				// let shwwList: number[] = []
-				// let swhList: number[] = []
-				self.valSWHList = []
-				self.valSHWWList = []
-				self.valMWPList = []
-				self.valMWDList = []
-				// self.tableWaveValsList = []
-				if (res.status === 200) {
-					res.data.forEach((temp) => {
-						if (temp.product_type === LayerTypeEnum.RASTER_LAYER_WVE) {
-							temp.real_list.forEach((swh) => {
-								xlist.push(new Date(swh.time))
-								// self.forecastDtList.push(new Date(swh.time))
-								const formatValStr = swh.val.toFixed(2)
-								const formatValNum = parseFloat(formatValStr)
-								// swhList.push(formatValNum)
-								self.valSWHList.push(formatValNum)
-							})
-						}
-						if (temp.product_type === LayerTypeEnum.RASTER_LAYER_SHWW) {
-							temp.real_list.forEach((shww) => {
-								const formatValStr = shww.val.toFixed(2)
-								const formatValNum = parseFloat(formatValStr)
-								// shwwList.push(formatValNum)
-								self.valSHWWList.push(formatValNum)
-							})
-						}
-						if (
-							[
-								LayerTypeEnum.RASTER_LAYER_MWP,
-								LayerTypeEnum.RASTER_LAYER_MWD,
-							].findIndex((val) => {
-								return val == temp.product_type
-							}) >= 0
-						) {
-							if (temp.product_type === LayerTypeEnum.RASTER_LAYER_MWP) {
-								temp.real_list.map((mwp) => {
-									self.valMWPList.push(mwp.val)
-								})
-							} else if (temp.product_type === LayerTypeEnum.RASTER_LAYER_MWD) {
-								temp.real_list.map((mwp) => {
-									self.valMWDList.push(mwp.val)
-								})
-							}
-						}
-					})
-					self.forecastDtList = xlist
-					self.dtList = xlist
-					const yMax: number = Math.max(...self.valSWHList, ...self.valSHWWList)
-					this.yAxisMax = yMax
-					const yMin: number = Math.min(...self.valSWHList, ...self.valSHWWList)
-					this.yAxisMin = yMin
-					this.initCharts(
-						xlist,
-						[
-							{ fieldName: 'swh', yList: self.valSWHList },
-							{ fieldName: 'shww', yList: self.valSHWWList },
-						],
-						self.currentForecastDtIndex
-					)
-				}
-			}
-		)
-	}
-
 	/** + 23-03-30 加载当前 code 的指定时间范围内的 [start,end] 的潮位数据并初始化 charts*/
 	loadTargetStationSurgeDataList(code: string, start: Date, end: Date): void {
 		const that = this
@@ -319,11 +215,18 @@ export default class StationSurgeChartView extends Vue {
 					}
 					surgeList.push(tempSurge)
 				})
+				that.dtList = []
+				that.surgeList = []
 				that.dtList = dtList
 				that.surgeList = surgeList
 				that.yAxisMax = Math.max(...surgeList)
 				that.yAxisMin = Math.min(...surgeList)
-				that.initCharts(dtList, [{ fieldName: 'surge', yList: surgeList }], 0)
+				that.initCharts(
+					dtList,
+					[{ fieldName: 'surge', yList: surgeList }],
+					that.getChartTile,
+					0
+				)
 			}
 		)
 	}
@@ -384,6 +287,7 @@ export default class StationSurgeChartView extends Vue {
 	initCharts(
 		xList: Date[],
 		yVals: { yList: number[]; fieldName: string }[],
+		title: string,
 		selectIndex: number
 	): void {
 		const that = this
@@ -478,11 +382,10 @@ export default class StationSurgeChartView extends Vue {
 				}
 				series.push(tempSeries)
 			}
-			yVals.forEach((temp) => {})
 			// this.surgeByGroupPath = []
 			const option = {
 				title: {
-					text: that.chartTitle,
+					text: title,
 					subtext: that.chartSubTitle,
 					textStyle: {
 						color: '#f8f8f7',
@@ -493,47 +396,6 @@ export default class StationSurgeChartView extends Vue {
 					showContent: true,
 					axisPointer: {
 						type: 'cross',
-						label: {
-							backgroundColor: '#d4e257',
-							formatter: (params: {
-								value: number
-								axisDimension: string
-								axisIndex: number
-								seriesData: {
-									data: number
-									dataIndex: number
-									seriesName: string
-									seriesType: string
-									value: number
-								}[]
-							}): string => {
-								// params :value: 0.4911190576356751, axisDimension: 'y', axisIndex: 0
-								// return params
-								// TODO:[-] 23-02-10 此处加入判断，若存在 seriesData , 取出 index=0 位置处的 dataIndex 赋值给 hoverIndex
-								// TODO:[*] 23-02-10 此处应加入防抖处理
-								try {
-									if (params['seriesData'] && params.seriesData.length > 0) {
-										if (that.hoverDtIndex !== params.seriesData[0].dataIndex) {
-											that.hoverDtIndex = params.seriesData[0].dataIndex
-											console.log(`hover index :${that.hoverDtIndex}`)
-										}
-										// console.log(`mouse hover in:${that.hoverDtIndex}`)
-									}
-								} catch (error) {
-									console.log(error)
-									that.hoverDtIndex = 0
-								}
-
-								return fortmatData2MDHM(params.value)
-							},
-						},
-					},
-					// valueFormatter: (val) => val.toFixed(1),
-					formatter: (params: { seriesName: string; data: number }[]): string => {
-						// + 22-10-26 params[0]:天文潮 ; params[1]:实况
-						// let content = params[0].data
-						let content = `有效波高:${params[0].data}</br>风浪波高:${params[1].data}`
-						return content
 					},
 				},
 				legend: {
@@ -590,6 +452,8 @@ export default class StationSurgeChartView extends Vue {
 				width: 1,
 				opacity: 0.5,
 			}
+			// TODO:[*] 23-04-03
+			// ERROR:`setOption` should not be called during main process.
 			myChart.setOption(option)
 			myChart.getZr().on('click', (params) => {
 				console.log(`点击所有区域${params}`)
@@ -597,7 +461,9 @@ export default class StationSurgeChartView extends Vue {
 			myChart.on('timelinechanged', (params) => {
 				console.log(`时间轴中的时间点发生改变:${params}`)
 			})
-			this.myChart = myChart
+			if (!this.myChart) {
+				this.myChart = myChart
+			}
 		}
 	}
 
@@ -623,9 +489,22 @@ export default class StationSurgeChartView extends Vue {
 
 	@Getter(GET_CURRENT_FORECAST_DT, { namespace: 'common' }) getForecastDt: Date
 
+	@Getter(GET_STATION_CODE, { namespace: 'station' }) getStationCode: string
+
 	@Watch('currentForecastDtIndex')
 	onCurrentForecastDtIndex(val: number): void {
 		this.testMarkLine(val)
+	}
+
+	@Watch('getStationCode')
+	onGetStationCode(code: string): void {
+		this.stationCode = code
+	}
+
+	@Watch('stationCode')
+	onStationCode(code: string): void {
+		this.loadTargetStationSurgeDataList(code, this.startDt, this.endDt)
+		this.loadStationRegionCountry(code)
 	}
 
 	/** 当前预报时间在 forecastDtList 中的所在 index */
@@ -635,6 +514,10 @@ export default class StationSurgeChartView extends Vue {
 			return current.getTime() === temp.getTime()
 		})
 		return filterDtIndex
+	}
+
+	get getChartTile(): string {
+		return this.stationCode + '站潮位'
 	}
 }
 </script>
