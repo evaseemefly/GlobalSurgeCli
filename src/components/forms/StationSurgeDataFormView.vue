@@ -1,5 +1,5 @@
 <template>
-	<div v-draggable id="station_surge_form" class="right-station-surge-form" v-show="getIsShow">
+	<div v-draggable id="station_surge_form" v-if="getIsShow" class="right-station-surge-form">
 		<div class="my-detail-form">
 			<div class="sub-titles">
 				<div
@@ -23,7 +23,9 @@
 </template>
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
+import { Getter, Mutation, State, namespace } from 'vuex-class'
 import StationSurgeChartView from '@/components/charts/StationSurgeDataCharts.vue'
+import { GET_SHOW_STATION_SURGE_FORM } from '@/store/types'
 @Component({ components: { StationSurgeChartView } })
 export default class StationSurgeDataFormView extends Vue {
 	mydata: any = null
@@ -31,7 +33,9 @@ export default class StationSurgeDataFormView extends Vue {
 	get computedTest() {
 		return null
 	}
-	getIsShow = true
+	// getIsShow = true
+
+	@Getter(GET_SHOW_STATION_SURGE_FORM, { namespace: 'station' }) getIsShow: boolean
 }
 </script>
 <style scoped lang="less">
@@ -44,15 +48,9 @@ export default class StationSurgeDataFormView extends Vue {
 	color: rgb(235, 232, 70);
 }
 
-#wave_form {
-	min-height: 495px;
-	min-width: 556px;
-	// height: 100%;
-	height: 500px;
-	position: absolute;
-	z-index: 9999;
-	top: 50px;
-	left: 180px;
+#station_surge_form {
+	bottom: 60px;
+	left: 50px;
 	// @form-base-background();
 }
 .detail-content {

@@ -135,6 +135,47 @@ const loadStationStaus = (code: string) => {
 }
 
 /**
+ * + 23-04-04 获取全部站点的状态
+ * @returns
+ * {
+		"id": 1,
+		"station_code": "abed",
+		"status": 1001,
+		"tid": 528,
+		"is_del": false,
+		"gmt_realtime": "2023-04-02T13:45:00"
+	},
+ */
+const loadAllStationStatus = () => {
+	const url = `${host}${area}/status/all`
+	return axios.get(url, {
+		headers: authHeader(),
+	})
+}
+
+/**
+ * +23-04-04 获取所有站点的状态及geo信息(包含surge默认值)
+ * @returns
+ * {
+      "station_code": "waka",
+      "status": 1001,
+      "gmt_realtime": "2023-04-02T19:29:00",
+      "gmt_modify_time": "2023-04-02T19:44:25.022726",
+      "is_del": false,
+      "lat": 45.41,
+      "lon": 141.69,
+      "rid": 110,
+      "surge": -9999.99
+   },
+ */
+const loadAllStationStatusJoinGeoInfo = () => {
+	const url = `${host}${area}/status/all/latlng`
+	return axios.get(url, {
+		headers: authHeader(),
+	})
+}
+
+/**
  *
  * @param code
  * @returns
@@ -155,5 +196,7 @@ export {
 	loadStationExtremumRealDataist,
 	loadStationBaseInfoList,
 	loadStationStaus,
+	loadAllStationStatus,
+	loadAllStationStatusJoinGeoInfo,
 	loadStaionRegionCountry,
 }

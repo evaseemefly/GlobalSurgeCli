@@ -173,8 +173,12 @@ export default class StationSurgeChartView extends Vue {
 	valSHWWList: number[] = []
 
 	stationCode = 'kusm'
+	/** 起始时间 */
 	startDt: Date = new Date('2023-03-02 10:30:00')
-	endDt: Date = new Date('2023-03-03 10:09:00')
+	/** TODO:[-] 23-04-04 此处修改为计算属性 endDt=start+timespan */
+	// endDt: Date = new Date('2023-03-03 10:09:00')
+	/** 时间跨度(单位:s) */
+	timeSpan: number = 60 * 60 * 24
 
 	/** 鼠标移入 chart 中的 index */
 	hoverDtIndex = 0
@@ -485,11 +489,14 @@ export default class StationSurgeChartView extends Vue {
 		}
 	}
 
-	@Getter(GET_WAVE_PRODUCT_ISSUE_DATETIME, { namespace: 'wave' }) getWaveIssueDt: Date
-
 	@Getter(GET_CURRENT_FORECAST_DT, { namespace: 'common' }) getForecastDt: Date
 
 	@Getter(GET_STATION_CODE, { namespace: 'station' }) getStationCode: string
+
+	@Watch('getForecastDt')
+	onGetForecastDt(now: Date): void {
+		this.startDt = now
+	}
 
 	@Watch('currentForecastDtIndex')
 	onCurrentForecastDtIndex(val: number): void {
@@ -501,11 +508,11 @@ export default class StationSurgeChartView extends Vue {
 		this.stationCode = code
 	}
 
-	@Watch('stationCode')
-	onStationCode(code: string): void {
-		this.loadTargetStationSurgeDataList(code, this.startDt, this.endDt)
-		this.loadStationRegionCountry(code)
-	}
+	// @Watch('stationCode')
+	// onStationCode(code: string): void {
+	// 	this.loadTargetStationSurgeDataList(code, this.startDt, this.endDt)
+	// 	this.loadStationRegionCountry(code)
+	// }
 
 	/** 当前预报时间在 forecastDtList 中的所在 index */
 	get currentForecastDtIndex(): number {
@@ -518,6 +525,28 @@ export default class StationSurgeChartView extends Vue {
 
 	get getChartTile(): string {
 		return this.stationCode + '站潮位'
+	}
+
+	/** 需要监听的 chart 配置项 */
+	get chartOpts(): { stationCode: string; startDt: Date; endDt: Date } {
+		const { stationCode, startDt, endDt } = this
+		return {
+			stationCode,
+			startDt,
+			endDt,
+		}
+	}
+
+	@Watch('chartOpts')
+	onChartOpts(val: { stationCode: string; startDt: Date; endDt: Date }): void {
+		this.loadTargetStationSurgeDataList(val.stationCode, val.startDt, val.endDt)
+		this.loadStationRegionCountry(val.stationCode)
+	}
+
+	/** 终止时间 */
+	get endDt(): Date {
+		const end = moment(this.startDt).add(this.timeSpan, 's')
+		return end.toDate()
 	}
 }
 </script>

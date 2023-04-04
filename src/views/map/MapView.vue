@@ -96,6 +96,7 @@ import {
 	SET_BOX_LOOP_LATLNG,
 	GET_SCALAR_SHOW_TYPE,
 	SET_STATION_CODE,
+	SET_SHOW_STATION_SURGE_FORM,
 } from '@/store/types'
 // 默认常量
 import {
@@ -166,6 +167,7 @@ import { WaveBarOptType } from '@/middle_model/geo'
 
 // - 23-03-27 api
 import { loadSurgeListByRecently } from '@/api/surge' // 获取所有潮位站距离当前最近的潮值
+import { loadAllStationStatusJoinGeoInfo } from '@/api/station'
 import { StationBaseInfoMidModel } from '@/middle_model/station'
 
 /**
@@ -266,10 +268,17 @@ export default class MainMapView extends Vue {
 	created() {}
 
 	mounted() {
-		const self = this
+		const that = this
 
 		this.loadBaseStationList()
 		this.loadSurgeStationList()
+		// TODO:[*] + 23-04-04 加入点击地图不再显示 form
+		const mymap: L.Map = this.$refs.basemap['mapObject']
+		// 点击地图隐藏 station surge form
+		mymap.on('click', (el) => {
+			console.log(el)
+			that.setShowStationSurgeForm(false)
+		})
 	}
 
 	/** 清除当前选定的圈选位置的中心点 */
@@ -323,6 +332,9 @@ export default class MainMapView extends Vue {
 	/** 设置当前潮位站 code */
 	@Mutation(SET_STATION_CODE, { namespace: 'station' }) setStationCode
 
+	/** 设置 显示|隐藏 station surge form */
+	@Mutation(SET_SHOW_STATION_SURGE_FORM, { namespace: 'station' }) setShowStationSurgeForm
+
 	/** 获取当前地图key */
 	@Getter(GET_BASE_MAP_KEY, { namespace: 'map' }) getBaseMapKey
 
@@ -356,13 +368,14 @@ export default class MainMapView extends Vue {
 		const that = this
 		if (is_recent) {
 			this.surgeStationList = []
-			loadSurgeListByRecently(now)
+			loadAllStationStatusJoinGeoInfo()
 				.then(
 					(
 						res: IHttpResponse<
 							{
 								station_code: string
 								gmt_realtime: string
+								status: number
 								surge: number
 								tid: number
 								lat: number
@@ -392,6 +405,7 @@ export default class MainMapView extends Vue {
 						(msg: { code: string; name: string }) => {
 							console.log(`当前点击了code:${msg.code},name:${msg.name}`)
 							that.setStationCode(msg.code)
+							that.setShowStationSurgeForm(true)
 						},
 						IconTypeEnum.FIXED_CIRCLE_ICON,
 						StationIconShowTypeEnum.SHOW_STATION_STATUS
@@ -443,6 +457,7 @@ export default class MainMapView extends Vue {
 				break
 		}
 	}
+	toHideStationSurgeForm(): void {}
 }
 </script>
 <style lang="less">
