@@ -238,6 +238,9 @@ export const SET_DATE_STEP = 'SET_DATE_STEP'
 /** 获取当前时间间隔 */
 export const GET_DATE_STEP = 'GET_DATE_STEP'
 
+export const SET_TIMESPAN = 'SET_TIMESPAN'
+export const GET_TIMESPAN = 'GET_TIMESPAN'
+
 /** 设置执行过滤台风并加载对应的散点 */
 export const SET_TO_FILTER_TY_SCATTER = 'SET_TO_FILTER_TY_SCATTER'
 /** 设置执行过滤台风并加载对应的散点 */

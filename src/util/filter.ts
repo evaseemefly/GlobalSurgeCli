@@ -344,6 +344,17 @@ const formatSurgeFixed2Str = (val: number | null): string => {
 	return surgeStr
 }
 
+/**
+ * @description 将 s -> hour
+ * @author evaseemefly
+ * @date 2023/04/05
+ * @param {number} val
+ * @returns {*}  {number}
+ */
+const formatSecond2Hour = (val: number): number => {
+	return val / (60 * 60)
+}
+
 export {
 	fortmatData2YMDHM,
 	formatOnlyFirstCol,
@@ -363,6 +374,7 @@ export {
 	filterLatlng2Str,
 	formatSurge2Str,
 	formatDir2Int,
+	formatSecond2Hour,
 	formatSurgeFixed2Str,
 	filterWaveColor,
 }

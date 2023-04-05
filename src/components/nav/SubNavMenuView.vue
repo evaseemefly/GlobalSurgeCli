@@ -74,6 +74,11 @@
 			:forecastEndDt="forecastEndDt"
 			@updateForecastDt="updateForecastDt"
 		></SubNavTimeItem>
+		<SubNavTimespanItem
+			:timeSpan="timeSpan"
+			:timeStep="timeStep"
+			@updateTimespan="updateTimespan"
+		></SubNavTimespanItem>
 	</nav>
 </template>
 <script lang="ts">
@@ -83,6 +88,7 @@ import { Mutation, Getter } from 'vuex-class'
 import SubNavTimeItem from '@/components/nav/subItems/SubNavTimeItem.vue'
 import TyphoonListView from '@/components/table/tyListView.vue'
 import SubNavIssueTimeItem from '@/components/nav/subItems/SubNavIssueTimeItem.vue'
+import SubNavTimespanItem from '@/components/nav/subItems/SubNavTimespanItem.vue'
 //
 import * as L from 'leaflet'
 // store
@@ -137,7 +143,7 @@ import { IExpandEnum, ScalarShowTypeEnum } from '@/enum/common'
 
 /** + 22-10-14 副导航栏(布局:底部) */
 @Component({
-	components: { SubNavTimeItem, TyphoonListView, SubNavIssueTimeItem },
+	components: { SubNavTimeItem, TyphoonListView, SubNavIssueTimeItem, SubNavTimespanItem },
 })
 export default class SubNavMenuView extends Vue {
 	/** 是否圈选 */
@@ -179,6 +185,10 @@ export default class SubNavMenuView extends Vue {
 
 	/** 时间间隔 */
 	dateStep: number = DEFAULT_DATE_STEP
+
+	/** 查询的起止时间间隔(单位:s) */
+	timeSpan: number = 60 * 60 * 24
+	timeStep: number = 60 * 60 * 24
 
 	@Watch('checkedSelectLoop')
 	onCheckedSelectLoop(val: boolean): void {
@@ -226,6 +236,10 @@ export default class SubNavMenuView extends Vue {
 		// this.forecastDt = val
 		console.log(`监听到菜单栏更新了当前预报时间:${val}`)
 		this.setForecastDt(val)
+	}
+
+	updateTimespan(val: number): void {
+		this.timeSpan = val
 	}
 
 	/** 获取当前选中的经纬度 */
