@@ -39,4 +39,23 @@ const loadTargetStationSurgeRealdataList = (code: string, start: Date, end: Date
 	})
 }
 
-export { loadSurgeListByRecently, loadTargetStationSurgeRealdataList }
+/**
+ * 获取单站的天文潮位
+ * @param code
+ * @param start
+ * @param end
+ * @returns
+ */
+const loadTargetStationTideRealdataList = (code: string, start: Date, end: Date) => {
+	const url = `${host}${area}/tide/one/`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: { station_code: code, start_dt: start, end_dt: end },
+	})
+}
+
+export {
+	loadSurgeListByRecently,
+	loadTargetStationSurgeRealdataList,
+	loadTargetStationTideRealdataList,
+}

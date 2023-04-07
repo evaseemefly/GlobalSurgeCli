@@ -45,6 +45,7 @@
 		<div class="down-section">
 			<SurgeTableView
 				:surgeList="surgeList"
+				:tideList="tideList"
 				:forecastDtList="dtList"
 				:propHoverIndex="hoverDtIndex"
 			></SurgeTableView>
@@ -81,7 +82,7 @@ import {
 } from '@/store/types'
 //
 // api
-import { loadTargetStationSurgeRealdataList } from '@/api/surge'
+import { loadTargetStationSurgeRealdataList, loadTargetStationTideRealdataList } from '@/api/surge'
 import { loadStaionRegionCountry, loadStationStaus } from '@/api/station'
 // 工具方法
 // filter
@@ -127,7 +128,10 @@ export default class StationSurgeChartView extends Vue {
 	/** 预报时间列表 */
 	forecastDtList: Date[] = []
 	dtList: Date[] = []
+	/** 实况潮位 */
 	surgeList: number[] = []
+	/** 天文潮 */
+	tideList: number[] = []
 	/** 预报值(天文潮)列表 */
 	forcastValList: number[] = []
 
@@ -195,44 +199,82 @@ export default class StationSurgeChartView extends Vue {
 	/** + 23-03-30 加载当前 code 的指定时间范围内的 [start,end] 的潮位数据并初始化 charts*/
 	loadTargetStationSurgeDataList(code: string, start: Date, end: Date): void {
 		const that = this
-		loadTargetStationSurgeRealdataList(code, start, end).then(
-			(
-				res: IHttpResponse<
-					{
-						station_code: string
-						surge: number
-						tid: number
-						gmt_realtime: string
-						ts: number
-					}[]
-				>
-			) => {
-				/** 时间集合 */
-				let dtList: Date[] = []
-				/** 与时间集合相对应的潮位集合 */
-				let surgeList: number[] = []
-				res.data.forEach((element) => {
-					dtList.push(new Date(element.gmt_realtime))
-					let tempSurge = null
-					if (element.surge !== DEFAULT_SURGE_VAL) {
-						tempSurge = element.surge
+		loadTargetStationSurgeRealdataList(code, start, end)
+			.then(
+				(
+					res: IHttpResponse<
+						{
+							station_code: string
+							surge: number
+							tid: number
+							gmt_realtime: string
+							ts: number
+						}[]
+					>
+				) => {
+					/** 时间集合 */
+					let dtList: Date[] = []
+					/** 与时间集合相对应的潮位集合 */
+					let surgeList: number[] = []
+					res.data.forEach((element) => {
+						dtList.push(new Date(element.gmt_realtime))
+						let tempSurge = null
+						if (element.surge !== DEFAULT_SURGE_VAL) {
+							tempSurge = element.surge
+						}
+						surgeList.push(tempSurge)
+					})
+					that.dtList = []
+					that.surgeList = []
+					that.dtList = dtList
+					that.surgeList = surgeList
+					that.yAxisMax = Math.max(...surgeList)
+					const noNanList = surgeList.filter((val) => {
+						return val != null
+					})
+					that.yAxisMin = Math.min(...noNanList)
+					return surgeList
+				}
+			)
+			.then((surgeList) => {
+				loadTargetStationTideRealdataList(code, start, end).then(
+					(
+						res: IHttpResponse<
+							{
+								station_code: string
+								surge: number
+								tid: number
+								gmt_realtime: string
+								ts: number
+							}[]
+						>
+					) => {
+						let tideList = []
+						res.data.forEach((element) => {
+							tideList.push(element.surge)
+						})
+						that.tideList = tideList
+						const noNanSurgeList = surgeList.filter((val) => {
+							return val != null
+						})
+						const noDefaultTideList = tideList.filter((val) => {
+							return val !== DEFAULT_SURGE_VAL
+						})
+						that.yAxisMax = Math.max(...noNanSurgeList, ...noDefaultTideList)
+
+						that.yAxisMin = Math.min(...noNanSurgeList, ...noDefaultTideList)
+						that.initCharts(
+							that.dtList,
+							[
+								{ fieldName: 'surge', yList: surgeList },
+								{ fieldName: 'tide', yList: tideList },
+							],
+							that.getChartTile,
+							0
+						)
 					}
-					surgeList.push(tempSurge)
-				})
-				that.dtList = []
-				that.surgeList = []
-				that.dtList = dtList
-				that.surgeList = surgeList
-				that.yAxisMax = Math.max(...surgeList)
-				that.yAxisMin = Math.min(...surgeList)
-				that.initCharts(
-					dtList,
-					[{ fieldName: 'surge', yList: surgeList }],
-					that.getChartTile,
-					0
 				)
-			}
-		)
+			})
 	}
 
 	/** + 23-04-03 获取当前 code 的站点状态 */

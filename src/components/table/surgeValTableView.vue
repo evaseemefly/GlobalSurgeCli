@@ -42,6 +42,36 @@
 						</div> -->
 					</td>
 				</tr>
+				<tr>
+					<td
+						scope="col"
+						v-for="(item, index) in tideList"
+						:key="index"
+						:style="{ background: toColor(item) }"
+						:class="index === hoverIndex ? 'activate' : 'un-activate'"
+						@mouseover="toSetHoverIndex(index)"
+					>
+						{{ item | formatSurgeFixed2Str }}
+						<!-- <div :style="{ transform: toRotate(item) }">
+							<i class="fa-solid fa-arrow-up"></i>
+						</div> -->
+					</td>
+				</tr>
+				<tr>
+					<td
+						scope="col"
+						v-for="(item, index) in tideList"
+						:key="index"
+						:style="{ background: toColor(surgeList[index] - item) }"
+						:class="index === hoverIndex ? 'activate' : 'un-activate'"
+						@mouseover="toSetHoverIndex(index)"
+					>
+						{{ (surgeList[index] - item) | formatSurgeFixed2Str }}
+						<!-- <div :style="{ transform: toRotate(item) }">
+							<i class="fa-solid fa-arrow-up"></i>
+						</div> -->
+					</td>
+				</tr>
 			</tbody>
 		</table>
 	</div>
@@ -57,9 +87,13 @@ import {
 /** 海浪 */
 @Component({ filters: { formatDir2Int, formatSurgeFixed2Str, formatDate2DayHM } })
 export default class SurgeTableView extends Vue {
-	/** 平均波向 */
+	/** 实况潮位 */
 	@Prop({ type: Array, default: [] })
 	surgeList: { val: number }[]
+
+	/** 天文潮位 */
+	@Prop({ type: Array, default: [] })
+	tideList: { val: number }[]
 
 	@Prop({ type: Array, default: [] })
 	forecastDtList: { val: Date }[]
