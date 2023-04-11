@@ -36,5 +36,6 @@
 叠加显示天文潮位的站点详情
 ![v0.1](./docs/imgs/007.png) 
 
-
++ 23-04-11 update 潮位form中的chart中的tooltip格式以及修改了 surgeTable 中的部分bug;修改surge与tide不再向下填充,增水向下填充
+![v0.1](./docs/imgs/008.png) 
 -------

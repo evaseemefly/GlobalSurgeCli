@@ -60,13 +60,13 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in tideList"
+						v-for="(item, index) in diffSurgeList"
 						:key="index"
-						:style="{ background: toColor(surgeList[index] - item) }"
+						:style="{ background: toColor(item) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
-						{{ (surgeList[index] - item) | formatSurgeFixed2Str }}
+						{{ item | formatSurgeFixed2Str }}
 						<!-- <div :style="{ transform: toRotate(item) }">
 							<i class="fa-solid fa-arrow-up"></i>
 						</div> -->
@@ -94,6 +94,10 @@ export default class SurgeTableView extends Vue {
 	/** 天文潮位 */
 	@Prop({ type: Array, default: [] })
 	tideList: { val: number }[]
+
+	/** 实况-天文潮 */
+	@Prop({ type: Array, default: [] })
+	diffSurgeList: { val: number }[]
 
 	@Prop({ type: Array, default: [] })
 	forecastDtList: { val: Date }[]

@@ -47,6 +47,7 @@
 				:surgeList="surgeList"
 				:tideList="tideList"
 				:forecastDtList="dtList"
+				:diffSurgeList="diffSurgeList"
 				:propHoverIndex="hoverDtIndex"
 			></SurgeTableView>
 		</div>
@@ -132,6 +133,8 @@ export default class StationSurgeChartView extends Vue {
 	surgeList: number[] = []
 	/** 天文潮 */
 	tideList: number[] = []
+	/** 实况潮位-天文潮 */
+	diffSurgeList: number[] = []
 	/** 预报值(天文潮)列表 */
 	forcastValList: number[] = []
 
@@ -167,14 +170,11 @@ export default class StationSurgeChartView extends Vue {
 		country_en: '',
 	}
 
-	/** 有效波高集合 */
-	valSWHList: number[] = []
-	/** 平均周期集合 */
-	valMWPList: number[] = []
-	/** 平均波向集合 */
-	valMWDList: number[] = []
-	/** 风浪波高集合 */
-	valSHWWList: number[] = []
+	seriesMap: Map<string, string> = new Map([
+		['tide', '天文潮'],
+		['surge', '潮位'],
+		['difftide', '增水'],
+	])
 
 	stationCode = 'kusm'
 	/** 起始时间 */
@@ -220,7 +220,7 @@ export default class StationSurgeChartView extends Vue {
 						dtList.push(new Date(element.gmt_realtime))
 						let tempSurge = null
 						if (element.surge !== DEFAULT_SURGE_VAL) {
-							tempSurge = element.surge
+							tempSurge = Number(element.surge.toFixed(2))
 						}
 						surgeList.push(tempSurge)
 					})
@@ -251,24 +251,55 @@ export default class StationSurgeChartView extends Vue {
 					) => {
 						let tideList = []
 						res.data.forEach((element) => {
-							tideList.push(element.surge)
+							tideList.push(Number(element.surge.toFixed(2)))
 						})
 						that.tideList = tideList
+						let diffTideList = []
+						// 求 surge -tide 的差值集合
+						for (let index = 0; index < surgeList.length; index++) {
+							if (
+								surgeList[index] !== DEFAULT_SURGE_VAL &&
+								tideList[index] !== DEFAULT_SURGE_VAL &&
+								surgeList[index] !== null &&
+								tideList[index] !== null
+							) {
+								diffTideList.push(
+									Number((surgeList[index] - tideList[index]).toFixed(2))
+								)
+							} else {
+								diffTideList.push(null)
+							}
+						}
+						that.diffSurgeList = diffTideList
 						const noNanSurgeList = surgeList.filter((val) => {
 							return val != null
 						})
 						const noDefaultTideList = tideList.filter((val) => {
 							return val !== DEFAULT_SURGE_VAL
 						})
-						that.yAxisMax = Math.max(...noNanSurgeList, ...noDefaultTideList)
 
-						that.yAxisMin = Math.min(...noNanSurgeList, ...noDefaultTideList)
+						const noDefaultdiffSurgeList = diffTideList.filter((val) => {
+							return val !== DEFAULT_SURGE_VAL && val !== null
+						})
+
+						that.yAxisMax = Math.max(
+							...noNanSurgeList,
+							...noDefaultTideList,
+							...noDefaultdiffSurgeList
+						)
+
+						that.yAxisMin = Math.min(
+							...noNanSurgeList,
+							...noDefaultTideList,
+							...noDefaultdiffSurgeList
+						)
 						that.initCharts(
 							that.dtList,
 							[
 								{ fieldName: 'surge', yList: surgeList },
 								{ fieldName: 'tide', yList: tideList },
 							],
+							{ fieldName: 'difftide', vals: diffTideList },
 							that.getChartTile,
 							0
 						)
@@ -333,6 +364,7 @@ export default class StationSurgeChartView extends Vue {
 	initCharts(
 		xList: Date[],
 		yVals: { yList: number[]; fieldName: string }[],
+		areaVals: { vals: number[]; fieldName: string },
 		title: string,
 		selectIndex: number
 	): void {
@@ -351,8 +383,8 @@ export default class StationSurgeChartView extends Vue {
 			}[] = []
 			let series = []
 			let scale = chroma.scale([
-				'#00429d',
-				'#4771b2',
+				// '#00429d',
+				// '#4771b2',
 				'#73a2c6',
 				'#a5d5d8',
 				'#ffffe0',
@@ -388,19 +420,19 @@ export default class StationSurgeChartView extends Vue {
 					name: element.fieldName,
 					type: 'line',
 					silent: false,
-					areaStyle: {
-						opacity: 0.8,
-						color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-							{
-								offset: 0,
-								color: scale(index / fieldsCount).hex(),
-							},
-							{
-								offset: 1,
-								color: scale((index + 1) / fieldsCount).hex(),
-							},
-						]),
-					},
+					// areaStyle: {
+					// 	opacity: 0.8,
+					// 	color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+					// 		{
+					// 			offset: 0,
+					// 			color: scale(index / fieldsCount).hex(),
+					// 		},
+					// 		{
+					// 			offset: 1,
+					// 			color: scale((index + 1) / fieldsCount).hex(),
+					// 		},
+					// 	]),
+					// },
 					lineStyle: { color: scale(index / fieldsCount).hex() },
 					emphasis: {
 						focus: 'series',
@@ -428,6 +460,70 @@ export default class StationSurgeChartView extends Vue {
 				}
 				series.push(tempSeries)
 			}
+			// TODO:[-] 23-04-11 加入 area series
+			const element = areaVals
+			const tempLegend: {
+				name: string
+				itemStyle: {
+					color: string
+				}
+				textStyle: {
+					color: string
+				}
+			} = {
+				name: element.fieldName,
+				itemStyle: {
+					color: '#f39c12',
+				},
+				textStyle: {
+					color: '#f39c12',
+				},
+			}
+			legendData.push(tempLegend)
+
+			const tempSeries = {
+				name: element.fieldName,
+				type: 'line',
+				silent: false,
+				areaStyle: {
+					opacity: 0.8,
+					color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+						{
+							offset: 0,
+							color: '#f1c40f',
+						},
+						{
+							offset: 1,
+							color: '#e67e22',
+						},
+					]),
+				},
+				lineStyle: { color: '#f1c40f' },
+				emphasis: {
+					focus: 'series',
+				},
+				data: element.vals,
+				showSymbol: false,
+				smooth: true,
+				markPoint: {
+					symbol: 'circle',
+					symbolSize: 2,
+					data: [
+						{ type: 'max', name: 'Max' },
+						{ type: 'min', name: 'Min' },
+					],
+					symbolOffset: [0, '-500%'],
+					label: {
+						color: '#fff',
+					},
+				},
+				markLine: {
+					symbol: ['none', 'none'],
+					label: { show: false },
+					data: [{ xAxis: that.currentForecastDtIndex }],
+				},
+			}
+			series.push(tempSeries)
 			// this.surgeByGroupPath = []
 			const option = {
 				title: {
@@ -442,6 +538,29 @@ export default class StationSurgeChartView extends Vue {
 					showContent: true,
 					axisPointer: {
 						type: 'cross',
+					},
+					formatter: function (params, ticket, callback) {
+						/** 
+						 * params[0].name
+							'Thu Mar 02 2023 15:00:00 GMT+0800 (中国标准时间)'
+							params[1].seriesName
+							'tide'
+							params[1].value
+							2.36
+						 */
+						//x轴名称
+						const dt = params[0].name
+						const dtStr: string = fortmatData2YMDHM(dt)
+						let html = '' + dtStr + '<br />'
+						for (let index = 0; index < params.length; index++) {
+							const temp = params[index]
+							const seriesName: string = that.seriesMap.get(temp.seriesName)
+							const seriesVal: string = isNaN(temp.value) ? '-' : temp.value
+							// 拼接为 line
+							const tempHtml = `${seriesName}:${seriesVal}` + '<br />'
+							html = html + tempHtml
+						}
+						return html
 					},
 				},
 				legend: {
