@@ -13,7 +13,7 @@
 				>
 					{{ item.title }}
 				</div>
-				<div class="my-sub-title right" @click="setExpanded()">最小化</div>
+				<!-- <div class="my-sub-title right" @click="setExpanded()">最小化</div> -->
 			</div>
 			<div class="detail-content">
 				<StationSurgeChartView></StationSurgeChartView>

@@ -6,9 +6,9 @@
 		element-loading-spinner="el-icon-loading"
 		element-loading-background="rgba(49, 59, 89, 0.733)"
 	>
-		<div class="left-section">
+		<div class="upper-section">
 			<div class="info-card base-info">
-				<h3>{{ stationCode }} 站</h3>
+				<h3>基础信息</h3>
 				<div>
 					<div class="row">
 						<span>所属国家_en</span><span>{{ stationBaseInfo.country_en }}</span>
@@ -30,27 +30,26 @@
 					</div> -->
 				</div>
 			</div>
-			<!-- <div class="info-card forecast-info">
+			<div class="info-card forecast-info">
 				<h3>预报信息</h3>
+				<!-- <div class="card-title">基础信息</div> -->
 				<div>
 					<div class="row"><span>潮位</span><span>-</span></div>
 					<div class="row"><span>天文潮位</span><span>-</span></div>
 					<div class="row"><span>时间</span><span>-</span></div>
 				</div>
-			</div> -->
-		</div>
-		<div class="right-section">
-			<!-- 对于非集合路径才提供叠加天文潮位的选项 -->
-			<div id="surge_scalar_chart"></div>
-			<div class="down-section">
-				<SurgeTableView
-					:surgeList="surgeList"
-					:tideList="tideList"
-					:forecastDtList="dtList"
-					:diffSurgeList="diffSurgeList"
-					:propHoverIndex="hoverDtIndex"
-				></SurgeTableView>
 			</div>
+		</div>
+		<!-- 对于非集合路径才提供叠加天文潮位的选项 -->
+		<div id="surge_scalar_chart"></div>
+		<div class="down-section">
+			<SurgeTableView
+				:surgeList="surgeList"
+				:tideList="tideList"
+				:forecastDtList="dtList"
+				:diffSurgeList="diffSurgeList"
+				:propHoverIndex="hoverDtIndex"
+			></SurgeTableView>
 		</div>
 	</div>
 </template>
@@ -301,7 +300,7 @@ export default class StationSurgeChartView extends Vue {
 								{ fieldName: 'tide', yList: tideList },
 							],
 							{ fieldName: 'difftide', vals: diffTideList },
-							'潮位',
+							that.getChartTile,
 							0
 						)
 					}
@@ -719,6 +718,17 @@ export default class StationSurgeChartView extends Vue {
 	height: 100%;
 	width: 100%;
 }
+#station_scalar_form {
+	// min-width: 660px;
+	// min-height: 445px;
+	// height: 100%;
+	// height: 500px;
+	// width: 100%;
+	width: 880px;
+	margin-left: 20px;
+	// bottom: 100px;
+	// 信息栏
+}
 // 潮位chart
 #surge_scalar_chart {
 	// height: 100%;
@@ -729,51 +739,28 @@ export default class StationSurgeChartView extends Vue {
 	// @form-base-background();
 	// height: 100%;
 	// width: 100%;
-	flex-direction: row;
-	.left-section {
-		background: #2c3e50;
-		display: flex;
-		// flex: 1;
-		// width: 200px;
-		flex-direction: row;
-		justify-content: center;
-		.info-card {
-			color: white;
-			// width: 45%;
-			width: 150px;
-			margin: 5px;
-			padding: 5px;
-			h3 {
-				display: flex;
-				border-bottom: 1px solid #c4ccd6;
-				padding: 5px;
-				font-size: 18px;
-				align-items: center;
-				letter-spacing: 0.36px;
-			}
-			.row {
-				// justify-content: space-between;
-				display: flex;
-				justify-content: space-between;
-				font-size: 14px;
-				line-height: 24px;
-			}
-		}
-	}
-	.right-section {
-		padding: 5px;
-		margin: 5px;
-		display: flex;
-		// flex: 5;
-		flex-direction: column;
-	}
-	// 不再使用此种布局
 	.upper-section {
 		// color: white;
 		width: 100%;
 		display: flex;
 		flex-direction: row;
 		justify-content: center;
+		.info-card {
+			color: white;
+			width: 45%;
+			margin: 5px;
+			padding: 5px;
+			h3 {
+				display: flex;
+				border-bottom: 1px solid #c4ccd6;
+				padding: 5px;
+			}
+			.row {
+				justify-content: space-between;
+				display: flex;
+				font-size: 13px;
+			}
+		}
 	}
 }
 </style>
