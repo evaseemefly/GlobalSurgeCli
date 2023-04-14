@@ -8,7 +8,7 @@
 	>
 		<div class="left-section">
 			<div class="info-card base-info">
-				<h3>{{ stationCode }} 站</h3>
+				<h3>{{ getStationCode }} 站</h3>
 				<div>
 					<div class="row">
 						<span>所属国家_en</span><span>{{ stationBaseInfo.country_en }}</span>
@@ -48,6 +48,7 @@
 					:tideList="tideList"
 					:forecastDtList="dtList"
 					:diffSurgeList="diffSurgeList"
+					:surgeTdStep="getSurgeTdStep"
 					:propHoverIndex="hoverDtIndex"
 				></SurgeTableView>
 			</div>
@@ -80,6 +81,8 @@ import SurgeTableView from '@/components/table/surgeValTableView.vue'
 import {
 	GET_CURRENT_FORECAST_DT,
 	GET_STATION_CODE,
+	GET_SURGE_TD_STEP,
+	GET_TIMESPAN,
 	GET_WAVE_PRODUCT_ISSUE_DATETIME,
 } from '@/store/types'
 //
@@ -179,11 +182,11 @@ export default class StationSurgeChartView extends Vue {
 
 	stationCode = 'kusm'
 	/** 起始时间 */
-	startDt: Date = new Date('2023-03-02 10:30:00')
+	startDt: Date = DEFAULT_DATE
 	/** TODO:[-] 23-04-04 此处修改为计算属性 endDt=start+timespan */
 	// endDt: Date = new Date('2023-03-03 10:09:00')
 	/** 时间跨度(单位:s) */
-	timeSpan: number = 60 * 60 * 24
+	// timeSpan: number = 60 * 60 * 24
 
 	/** 鼠标移入 chart 中的 index */
 	hoverDtIndex = 0
@@ -192,8 +195,8 @@ export default class StationSurgeChartView extends Vue {
 
 	created() {
 		// EventBus.$on(TO_LOAD_FORECASTDATALIST_COORDS, this.loadWaveForecastDataListbyCoords)
-		this.loadTargetStationSurgeDataList(this.stationCode, this.startDt, this.endDt)
-		this.loadStationRegionCountry(this.stationCode)
+		this.loadTargetStationSurgeDataList(this.getStationCode, this.getForecastDt, this.endDt)
+		this.loadStationRegionCountry(this.getStationCode)
 		// console.log(`当前charts窗口大小:${document.getElementById('wave_scalar_chart')}`)
 	}
 
@@ -655,6 +658,10 @@ export default class StationSurgeChartView extends Vue {
 
 	@Getter(GET_STATION_CODE, { namespace: 'station' }) getStationCode: string
 
+	@Getter(GET_SURGE_TD_STEP, { namespace: 'common' }) getSurgeTdStep: number
+
+	@Getter(GET_TIMESPAN, { namespace: 'common' }) getTimespan: number
+
 	@Watch('getForecastDt')
 	onGetForecastDt(now: Date): void {
 		this.startDt = now
@@ -686,28 +693,28 @@ export default class StationSurgeChartView extends Vue {
 	}
 
 	get getChartTile(): string {
-		return this.stationCode + '站潮位'
+		return this.getStationCode + '站潮位'
 	}
 
 	/** 需要监听的 chart 配置项 */
-	get chartOpts(): { stationCode: string; startDt: Date; endDt: Date } {
-		const { stationCode, startDt, endDt } = this
+	get chartOpts(): { getStationCode: string; getForecastDt: Date; endDt: Date } {
+		const { getStationCode, getForecastDt, endDt } = this
 		return {
-			stationCode,
-			startDt,
+			getStationCode,
+			getForecastDt,
 			endDt,
 		}
 	}
 
 	@Watch('chartOpts')
-	onChartOpts(val: { stationCode: string; startDt: Date; endDt: Date }): void {
-		this.loadTargetStationSurgeDataList(val.stationCode, val.startDt, val.endDt)
-		this.loadStationRegionCountry(val.stationCode)
+	onChartOpts(val: { getStationCode: string; getForecastDt: Date; endDt: Date }): void {
+		this.loadTargetStationSurgeDataList(val.getStationCode, val.getForecastDt, val.endDt)
+		this.loadStationRegionCountry(val.getStationCode)
 	}
 
 	/** 终止时间 */
 	get endDt(): Date {
-		const end = moment(this.startDt).add(this.timeSpan, 's')
+		const end = moment(this.getForecastDt).add(this.getTimespan, 's')
 		return end.toDate()
 	}
 }

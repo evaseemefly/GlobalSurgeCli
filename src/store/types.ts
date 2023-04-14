@@ -167,6 +167,11 @@ export const GET_TY_GROUP_PATH_LATERS_OPTS = 'GET_TY_GROUP_PATH_OPTS'
 export const SET_SHOW_OPTS_FORM = 'SET_SHOW_OPTS_FORM'
 export const GET_SHOW_OPTS_FORM = 'GET_SHOW_OPTS_FORM'
 
+/** 潮位 table 中的 td 之间的时间间隔(h) */
+export const SET_SURGE_TD_STEP = 'SET_SURGE_TD_STEP'
+/** 潮位 table 中的 td 之间的时间间隔(h) */
+export const GET_SURGE_TD_STEP = 'GET_SURGE_TD_STEP'
+
 /** 设置 显示台风搜索窗口 */
 export const SET_SHOW_TY_SEARCH_FORM = 'SET_SHOW_TY_SEARCH_FORM'
 /** 获取 显示台风搜索窗口 */
@@ -238,7 +243,9 @@ export const SET_DATE_STEP = 'SET_DATE_STEP'
 /** 获取当前时间间隔 */
 export const GET_DATE_STEP = 'GET_DATE_STEP'
 
+/** 设置时间间隔 */
 export const SET_TIMESPAN = 'SET_TIMESPAN'
+/** 设置时间间隔 */
 export const GET_TIMESPAN = 'GET_TIMESPAN'
 
 /** 设置执行过滤台风并加载对应的散点 */

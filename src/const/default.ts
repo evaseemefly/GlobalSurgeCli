@@ -39,6 +39,12 @@ const DEFAULT_STATION_NAME = 'DEFAULT_NAME'
 /** 默认时间间隔(对应时间组件——由当前台风的时间间隔决定) */
 const DEFAULT_DATE_STEP = 1
 
+/** 潮位 table 中的 td 之间的时间间隔(h) */
+const DEFAULT_SURGE_TD_STEP = 1
+
+/** 查询的起止时间间隔(单位:s) */
+const DEFAULT_TIME_SPAN = 60 * 60 * 24
+
 /** 圆的半径的单位系数 @type {*} */
 const DEFAULT_ALERT_TIDE = -999999
 /** 默认基面差值 @type {*} */
@@ -70,4 +76,6 @@ export {
 	DEFAULT_TIMESTAMP,
 	DEFAULT_TIMESTAMP_STR,
 	DEFAULT_PRODUCT_TYPE_NAME,
+	DEFAULT_SURGE_TD_STEP,
+	DEFAULT_TIME_SPAN,
 }

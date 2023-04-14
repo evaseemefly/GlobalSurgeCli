@@ -17,7 +17,7 @@
 				<tr>
 					<th
 						scope="col"
-						v-for="(item, index) in forecastDtList"
+						v-for="(item, index) in splitForecastDtListList"
 						:key="index"
 						@mouseover="toSetHoverIndex(index)"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
@@ -30,7 +30,7 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in surgeList"
+						v-for="(item, index) in splitSurgeList"
 						:key="index"
 						:style="{ background: toColor(item) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
@@ -45,7 +45,7 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in tideList"
+						v-for="(item, index) in splitTideList"
 						:key="index"
 						:style="{ background: toColor(item) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
@@ -60,7 +60,7 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in diffSurgeList"
+						v-for="(item, index) in splitDiffSurgeList"
 						:key="index"
 						:style="{ background: toColor(item) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
@@ -84,6 +84,7 @@ import {
 	filterWaveColor,
 	formatDate2DayHM,
 } from '@/util/filter'
+import { DEFAULT_SURGE_TD_STEP } from '@/const/default'
 /** 海浪 */
 @Component({ filters: { formatDir2Int, formatSurgeFixed2Str, formatDate2DayHM } })
 export default class SurgeTableView extends Vue {
@@ -101,6 +102,10 @@ export default class SurgeTableView extends Vue {
 
 	@Prop({ type: Array, default: [] })
 	forecastDtList: { val: Date }[]
+
+	/** 潮位 table 中的 td 之间的时间间隔(h) */
+	@Prop({ type: Number, default: DEFAULT_SURGE_TD_STEP })
+	surgeTdStep: number
 
 	@Prop({ type: Number, default: 0 })
 	propHoverIndex: number
@@ -124,6 +129,46 @@ export default class SurgeTableView extends Vue {
 	@Watch('propHoverIndex')
 	onPropHoverIndex(val: number): void {
 		this.hoverIndex = val
+	}
+
+	get splitSurgeList(): { val: number }[] {
+		let surgeList: { val: number }[] = []
+		for (let index = 0; index < this.surgeList.length; index++) {
+			if (index === 0 || index % this.surgeTdStep === 0) {
+				surgeList.push(this.surgeList[index])
+			}
+		}
+		return surgeList
+	}
+
+	get splitTideList(): { val: number }[] {
+		let surgeList: { val: number }[] = []
+		for (let index = 0; index < this.tideList.length; index++) {
+			if (index === 0 || index % this.surgeTdStep === 0) {
+				surgeList.push(this.tideList[index])
+			}
+		}
+		return surgeList
+	}
+
+	get splitDiffSurgeList(): { val: number }[] {
+		let surgeList: { val: number }[] = []
+		for (let index = 0; index < this.diffSurgeList.length; index++) {
+			if (index === 0 || index % this.surgeTdStep === 0) {
+				surgeList.push(this.diffSurgeList[index])
+			}
+		}
+		return surgeList
+	}
+
+	get splitForecastDtListList(): { val: Date }[] {
+		let dtList: { val: Date }[] = []
+		for (let index = 0; index < this.forecastDtList.length; index++) {
+			if (index === 0 || index % this.surgeTdStep === 0) {
+				dtList.push(this.forecastDtList[index])
+			}
+		}
+		return dtList
 	}
 }
 </script>

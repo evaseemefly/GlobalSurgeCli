@@ -79,6 +79,7 @@
 			:timeStep="timeStep"
 			@updateTimespan="updateTimespan"
 		></SubNavTimespanItem>
+		<SubNavTemp :tempVal="tdStep + 'H'" :tempTitle="tempTitle"></SubNavTemp>
 	</nav>
 </template>
 <script lang="ts">
@@ -89,6 +90,7 @@ import SubNavTimeItem from '@/components/nav/subItems/SubNavTimeItem.vue'
 import TyphoonListView from '@/components/table/tyListView.vue'
 import SubNavIssueTimeItem from '@/components/nav/subItems/SubNavIssueTimeItem.vue'
 import SubNavTimespanItem from '@/components/nav/subItems/SubNavTimespanItem.vue'
+import SubNavTemp from '@/components/nav/subItems/SubNavTemp.vue'
 //
 import * as L from 'leaflet'
 // store
@@ -107,6 +109,8 @@ import {
 	GET_WAVE_PRODUCT_ISSUE_TIMESTAMP,
 	SET_SHOW_TY_SEARCH_FORM,
 	SET_SCALAR_SHOW_TYPE,
+	SET_SURGE_TD_STEP,
+	SET_TIMESPAN,
 } from '@/store/types'
 // 默认常量
 import {
@@ -115,6 +119,7 @@ import {
 	DEFAULT_DATE,
 	DEFAULT_DATE_STEP,
 	DEFAULT_TIMESTAMP,
+	DEFAULT_TIME_SPAN,
 } from '@/const/default'
 import { MS_UNIT } from '@/const/unit'
 // api
@@ -143,7 +148,13 @@ import { IExpandEnum, ScalarShowTypeEnum } from '@/enum/common'
 
 /** + 22-10-14 副导航栏(布局:底部) */
 @Component({
-	components: { SubNavTimeItem, TyphoonListView, SubNavIssueTimeItem, SubNavTimespanItem },
+	components: {
+		SubNavTimeItem,
+		TyphoonListView,
+		SubNavIssueTimeItem,
+		SubNavTimespanItem,
+		SubNavTemp,
+	},
 })
 export default class SubNavMenuView extends Vue {
 	/** 是否圈选 */
@@ -172,6 +183,11 @@ export default class SubNavMenuView extends Vue {
 	/** 标量场展示形式 */
 	scalarShowType: ScalarShowTypeEnum = ScalarShowTypeEnum.RASTER
 
+	created() {
+		this.forecastDt = new Date()
+		this.setForecastDt(this.forecastDt)
+	}
+
 	@Watch('isRasterShow')
 	onIsRasterShow(val: boolean): void {
 		let scatterMenu = ScalarShowTypeEnum.RASTER
@@ -187,8 +203,17 @@ export default class SubNavMenuView extends Vue {
 	dateStep: number = DEFAULT_DATE_STEP
 
 	/** 查询的起止时间间隔(单位:s) */
-	timeSpan: number = 60 * 60 * 24
+	timeSpan: number = DEFAULT_TIME_SPAN
+
+	/** 最大可提供的查询时间间隔(default:7d) */
+	timeSpanMax: number = 60 * 60 * 24 * 3
+
+	/** 增加的时间步长(1d) */
 	timeStep: number = 60 * 60 * 24
+
+	// tdStep = 0
+
+	tempTitle = '数据间隔'
 
 	@Watch('checkedSelectLoop')
 	onCheckedSelectLoop(val: boolean): void {
@@ -238,8 +263,11 @@ export default class SubNavMenuView extends Vue {
 		this.setForecastDt(val)
 	}
 
+	/** 子组件调用——更新时间间隔 */
 	updateTimespan(val: number): void {
-		this.timeSpan = val
+		if (val <= this.timeSpanMax) {
+			this.timeSpan = val
+		}
 	}
 
 	/** 获取当前选中的经纬度 */
@@ -269,6 +297,14 @@ export default class SubNavMenuView extends Vue {
 	/** 显示台风搜索form(格点时序数据form) */
 	@Mutation(SET_SHOW_TY_SEARCH_FORM, { namespace: 'common' })
 	setShowTySearchForm: { (val: IExpandEnum): void }
+
+	/** 潮位 table 中的 td 之间的时间间隔(h) */
+	@Mutation(SET_SURGE_TD_STEP, { namespace: 'common' })
+	setSurgeTdStep: { (val: number) }
+
+	/** 设置时间间隔 */
+	@Mutation(SET_TIMESPAN, { namespace: 'common' })
+	setTimespan: { (val: number) }
 
 	/** 获取当前产品的发布时间 */
 	@Getter(GET_WAVE_PRODUCT_ISSUE_DATETIME, { namespace: 'wave' })
@@ -343,6 +379,17 @@ export default class SubNavMenuView extends Vue {
 	@Watch('getDateStep')
 	onDateStep(val: number): void {
 		this.dateStep = val
+	}
+
+	@Watch('timeSpan')
+	onTimeSpan(val: number): void {
+		this.setTimespan(val)
+	}
+
+	get tdStep(): number {
+		const step = this.timeSpan / this.timeStep
+		this.setSurgeTdStep(step)
+		return step
 	}
 }
 </script>

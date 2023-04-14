@@ -31,9 +31,18 @@ import {
 	GET_CURRENT_FORECAST_DT,
 	GET_SCALAR_SHOW_TYPE,
 	SET_SCALAR_SHOW_TYPE,
+	SET_SURGE_TD_STEP,
+	GET_SURGE_TD_STEP,
+	SET_TIMESPAN,
+	GET_TIMESPAN,
 } from '../types'
 
-import { DEFAULT_DATE, DEFAULT_DATE_STEP } from '@/const/default'
+import {
+	DEFAULT_DATE,
+	DEFAULT_DATE_STEP,
+	DEFAULT_SURGE_TD_STEP,
+	DEFAULT_TIME_SPAN,
+} from '@/const/default'
 import { IExpandEnum, ScalarShowTypeEnum } from '@/enum/common'
 // import { faL } from '@fortawesome/free-solid-svg-icons'
 
@@ -64,6 +73,9 @@ interface Common {
 	currentForecastDt: Date
 	/** 标量场显示类型 栅格图层 | 等值线 */
 	scalarShowType: ScalarShowTypeEnum
+	/** 潮位 table 中的 td 之间的时间间隔(h) */
+	surgeTdStep: number
+	timeSpan: number
 }
 
 const state: Common = {
@@ -82,6 +94,8 @@ const state: Common = {
 	isShadeTimeBar: false,
 	currentForecastDt: DEFAULT_DATE,
 	scalarShowType: ScalarShowTypeEnum.RASTER,
+	surgeTdStep: DEFAULT_SURGE_TD_STEP,
+	timeSpan: DEFAULT_TIME_SPAN,
 }
 const getters = {
 	[GET_SCALE_RANGE](state: Common): number[] {
@@ -125,6 +139,12 @@ const getters = {
 	},
 	[GET_SCALAR_SHOW_TYPE](state: Common): ScalarShowTypeEnum {
 		return state.scalarShowType
+	},
+	[GET_SURGE_TD_STEP](state: Common): number {
+		return state.surgeTdStep
+	},
+	[GET_TIMESPAN](state: Common): number {
+		return state.timeSpan
 	},
 }
 // 使用dispatch调用
@@ -171,11 +191,17 @@ const mutations = {
 	},
 	[SET_CURRENT_FORECAST_DT](state: Common, val: Date): void {
 		state.currentForecastDt = val
-		console.log(`监听到 CURRENT_FORECAST_DT:${val}`)
+		// console.log(`监听到 CURRENT_FORECAST_DT:${val}`)
 	},
 	[SET_SCALAR_SHOW_TYPE](state: Common, val: ScalarShowTypeEnum): void {
 		state.scalarShowType = val
 		// console.log(`坚挺到 to filter :${val}`)
+	},
+	[SET_SURGE_TD_STEP](state: Common, val: number): void {
+		state.surgeTdStep = val
+	},
+	[SET_TIMESPAN](state: Common, val: number): void {
+		state.timeSpan = val
 	},
 }
 
