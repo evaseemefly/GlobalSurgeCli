@@ -207,6 +207,11 @@ export const SET_STATION_CODE = 'SET_STATION_CODE'
 /** 获取当前选定的海洋站 code */
 export const GET_STATION_CODE = 'GET_STATION_CODE'
 
+/** 设置当前PID */
+export const SET_REGION_PID = 'SET_REGION_PID'
+/** 获取当前PID */
+export const GET_REGION_PID = 'GET_REGION_PID'
+
 // + 22-04-18 TYPHOON 显示台风图例
 export const SET_SHOW_TYPHOON_LEGEND_ICON = 'SET_SHOW_TYPHOON_LEGEND_ICON'
 export const GET_SHOW_TYPHOON_LEGEND_ICON = 'GET_SHOW_TYPHOON_LEGEND_ICON'

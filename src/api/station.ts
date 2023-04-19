@@ -153,6 +153,16 @@ const loadAllStationStatus = () => {
 	})
 }
 
+const loadStationStatusByPid = (pid: number) => {
+	const url = `${host}${area}/status/all/station_status/pid/`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: {
+			pid: pid,
+		},
+	})
+}
+
 /**
  * +23-04-04 获取所有站点的状态及geo信息(包含surge默认值)
  * @returns
@@ -168,10 +178,13 @@ const loadAllStationStatus = () => {
       "surge": -9999.99
    },
  */
-const loadAllStationStatusJoinGeoInfo = () => {
+const loadAllStationStatusJoinGeoInfo = (pid?: number) => {
 	const url = `${host}${area}/status/all/latlng`
 	return axios.get(url, {
 		headers: authHeader(),
+		params: {
+			pid: pid,
+		},
 	})
 }
 
@@ -197,6 +210,7 @@ export {
 	loadStationBaseInfoList,
 	loadStationStaus,
 	loadAllStationStatus,
+	loadStationStatusByPid,
 	loadAllStationStatusJoinGeoInfo,
 	loadStaionRegionCountry,
 }

@@ -3,6 +3,7 @@ import moment from 'moment'
 import { DEFAULT_DATE, DEFAULT_PRODUCT_TYPE_NAME, DEFAULT_SURGE_VAL } from '@/const/default'
 import { TyphoonLevelEnum } from '@/enum/typhoon'
 import { LayerTypeEnum } from '@/enum/map'
+import { getDateDiffMs } from '@/util/dateUtil'
 import chroma from 'chroma-js'
 /**
  * 将时间转换为指定的格式(str)
@@ -201,6 +202,32 @@ const filterSurgeAlarmColor = (val: number): string => {
 	return colorStr
 }
 
+const filterSpiderStationStatusCls = (updateDt: Date, now: Date): string => {
+	const dtTsDiff = getDateDiffMs(now, updateDt)
+	let statusCls = ''
+	switch (true) {
+		case dtTsDiff < 3 * 60 * 60 * 1000:
+			statusCls = 'green'
+			break
+		case dtTsDiff < 6 * 60 * 60 * 1000:
+			statusCls = 'blue'
+			break
+		case dtTsDiff < 12 * 60 * 60 * 1000:
+			statusCls = 'yellow'
+			break
+		case dtTsDiff <= 24 * 60 * 60 * 1000:
+			statusCls = 'orange'
+			break
+		case dtTsDiff > 24 * 60 * 60 * 1000:
+			statusCls = 'red'
+			break
+		default:
+			statusCls = 'other'
+			break
+	}
+	return statusCls
+}
+
 const waveScale = chroma
 	.scale('#153C83', '#4899D9', '#FFFB58', '#F1C712', '#E79325', '#F22015', '#C40E0F')
 	.domain([2, 3, 4, 6, 9, 12, 14])
@@ -355,6 +382,18 @@ const formatSecond2Hour = (val: number): number => {
 	return val / (60 * 60)
 }
 
+const formatContry2Str = (val: {
+	id: number
+	valCh: string
+	valEn: string
+	count: number
+}): string => {
+	if (val !== null) {
+		return val.valCh
+	}
+	return '-'
+}
+
 export {
 	fortmatData2YMDHM,
 	formatOnlyFirstCol,
@@ -376,5 +415,7 @@ export {
 	formatDir2Int,
 	formatSecond2Hour,
 	formatSurgeFixed2Str,
+	formatContry2Str,
 	filterWaveColor,
+	filterSpiderStationStatusCls,
 }

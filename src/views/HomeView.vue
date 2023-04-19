@@ -13,6 +13,7 @@
 		<ThumbListView></ThumbListView>
 		<HeaderLogoView title="全球潮位站系统"></HeaderLogoView>
 		<LegendListView></LegendListView>
+		<RegionStatisticsCard></RegionStatisticsCard>
 	</div>
 </template>
 
@@ -28,6 +29,7 @@ import HeaderLogoView from '@/components/header/headerLogoView.vue'
 import LegendListView from '@/components/toolsBar/legendListView.vue'
 import WaveGridForecastDataFormView from '@/components/forms/WaveGridForecastDataForm.vue'
 import StationSurgeDataFormView from '@/components/forms/StationSurgeDataFormView.vue'
+import RegionStatisticsCard from '@/components/cards/regionStatisticsCard.vue'
 
 // 默认值
 import { DEFAULT_DATE, DEFAULT_TIMESTAMP, DEFAULT_TY_NUM } from '@/const/default'
@@ -54,6 +56,7 @@ import moment from 'moment'
 		LegendListView,
 		WaveGridForecastDataFormView,
 		StationSurgeDataFormView,
+		RegionStatisticsCard,
 	},
 })
 export default class HomeView extends Vue {

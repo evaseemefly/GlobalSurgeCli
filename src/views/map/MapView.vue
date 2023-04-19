@@ -97,6 +97,8 @@ import {
 	GET_SCALAR_SHOW_TYPE,
 	SET_STATION_CODE,
 	SET_SHOW_STATION_SURGE_FORM,
+	GET_REGION_PID,
+	GET_STATION_CODE,
 } from '@/store/types'
 // 默认常量
 import {
@@ -238,6 +240,9 @@ export default class MainMapView extends Vue {
 	/** 格点文字 layer id */
 	gridTitlesLayerId = DEFAULT_LAYER_ID
 
+	/** 目前添加至map的markers id 集合 */
+	markersIdList: number[] = []
+
 	/** 浪向 canvas layer */
 	waveArrowCanvasLayer = null
 	now: Date = new Date()
@@ -294,6 +299,14 @@ export default class MainMapView extends Vue {
 		}
 	}
 
+	private clearLayersByIds(ids: number[]): void {
+		const that = this
+		ids.forEach((id) => {
+			// @ts-ignore
+			that.clearLayerById(id)
+		})
+	}
+
 	/** 清除当前的 等值面图层 */
 	private clearSosurfaceLayer(): void {
 		if (this.sosurfaceLayerId != DEFAULT_LAYER_ID) {
@@ -317,6 +330,11 @@ export default class MainMapView extends Vue {
 		} else {
 			this.waveArrowCanvasLayer.clearLayers()
 		}
+	}
+
+	private loadStationAndShow(code: string): void {
+		this.setStationCode(code)
+		this.setShowStationSurgeForm(true)
 	}
 
 	/** 清除海浪全部图层 */
@@ -350,6 +368,9 @@ export default class MainMapView extends Vue {
 	@Getter(GET_CURRENT_FORECAST_DT, { namespace: 'common' })
 	getForecastDt: Date
 
+	@Getter(GET_REGION_PID, { namespace: 'station' })
+	getRegionPid: number
+
 	@Watch('getForecastDt')
 	onForecastDt(val: Date) {
 		this.forecastTimestamp = val.getTime()
@@ -359,16 +380,20 @@ export default class MainMapView extends Vue {
 	@Getter(GET_SCALAR_SHOW_TYPE, { namespace: 'common' })
 	getScalarShowType: ScalarShowTypeEnum
 
+	@Getter(GET_STATION_CODE, { namespace: 'station' })
+	getStationCode: string
+
 	/** 设置当前圈选中心位置 */
 	@Mutation(SET_BOX_LOOP_LATLNG, { namespace: 'map' }) setBoxLoopLatlng: (val: L.LatLng) => void
 
 	/** + 23-03-27 加载 指定时间|当前时间 的全部潮位站 */
-	loadSurgeStationList(is_recent = true, now: Date = new Date()): void {
+	loadSurgeStationList(is_recent = true, now: Date = new Date(), pid?: number): void {
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		const that = this
+		this.clearLayersByIds(this.markersIdList)
 		if (is_recent) {
 			this.surgeStationList = []
-			loadAllStationStatusJoinGeoInfo()
+			loadAllStationStatusJoinGeoInfo(pid)
 				.then(
 					(
 						res: IHttpResponse<
@@ -397,15 +422,14 @@ export default class MainMapView extends Vue {
 					}
 				)
 				.then((_) => {
-					addStationIcon2Map(
+					that.markersIdList = addStationIcon2Map(
 						mymap,
 						this.surgeStationList,
 						10,
 						[{ name: '123', chname: '' }],
 						(msg: { code: string; name: string }) => {
 							console.log(`当前点击了code:${msg.code},name:${msg.name}`)
-							that.setStationCode(msg.code)
-							that.setShowStationSurgeForm(true)
+							that.loadStationAndShow(msg.code)
 						},
 						IconTypeEnum.FIXED_CIRCLE_ICON,
 						StationIconShowTypeEnum.SHOW_STATION_STATUS
@@ -439,6 +463,11 @@ export default class MainMapView extends Vue {
 		// }
 	}
 
+	@Watch('getStationCode')
+	onStationCode(val: string): void {
+		this.loadStationAndShow(val)
+	}
+
 	@Watch('getBaseMapKey')
 	onBaseMapKey(val: MapLayerEnum): void {
 		const mymap: L.Map = this.$refs.basemap['mapObject']
@@ -457,6 +486,12 @@ export default class MainMapView extends Vue {
 				break
 		}
 	}
+
+	@Watch('getRegionPid')
+	onPid(val: number): void {
+		this.loadSurgeStationList(true, new Date(), val)
+	}
+
 	toHideStationSurgeForm(): void {}
 }
 </script>
