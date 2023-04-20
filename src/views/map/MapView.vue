@@ -99,6 +99,7 @@ import {
 	SET_SHOW_STATION_SURGE_FORM,
 	GET_REGION_PID,
 	GET_STATION_CODE,
+	GET_NOW,
 } from '@/store/types'
 // 默认常量
 import {
@@ -245,7 +246,10 @@ export default class MainMapView extends Vue {
 
 	/** 浪向 canvas layer */
 	waveArrowCanvasLayer = null
-	now: Date = new Date()
+
+	/** vuex common now 当前时间 */
+	@Getter(GET_NOW, { namespace: 'common' })
+	now: Date
 
 	/** TODO:[-] 23-02-02 注意修改为通过监听 预报时间戳来执行加载操作(监听 预报Date 会出现多次赋相同值触发多次的问题) */
 	forecastTimestamp = 0
@@ -432,9 +436,22 @@ export default class MainMapView extends Vue {
 							that.loadStationAndShow(msg.code)
 						},
 						IconTypeEnum.FIXED_CIRCLE_ICON,
-						StationIconShowTypeEnum.SHOW_STATION_STATUS
+						StationIconShowTypeEnum.SHOW_STATION_STATUS,
+						that.now
 					)
+					that.zoom2Country()
 				})
+		}
+	}
+
+	/** 将地图缩放至当前 surgeStationList  */
+	zoom2Country(): void {
+		if (this.surgeStationList.length > 0) {
+			const tempStation = this.surgeStationList[0]
+
+			const tempPostion = new L.LatLng(tempStation.lat, tempStation.lon)
+			const mymap: L.Map = this.$refs.basemap['mapObject']
+			mymap.setView(tempPostion)
 		}
 	}
 

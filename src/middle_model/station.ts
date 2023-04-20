@@ -1,4 +1,9 @@
-import { formatPadRightstr, formatDate2YMD, formatDate2HM } from '@/util/filter'
+import {
+	formatPadRightstr,
+	formatDate2YMD,
+	formatDate2HM,
+	filterSpiderStationStatusCls,
+} from '@/util/filter'
 import { IToHtml } from '@/interface/leaflet_icon'
 import { StationIconShowTypeEnum } from '@/enum/common'
 
@@ -403,6 +408,90 @@ class IconFormOnlyTitleStationSurgeMidModel implements IToHtml {
 	}
 }
 
+/**
+ *+ 23-04-20 根据传入的 lastDt- now 获取对应icon cls
+ */
+class IconStationStatusByDtDiffMidModel implements IToHtml {
+	stationName: string
+	stationCode: string
+	surge: number
+	productTypeStr: string
+	isChecked: boolean
+	// tsDiff: number
+	lastDt: Date
+	now: Date
+	constructor(
+		stationName: string,
+		stationCode: string,
+		surge: number,
+		lastDt: Date,
+		now: Date,
+		productTypeStr = '潮位',
+		isChecked = false
+	) {
+		this.stationName = stationName
+		this.stationCode = stationCode
+		this.surge = surge
+		this.productTypeStr = productTypeStr
+		this.lastDt = lastDt
+		this.now = now
+		this.isChecked = isChecked
+	}
+	toHtml(): string {
+		const divHtml = `<div class="my-station-title-surge-div">
+        <div class="station-title-div-title">${this.stationName}</div>
+        </div>`
+		return divHtml
+	}
+
+	/**
+	 * @description 获取 class 字符串
+	 * @author evaseemefly
+	 * @date 2022/07/26
+	 * @returns {*}  {string}
+	 * @memberof IconFormTitleStationSurgeMidModel
+	 */
+	getClassName(): string {
+		const iconClsStr: string = filterSpiderStationStatusCls(this.lastDt, this.now)
+		return `station-surge-icon-onlytitle`
+	}
+
+	getStatusCls(): string {
+		const iconClsStr: string = filterSpiderStationStatusCls(this.lastDt, this.now)
+		return iconClsStr
+	}
+	getStationCode(): string {
+		return this.stationCode
+	}
+	/**
+	 * @description 获取全部动态 class string
+	 * @author evaseemefly
+	 * @date 2022/07/26
+	 * @param {boolean} [isChecked=false]
+	 * @returns {*}  {string}
+	 * @memberof IconFormTitleStationSurgeMidModel
+	 */
+	allCls(isChecked = false): string {
+		// let clsStr=''
+		const checkedCls = this.getCheckedCls(isChecked)
+		const clsStr = `${checkedCls}`
+		return clsStr
+	}
+
+	/**
+	 * @description 根据是否选中添加 checked cls
+	 * @author evaseemefly
+	 * @date 2022/07/26
+	 * @private
+	 * @param {boolean} [isChecked=false]
+	 * @returns {*}  {string}
+	 * @memberof IconFormTitleStationSurgeMidModel
+	 */
+	private getCheckedCls(isChecked = false): string {
+		return isChecked ? 'checked' : ''
+	}
+}
+
 /** + 22-09-14 海洋站潮位集群 mid model */
 class SurgeStationGroupMidModel {
 	/** 海洋站name */
@@ -575,6 +664,8 @@ class StationSurgeMidModel {
 			surgeVal: number
 			isChecked?: boolean
 			stationIconShowType?: StationIconShowTypeEnum
+			lastDt?: Date
+			now?: Date
 		}
 	): IToHtml {
 		// const stationIcons: IconFormStationDetialedMidModel[] = []
@@ -585,10 +676,12 @@ class StationSurgeMidModel {
 			options['stationIconShowType'] !== undefined &&
 			options.stationIconShowType === StationIconShowTypeEnum.SHOW_STATION_STATUS
 		) {
-			iToHtml = new IconFormOnlyTitleStationSurgeMidModel(
+			iToHtml = new IconStationStatusByDtDiffMidModel(
 				options.stationName,
 				options.stationCode,
-				options.surgeVal
+				options.surgeVal,
+				options.lastDt,
+				options.now
 			)
 			return iToHtml
 		}
@@ -626,6 +719,8 @@ class StationSurgeMidModel {
 			surgeMin: number
 			surgeVal: number
 			stationIconShowType?: StationIconShowTypeEnum
+			lastDt?: Date
+			now?: Date
 		}
 	): IToHtml {
 		return this.getStationIconImplements(zoom, options)
@@ -659,6 +754,7 @@ export {
 	IconFormDefaultMidModel,
 	IconFormMinStationSurgeMidModel,
 	IconFormTitleStationSurgeMidModel,
+	IconStationStatusByDtDiffMidModel,
 	StationSurgeMiModel,
 	SurgeStationGroupMidModel,
 	StationSurgeMidModel,

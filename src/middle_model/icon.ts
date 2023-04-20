@@ -13,7 +13,7 @@ import { IToHtml } from '@/interface/leaflet_icon'
 // 中间 model
 import { StationSurgeMidModel } from '@/middle_model/station'
 // filter
-import { filterStationNameCh } from '@/util/filter'
+import { filterSpiderStationStatusCls, filterStationNameCh } from '@/util/filter'
 import { getDateDiffMs } from '@/util/dateUtil'
 
 interface IIconPlusingOptions {
@@ -247,12 +247,23 @@ class DynamicIconCirle extends AbsIconCirle {
 		// TODO:[*] 22-03-07 注意此处 my-leaflet-icon-border orange 会有一个 3px的border的距离，但外侧的border是不会影响内部的定位，所以不需要加入对该border边距的计算
 		// 最终: 只需要平移 (-r/2,-r/2)
 		// TODO:[-] 23-03-28 只保留了圆形icon，去掉了脉冲div
-		const divHtml = `<div class="my-leaflet-pulsing-marker" >              
+		const divHtml = `<div class="my-leaflet-pulsing-marker station-status" >              
               <div class="my-leaflet-pulsing-icon ${this.getAlarmColor()}" style="width: ${iconPulsingWidth}px;height:${iconPulsingHeight}px;left:${
 			-iconPulsingWidth / 2
 		}px;top:${-iconPulsingHeight / 2}px"></div>
             </div>`
 		return divHtml
+	}
+
+	/**
+	 * @description 对于动态固定的 station surge 圆形icon 改为通过 最后更新时间与当前时间的差获取对应的color cls
+	 * @author evaseemefly
+	 * @date 2023/04/20
+	 * @returns {*}  {string}
+	 * @memberof DynamicIconCirle
+	 */
+	getAlarmColor(): string {
+		return filterSpiderStationStatusCls(this.config.gmtRealTime, this.config.gmtNow)
 	}
 }
 
@@ -289,35 +300,37 @@ class FixedIconCirle extends AbsIconCirle {
 	 */
 	protected getAlarmColor(): string {
 		// TODO:[-] 21-06-08 此处代码与 middle_model -> stations.ts -> IconFormMinStationSurgeMidModel -> getAlarmColor 重复
-		const surge = this.config.val
-		let colorStr = 'green'
-		/** 获取 now-realtime(ms) */
-		const diffDt: number = getDateDiffMs(this.config.gmtNow, this.config.gmtRealTime)
-		if (diffDt) {
-			switch (true) {
-				// < 1h
-				case diffDt <= 1 * 60 * 60 * 1000:
-					colorStr = 'green-icon'
-					break
-				// < 2h
-				case surge <= 2 * 60 * 60 * 1000:
-					colorStr = 'blue'
-					break
-				// < 6h
-				case surge <= 6 * 60 * 60 * 1000:
-					colorStr = 'yellow'
-					break
-				// < 24h
-				case surge <= 24 * 60 * 60 * 1000:
-					colorStr = 'orange'
-					break
-				case surge > 24 * 60 * 60 * 1000:
-					colorStr = 'red'
-					break
-			}
-		}
+		// const surge = this.config.val
+		// let colorStr = 'green'
+		// /** 获取 now-realtime(ms) */
+		// const diffDt: number = getDateDiffMs(this.config.gmtNow, this.config.gmtRealTime)
+		// if (diffDt) {
+		// 	switch (true) {
+		// 		// < 1h
+		// 		case diffDt <= 1 * 60 * 60 * 1000:
+		// 			colorStr = 'green-icon'
+		// 			break
+		// 		// < 2h
+		// 		case surge <= 2 * 60 * 60 * 1000:
+		// 			colorStr = 'blue'
+		// 			break
+		// 		// < 6h
+		// 		case surge <= 6 * 60 * 60 * 1000:
+		// 			colorStr = 'yellow'
+		// 			break
+		// 		// < 24h
+		// 		case surge <= 24 * 60 * 60 * 1000:
+		// 			colorStr = 'orange'
+		// 			break
+		// 		case surge > 24 * 60 * 60 * 1000:
+		// 			colorStr = 'red'
+		// 			break
+		// 	}
+		// }
 
-		return colorStr
+		return filterSpiderStationStatusCls(this.config.gmtRealTime, this.config.gmtNow)
+
+		// return colorStr
 	}
 }
 
@@ -651,18 +664,21 @@ const addStationIcon2Map = (
 	stationNameDict: { name: string; chname: string }[],
 	callbackFunc: (stationTemp: { code: string; name: string }) => void,
 	iconType: IconTypeEnum = IconTypeEnum.TY_PULSING_ICON,
-	stationIconShowType: StationIconShowTypeEnum = StationIconShowTypeEnum.SHOW_SURGE_VAL
+	stationIconShowType: StationIconShowTypeEnum = StationIconShowTypeEnum.SHOW_SURGE_VAL,
+	now?: Date
 ): number[] => {
 	const zoom = 7
 	const self = this
+	/** station status 海洋站状态icon集合 */
 	const iconArr: AbsIconCirle[] = []
 	const iconSurgeMinArr: IToHtml[] = []
 	const stationArr: StationSurgeMidModel[] = []
 	const layerItemsList: IStationIcon[] = []
 
 	const pulsingMarkers: L.Marker[] = []
+	/** 海洋站 station titles icons */
 	const divMarkers: L.Marker[] = []
-	const now: Date = new Date('2023-03-03 07:33:00')
+
 	// 获取极值
 	stationList.forEach((temp) => {
 		/** 海洋站 icon */
@@ -675,6 +691,8 @@ const addStationIcon2Map = (
 					max: surgeMax,
 					min: 0,
 					iconType: iconType,
+					gmtRealTime: temp.gmt_realtime,
+					gmtNow: now,
 				})
 				break
 			// - 23-03-29 固定的圆形icon,需要传入gmt_realtime
@@ -723,6 +741,8 @@ const addStationIcon2Map = (
 			surgeMin: 0,
 			surgeVal: temp.surge,
 			stationIconShowType: stationIconShowType,
+			lastDt: temp.gmt_realtime,
+			now: now,
 		})
 		iconArr.push(icon)
 		iconSurgeMinArr.push(iconSurgeMin)
@@ -757,6 +777,7 @@ const addStationIcon2Map = (
 		)
 		pulsingMarkers.push(stationCirlePulsingMakrer)
 
+		/** station title icon */
 		const stationDivIconMarker: L.Marker = L.marker(
 			[stationList[index].lat, stationList[index].lon],
 			{
@@ -793,6 +814,7 @@ const addStationIcon2Map = (
 	})
 	// @ts-ignore
 	const pulsingLayerGroupId: number = L.layerGroup(pulsingMarkers).addTo(mymap)._leaflet_id
+	/** 海洋站 station status title icons */
 	// @ts-ignore
 	const divLayerGroupId: number = L.layerGroup(divMarkers).addTo(mymap)._leaflet_id
 	return [pulsingLayerGroupId, divLayerGroupId]

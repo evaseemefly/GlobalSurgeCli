@@ -167,6 +167,11 @@ export const GET_TY_GROUP_PATH_LATERS_OPTS = 'GET_TY_GROUP_PATH_OPTS'
 export const SET_SHOW_OPTS_FORM = 'SET_SHOW_OPTS_FORM'
 export const GET_SHOW_OPTS_FORM = 'GET_SHOW_OPTS_FORM'
 
+/** 设置当前时间 */
+export const SET_NOW = 'SET_NOW'
+/** 获取当前时间 */
+export const GET_NOW = 'GET_NOW'
+
 /** 潮位 table 中的 td 之间的时间间隔(h) */
 export const SET_SURGE_TD_STEP = 'SET_SURGE_TD_STEP'
 /** 潮位 table 中的 td 之间的时间间隔(h) */

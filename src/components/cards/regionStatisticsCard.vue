@@ -95,7 +95,7 @@ import { IHttpResponse } from '@/interface/common'
 import { loadAllCountryCount, loadRegionListByPid } from '@/api/region'
 import { loadStationStatusByPid } from '@/api/station'
 import { fortmatData2MDHM, filterSpiderStationStatusCls, formatContry2Str } from '@/util/filter'
-import { SET_REGION_PID, SET_STATION_CODE } from '@/store/types'
+import { SET_REGION_PID, SET_STATION_CODE, GET_NOW } from '@/store/types'
 @Component({
 	filters: {
 		fortmatData2MDHM,
@@ -120,7 +120,8 @@ export default class RegionStatisticsCard extends Vue {
 	currentCountry: { id: number; valCh: string; valEn: string; count: number } = null
 
 	selectedTrIndex = -1
-	now: Date = new Date(2023, 3, 2, 23, 0)
+	@Getter(GET_NOW, { namespace: 'common' })
+	now: Date
 
 	countryCount = 0
 

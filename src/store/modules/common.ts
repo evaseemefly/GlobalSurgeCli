@@ -35,6 +35,8 @@ import {
 	GET_SURGE_TD_STEP,
 	SET_TIMESPAN,
 	GET_TIMESPAN,
+	SET_NOW,
+	GET_NOW,
 } from '../types'
 
 import {
@@ -76,6 +78,7 @@ interface Common {
 	/** 潮位 table 中的 td 之间的时间间隔(h) */
 	surgeTdStep: number
 	timeSpan: number
+	now: Date
 }
 
 const state: Common = {
@@ -96,6 +99,8 @@ const state: Common = {
 	scalarShowType: ScalarShowTypeEnum.RASTER,
 	surgeTdStep: DEFAULT_SURGE_TD_STEP,
 	timeSpan: DEFAULT_TIME_SPAN,
+
+	now: new Date(2023, 3, 2, 23, 0),
 }
 const getters = {
 	[GET_SCALE_RANGE](state: Common): number[] {
@@ -145,6 +150,9 @@ const getters = {
 	},
 	[GET_TIMESPAN](state: Common): number {
 		return state.timeSpan
+	},
+	[GET_NOW](state: Common): Date {
+		return state.now
 	},
 }
 // 使用dispatch调用
@@ -202,6 +210,9 @@ const mutations = {
 	},
 	[SET_TIMESPAN](state: Common, val: number): void {
 		state.timeSpan = val
+	},
+	[SET_NOW](state: Common, val: Date): void {
+		state.now = val
 	},
 }
 
