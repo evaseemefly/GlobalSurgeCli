@@ -12,80 +12,85 @@
 				</div>
 			</div>
 		</div>
-		<div class="form-right-content" v-show="isShowStatisticForm">
-			<!-- 默认隐藏的国家列表 -->
-			<div class="country-list">
-				<table>
-					<thead>
-						<tr>
-							<th>国家及地区</th>
-							<!-- <th>en</th> -->
-							<!-- <th>时间</th> -->
-						</tr>
-					</thead>
-					<tbody>
-						<tr
-							v-for="(countryTemp, index) in countryStatisticsList"
-							:key="countryTemp.id"
-							@click="setCurrentCountry(countryTemp)"
-							:class="index == selectedTrIndex ? 'activate' : ' '"
-						>
-							<td>{{ countryTemp.valCh }}</td>
-							<!-- <td class="null-color"> -->
-							<!-- {{ countryTemp.valEn }} -->
-							<!-- <TideValuePrgressLineView
-							:realdata="stationTemp.realdata"
-							:lineWidth="84"
-							:alertTides="stationTemp.alerts"
-						></TideValuePrgressLineView> -->
-							<!-- </td> -->
-							<!-- <td>{{ stationTemp.dt | fortmatData2MDHM }}</td> -->
-						</tr>
-					</tbody>
-				</table>
-			</div>
-			<div class="station-status-list">
-				<div class="body-content">
+		<transition
+			enter-active-class="animate__animated animate__fadeIn"
+			leave-active-class="animate__animated animate__fadeOut"
+		>
+			<div class="form-right-content" v-show="isShowStatisticForm">
+				<!-- 默认隐藏的国家列表 -->
+				<div class="country-list">
 					<table>
 						<thead>
 							<tr>
-								<th style="width: 80px">编号</th>
+								<th>国家及地区</th>
 								<!-- <th>en</th> -->
-								<th style="width: 120px">最后更新时间</th>
-								<th style="width: 80px">状态</th>
+								<!-- <th>时间</th> -->
 							</tr>
 						</thead>
 						<tbody>
 							<tr
-								v-for="(stationTemp, index) in stationStatusList"
-								:key="stationTemp.id"
-								@click="setStationCode(stationTemp.stationCode)"
+								v-for="(countryTemp, index) in countryStatisticsList"
+								:key="countryTemp.id"
+								@click="setCurrentCountry(countryTemp)"
 								:class="index == selectedTrIndex ? 'activate' : ' '"
 							>
-								<td>{{ stationTemp.stationCode }}</td>
-								<td>{{ stationTemp.gmtDt | fortmatData2MDHM }}</td>
-								<td class="td-status">
-									<div
-										:class="getStationStatusCls(stationTemp.gmtDt)"
-										class="status-bar"
-									></div>
-								</td>
+								<td>{{ countryTemp.valCh }}</td>
+								<!-- <td class="null-color"> -->
+								<!-- {{ countryTemp.valEn }} -->
+								<!-- <TideValuePrgressLineView
+							:realdata="stationTemp.realdata"
+							:lineWidth="84"
+							:alertTides="stationTemp.alerts"
+						></TideValuePrgressLineView> -->
+								<!-- </td> -->
+								<!-- <td>{{ stationTemp.dt | fortmatData2MDHM }}</td> -->
 							</tr>
 						</tbody>
 					</table>
 				</div>
+				<div class="station-status-list">
+					<div class="body-content">
+						<table>
+							<thead>
+								<tr>
+									<th style="width: 80px">编号</th>
+									<!-- <th>en</th> -->
+									<th style="width: 120px">最后更新时间</th>
+									<th style="width: 80px">状态</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr
+									v-for="(stationTemp, index) in stationStatusList"
+									:key="stationTemp.id"
+									@click="setStationCode(stationTemp.stationCode)"
+									:class="index == selectedTrIndex ? 'activate' : ' '"
+								>
+									<td>{{ stationTemp.stationCode }}</td>
+									<td>{{ stationTemp.gmtDt | fortmatData2MDHM }}</td>
+									<td class="td-status">
+										<div
+											:class="getStationStatusCls(stationTemp.gmtDt)"
+											class="status-bar"
+										></div>
+									</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
 
-				<div class="station-status-station-count-footer">
-					<div class="content">{{ stationStatusList.length }}</div>
-					<div class="foot-titles">
-						<div class="main-title">
-							<span>{{ currentCountry | formatContry2Str }}</span>
+					<div class="station-status-station-count-footer">
+						<div class="content">{{ stationStatusList.length }}</div>
+						<div class="foot-titles">
+							<div class="main-title">
+								<span>{{ currentCountry | formatContry2Str }}</span>
+							</div>
+							<div class="sub-title">当前国家</div>
 						</div>
-						<div class="sub-title">当前国家</div>
 					</div>
 				</div>
 			</div>
-		</div>
+		</transition>
 	</div>
 </template>
 <script lang="ts">

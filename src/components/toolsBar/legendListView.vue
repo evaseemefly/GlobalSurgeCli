@@ -1,8 +1,8 @@
 <template>
 	<div id="legend_list">
 		<SwitchBackgroundMap></SwitchBackgroundMap>
-		<!-- <TyphoonLevelLegend></TyphoonLevelLegend>
-		<StationLevelLegend></StationLevelLegend> -->
+		<!-- <TyphoonLevelLegend></TyphoonLevelLegend> -->
+		<StationLevelLegend></StationLevelLegend>
 	</div>
 </template>
 <script lang="ts">
@@ -15,13 +15,7 @@ import StationLevelLegend from '@/components/toolsBar/stationLevelLegend.vue'
 @Component({
 	components: { SwitchBackgroundMap, TyphoonLevelLegend, StationLevelLegend },
 })
-export default class LegendListView extends Vue {
-	mydata: any = null
-	mounted() {}
-	get computedTest() {
-		return null
-	}
-}
+export default class LegendListView extends Vue {}
 </script>
 <style scoped lang="less">
 #legend_list {

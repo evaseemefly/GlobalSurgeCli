@@ -1,25 +1,32 @@
 <template>
-	<div v-draggable id="station_surge_form" v-if="getIsShow" class="right-station-surge-form">
-		<div class="my-detail-form">
-			<div class="sub-titles">
-				<div
-					:class="[
-						index == subTitleIndex ? 'actived my-sub-title' : 'unactived my-sub-title',
-						item.disabled ? 'disabled' : '',
-					]"
-					:key="index"
-					@click="checkSubTitle(index)"
-					v-for="(item, index) in subTitles"
-				>
-					{{ item.title }}
+	<transition
+		enter-active-class="animate__animated animate__fadeIn"
+		leave-active-class="animate__animated animate__fadeOut"
+	>
+		<div v-draggable id="station_surge_form" v-if="getIsShow" class="right-station-surge-form">
+			<div class="my-detail-form">
+				<div class="sub-titles">
+					<div
+						:class="[
+							index == subTitleIndex
+								? 'actived my-sub-title'
+								: 'unactived my-sub-title',
+							item.disabled ? 'disabled' : '',
+						]"
+						:key="index"
+						@click="checkSubTitle(index)"
+						v-for="(item, index) in subTitles"
+					>
+						{{ item.title }}
+					</div>
+					<!-- <div class="my-sub-title right" @click="setExpanded()">最小化</div> -->
 				</div>
-				<!-- <div class="my-sub-title right" @click="setExpanded()">最小化</div> -->
-			</div>
-			<div class="detail-content">
-				<StationSurgeChartView></StationSurgeChartView>
+				<div class="detail-content">
+					<StationSurgeChartView></StationSurgeChartView>
+				</div>
 			</div>
 		</div>
-	</div>
+	</transition>
 </template>
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'

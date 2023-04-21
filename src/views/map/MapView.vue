@@ -205,7 +205,7 @@ import { StationBaseInfoMidModel } from '@/middle_model/station'
 	mixins: [WMSMixin, MapMixin],
 })
 export default class MainMapView extends Vue {
-	zoom = 5
+	zoom = 4
 	center: number[] = [27.45, 130.8833]
 	url =
 		'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'
