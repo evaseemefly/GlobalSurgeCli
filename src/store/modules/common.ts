@@ -100,7 +100,8 @@ const state: Common = {
 	surgeTdStep: DEFAULT_SURGE_TD_STEP,
 	timeSpan: DEFAULT_TIME_SPAN,
 
-	now: new Date(2023, 3, 2, 23, 0),
+	// now: new Date(2023, 3, 2, 23, 0),
+	now: new Date(),
 }
 const getters = {
 	[GET_SCALE_RANGE](state: Common): number[] {

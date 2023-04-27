@@ -43,7 +43,8 @@
 				:visible="getSelectLoop"
 			></LCircle>
 		</l-map>
-		<LayersNavMenuView></LayersNavMenuView>
+		<!-- 不适用图层切换菜单 -->
+		<!-- <LayersNavMenuView></LayersNavMenuView> -->
 	</div>
 </template>
 <script lang="ts">

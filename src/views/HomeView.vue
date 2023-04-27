@@ -10,7 +10,7 @@
 		<!-- <div><StationTideFormView></StationTideFormView></div> -->
 		<!-- <StationLayoutView :tyNum="tyNum"></StationLayoutView> -->
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
-		<ThumbListView></ThumbListView>
+		<!-- <ThumbListView></ThumbListView> -->
 		<HeaderLogoView title="全球潮位站系统"></HeaderLogoView>
 		<LegendListView></LegendListView>
 		<RegionStatisticsCard></RegionStatisticsCard>
