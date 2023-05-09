@@ -14,16 +14,16 @@ import VueInteract from 'vue-interact'
 import 'vue-interact/dist/vue-interact.css'
 
 // 配置 Animate.css
-import 'animate.css'
+// import 'animate.css'
 // @ts-ignore
-import animate from 'animate.css'
+// import animate from 'animate.css'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { faHatWizard } from '@fortawesome/free-solid-svg-icons'
 
 Vue.use(ElementUI)
 Vue.use(VueInteract)
-Vue.use(animate)
+// Vue.use(animate)
 
 new Vue({
 	router,

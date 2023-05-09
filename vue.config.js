@@ -7,6 +7,10 @@ module.exports = defineConfig({
 	runtimeCompiler: true,
 	chainWebpack: (config) => {
 		config.resolve.alias.set('@', resolve('src'))
+		config.plugin('html').tap((args) => {
+			args[0].title = '全球潮位观测系统'
+			return args
+		})
 	},
 	// configureWebpack: (config) => {
 	//     // webpack配置，值位对象时会合并配置，为方法时会改写配置

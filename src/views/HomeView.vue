@@ -11,7 +11,7 @@
 		<!-- <StationLayoutView :tyNum="tyNum"></StationLayoutView> -->
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
 		<!-- <ThumbListView></ThumbListView> -->
-		<HeaderLogoView title="全球潮位站系统"></HeaderLogoView>
+		<HeaderLogoView title="全球潮位观测系统"></HeaderLogoView>
 		<LegendListView></LegendListView>
 		<RegionStatisticsCard></RegionStatisticsCard>
 	</div>

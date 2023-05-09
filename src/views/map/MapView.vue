@@ -214,7 +214,7 @@ export default class MainMapView extends Vue {
 	// TODO:[-] 20-11-09 新加入的 map 相关的一些基础静态配置
 	mapOptions: { preferCanvas: boolean; minZoom: number; maxZoom: number; render: any } = {
 		preferCanvas: true,
-		minZoom: 4,
+		minZoom: 3,
 		// 可缩放的最大 level
 		maxZoom: 11,
 		// 目前已经使用了 canvas 渲染

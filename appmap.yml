@@ -1,4 +1,4 @@
-name: wave_cli
+name: 全球潮位观测系统
 packages:
   - path: ''
 language: javascript
