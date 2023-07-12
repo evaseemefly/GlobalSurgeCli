@@ -2,12 +2,20 @@
 	<div id="wave_dir_table">
 		<section>
 			<div class="wave-table-legend">
-				<div class="table-legend-row">
+				<div class="table-legend-row table-legend-title">
 					<div class="legend-title">时间</div>
 					<div class="legend-unit">h</div>
 				</div>
-				<div class="table-legend-row">
-					<div class="legend-title">潮位</div>
+				<div class="table-legend-row table-legend-item">
+					<div class="legend-title">实况</div>
+					<div class="legend-unit">m</div>
+				</div>
+				<div class="table-legend-row table-legend-item">
+					<div class="legend-title">天文潮</div>
+					<div class="legend-unit">m</div>
+				</div>
+				<div class="table-legend-row table-legend-item">
+					<div class="legend-title">增水</div>
 					<div class="legend-unit">m</div>
 				</div>
 			</div>
@@ -183,12 +191,20 @@ export default class SurgeTableView extends Vue {
 				align-content: center;
 				align-items: center;
 				justify-content: space-between;
-				height: 20px;
+				// height: 20px;
 				width: 60px;
 				.legend-title {
 					width: 50px;
 				}
 			}
+		}
+		.table-legend-title {
+			height: 30px;
+			margin: 2px;
+		}
+		.table-legend-item {
+			height: 20px;
+			margin: 1px;
 		}
 	}
 

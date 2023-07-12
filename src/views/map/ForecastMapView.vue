@@ -44,7 +44,7 @@
 			></LCircle>
 		</l-map>
 		<!-- 不适用图层切换菜单 -->
-		<!-- <LayersNavMenuView></LayersNavMenuView> -->
+		<LayersNavMenuView></LayersNavMenuView>
 	</div>
 </template>
 <script lang="ts">
@@ -171,7 +171,7 @@ import { WaveBarOptType } from '@/middle_model/geo'
 
 // - 23-03-27 api
 import { loadSurgeListByRecently } from '@/api/surge' // 获取所有潮位站距离当前最近的潮值
-import { loadAllStationStatusJoinGeoInfo } from '@/api/station'
+import { loadAllStationStatusJoinGeoInfo, loadAllStationLastSurge } from '@/api/station'
 import { StationBaseInfoMidModel } from '@/middle_model/station'
 
 /**
@@ -205,7 +205,7 @@ import { StationBaseInfoMidModel } from '@/middle_model/station'
 	},
 	mixins: [WMSMixin, MapMixin],
 })
-export default class MainMapView extends Vue {
+export default class ForecastMapView extends Vue {
 	zoom = 4
 	center: number[] = [27.45, 130.8833]
 	url =
@@ -281,7 +281,7 @@ export default class MainMapView extends Vue {
 		const that = this
 
 		this.loadBaseStationList()
-		this.loadSurgeStationList()
+		// this.loadSurgeStationList()
 		// TODO:[*] + 23-04-04 加入点击地图不再显示 form
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		// 点击地图隐藏 station surge form
@@ -392,19 +392,20 @@ export default class MainMapView extends Vue {
 	@Mutation(SET_BOX_LOOP_LATLNG, { namespace: 'map' }) setBoxLoopLatlng: (val: L.LatLng) => void
 
 	/** + 23-03-27 加载 指定时间|当前时间 的全部潮位站 */
-	loadSurgeStationList(is_recent = true, now: Date = new Date(), pid?: number): void {
+	loadLastSurgeStationList(is_recent = true, now: Date = new Date(), pid?: number): void {
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		const that = this
 		this.clearLayersByIds(this.markersIdList)
 		if (is_recent) {
 			this.surgeStationList = []
-			loadAllStationStatusJoinGeoInfo(pid)
+			loadAllStationLastSurge(pid)
 				.then(
 					(
 						res: IHttpResponse<
 							{
 								station_code: string
-								gmt_realtime: string
+								forecast_dt: string
+								issue_dt: string
 								status: number
 								surge: number
 								tid: number
@@ -460,7 +461,7 @@ export default class MainMapView extends Vue {
 	async loadBaseStationList(): Promise<void> {
 		this.stationBaseInfoList = []
 		const stationBaseInfo = new StationBaseInfo()
-		await stationBaseInfo.getAllStationInfo()
+		await stationBaseInfo.getAllInlandStationInfo()
 		this.stationBaseInfoList = stationBaseInfo.allStationBaseInfoList
 	}
 

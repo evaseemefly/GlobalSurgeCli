@@ -176,13 +176,16 @@ export default class StationSurgeChartView extends Vue {
 
 	seriesMap: Map<string, string> = new Map([
 		['tide', '天文潮'],
-		['surge', '潮位'],
-		['difftide', '增水'],
+		['surge', '增水'],
+		['obs', '实况潮位'],
 	])
 
 	stationCode = 'kusm'
 	/** 起始时间 */
-	startDt: Date = DEFAULT_DATE
+	// startDt: Date = DEFAULT_DATE
+
+	/** 当前选定的时间 */
+	// selecetdDt: Date = DEFAULT_DATE
 	/** TODO:[-] 23-04-04 此处修改为计算属性 endDt=start+timespan */
 	// endDt: Date = new Date('2023-03-03 10:09:00')
 	/** 时间跨度(单位:s) */
@@ -195,7 +198,7 @@ export default class StationSurgeChartView extends Vue {
 
 	created() {
 		// EventBus.$on(TO_LOAD_FORECASTDATALIST_COORDS, this.loadWaveForecastDataListbyCoords)
-		this.loadTargetStationSurgeDataList(this.getStationCode, this.getForecastDt, this.endDt)
+		this.loadTargetStationSurgeDataList(this.getStationCode, this.startDt, this.endDt)
 		this.loadStationRegionCountry(this.getStationCode)
 		// console.log(`当前charts窗口大小:${document.getElementById('wave_scalar_chart')}`)
 	}
@@ -300,10 +303,10 @@ export default class StationSurgeChartView extends Vue {
 						that.initCharts(
 							that.dtList,
 							[
-								{ fieldName: 'surge', yList: surgeList },
+								{ fieldName: 'obs', yList: surgeList },
 								{ fieldName: 'tide', yList: tideList },
 							],
-							{ fieldName: 'difftide', vals: diffTideList },
+							{ fieldName: 'surge', vals: diffTideList },
 							'潮位',
 							0
 						)
@@ -654,6 +657,7 @@ export default class StationSurgeChartView extends Vue {
 		}
 	}
 
+	/** 23-05-10 修改后的逻辑 forecastDt 为 end date */
 	@Getter(GET_CURRENT_FORECAST_DT, { namespace: 'common' }) getForecastDt: Date
 
 	@Getter(GET_STATION_CODE, { namespace: 'station' }) getStationCode: string
@@ -662,10 +666,10 @@ export default class StationSurgeChartView extends Vue {
 
 	@Getter(GET_TIMESPAN, { namespace: 'common' }) getTimespan: number
 
-	@Watch('getForecastDt')
-	onGetForecastDt(now: Date): void {
-		this.startDt = now
-	}
+	// @Watch('getForecastDt')
+	// onGetForecastDt(now: Date): void {
+	// 	this.selecetdDt = now
+	// }
 
 	@Watch('currentForecastDtIndex')
 	onCurrentForecastDtIndex(val: number): void {
@@ -697,25 +701,31 @@ export default class StationSurgeChartView extends Vue {
 	}
 
 	/** 需要监听的 chart 配置项 */
-	get chartOpts(): { getStationCode: string; getForecastDt: Date; endDt: Date } {
-		const { getStationCode, getForecastDt, endDt } = this
+	get chartOpts(): { getStationCode: string; startDt: Date; endDt: Date } {
+		const { getStationCode, startDt, endDt } = this
 		return {
 			getStationCode,
-			getForecastDt,
+			startDt,
 			endDt,
 		}
 	}
 
 	@Watch('chartOpts')
-	onChartOpts(val: { getStationCode: string; getForecastDt: Date; endDt: Date }): void {
-		this.loadTargetStationSurgeDataList(val.getStationCode, val.getForecastDt, val.endDt)
+	onChartOpts(val: { getStationCode: string; startDt: Date; endDt: Date }): void {
+		this.loadTargetStationSurgeDataList(val.getStationCode, val.startDt, val.endDt)
 		this.loadStationRegionCountry(val.getStationCode)
 	}
 
 	/** 终止时间 */
 	get endDt(): Date {
-		const end = moment(this.getForecastDt).add(this.getTimespan, 's')
-		return end.toDate()
+		// const end = moment(this.getForecastDt).add(this.getTimespan, 's')
+		// return end.toDate()
+		return this.getForecastDt
+	}
+
+	get startDt(): Date {
+		const start = moment(this.getForecastDt).add(-this.getTimespan, 's')
+		return start.toDate()
 	}
 }
 </script>

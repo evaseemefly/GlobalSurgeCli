@@ -39,32 +39,32 @@ export default class LayersNavMenuView extends Vue {
 		menuType: LayerTypeEnum
 	}[] = [
 		{
-			title: '有效波高',
-			desc: '有效波高',
+			title: '72小时最大增水场',
+			desc: '72小时最大增水场',
 			icon: `fa-solid fa-water`,
 			icons: ['fa-solid', 'fa-water'],
 			menuType: LayerTypeEnum.RASTER_LAYER_WVE,
 		},
+		// {
+		// 	title: '平均周期',
+		// 	desc: '平均周期',
+		// 	icon: `fa-solid fa-hourglass-end`,
+		// 	icons: ['fa-solid', 'fa-magnifying-glass-location'],
+		// 	menuType: LayerTypeEnum.RASTER_LAYER_MWP,
+		// },
+		// {
+		// 	title: '平均波向',
+		// 	desc: '平均波向',
+		// 	icon: `fa-solid fa-location-arrow`,
+		// 	icons: ['fa-solid', 'fa-location-arrow'],
+		// 	menuType: LayerTypeEnum.RASTER_LAYER_MWD,
+		// },
 		{
-			title: '平均周期',
-			desc: '平均周期',
-			icon: `fa-solid fa-hourglass-end`,
-			icons: ['fa-solid', 'fa-magnifying-glass-location'],
-			menuType: LayerTypeEnum.RASTER_LAYER_MWP,
-		},
-		{
-			title: '平均波向',
-			desc: '平均波向',
-			icon: `fa-solid fa-location-arrow`,
-			icons: ['fa-solid', 'fa-location-arrow'],
-			menuType: LayerTypeEnum.RASTER_LAYER_MWD,
-		},
-		{
-			title: '风浪波高',
-			desc: '风浪波高',
+			title: '海洋站',
+			desc: '海洋站',
 			icon: `fa-solid fa-cloud-showers-water`,
 			icons: ['fa-solid', 'fa-cloud-showers-water'],
-			menuType: LayerTypeEnum.RASTER_LAYER_SHWW,
+			menuType: LayerTypeEnum.ICON_STATION,
 		},
 	]
 

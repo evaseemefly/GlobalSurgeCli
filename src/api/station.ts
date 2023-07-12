@@ -113,6 +113,25 @@ const loadStationBaseInfoList = () => {
 }
 
 /**
+ * 获取所有的国内站点集合
+ * @returns [{
+        "id": 4,
+        "code": "SHW",
+        "name": "汕尾",
+        "lat": 22.7564,
+        "lon": 115.3572,
+        "sort": -1,
+        "is_in_common_use": true
+    },]
+ */
+const loadInlandStationList = () => {
+	const url = `${host}${area}/inland/list/all`
+	return axios.get(url, {
+		headers: authHeader(),
+	})
+}
+
+/**
  * + 23-04-03 获取指定站点的状态
  * @param code 站点 code
  * @returns{
@@ -189,6 +208,29 @@ const loadAllStationStatusJoinGeoInfo = (pid?: number) => {
 }
 
 /**
+ * + 23-07-12 获取所有站点的最后状态
+ * @param pid
+ * @returns
+ * {
+    "station_code": "DGG",
+    "forecast_dt": "2023-07-05T12:00:00",
+    "issue_dt": "2023-06-28T12:00:00",
+    "surge": -8.74,
+    "forecast_ts": 1688558400,
+    "issue_ts": 1687953600
+  },
+ */
+const loadAllStationLastSurge = (pid?: number) => {
+	const url = `${host}${area}all/last/surge`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: {
+			pid: pid,
+		},
+	})
+}
+
+/**
  *
  * @param code
  * @returns
@@ -213,4 +255,6 @@ export {
 	loadStationStatusByPid,
 	loadAllStationStatusJoinGeoInfo,
 	loadStaionRegionCountry,
+	loadInlandStationList,
+	loadAllStationLastSurge,
 }

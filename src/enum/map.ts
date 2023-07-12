@@ -2,7 +2,12 @@ enum ConstLayerTypeEnum {
 	UN_LAYER = -1,
 }
 
-export enum StationIconLayerEnum {}
+export enum StationIconLayerEnum {
+	/**
+	 * 海洋站图层
+	 */
+	ICON_STATION = 1011,
+}
 
 /** 基础图层枚举 */
 enum BaseLayerTypeEnum {
@@ -30,6 +35,20 @@ enum BaseLayerTypeEnum {
 	 * 全部矢量场(MWD)
 	 */
 	RASTER_LAYER_ALL_VECTOR = 9997,
+}
+
+/**
+ * @description 风暴潮 layer 枚举
+ * @author evaseemefly
+ * @date 2023/07/12
+ * @export
+ * @enum {number}
+ */
+export enum SurgeLayerEnum {
+	/**
+	 *	最大增水场 72 h
+	 */
+	RASTER_LAYER_MAX_SURGE_72 = 3010,
 }
 
 export enum SurgeProLayerEnum {

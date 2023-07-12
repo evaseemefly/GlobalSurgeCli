@@ -7,7 +7,7 @@ import {
 } from '@/middle_model/station'
 
 import { IToHtml } from '@/interface/leaflet_icon'
-import { loadStationBaseInfoList } from '@/api/station'
+import { loadStationBaseInfoList, loadInlandStationList } from '@/api/station'
 import { IHttpResponse } from '@/interface/common'
 /*
  + 21-05-14 
@@ -128,7 +128,7 @@ class StationSurge {
 }
 
 /**
- * @description 潮位站基础信息
+ * @description 全球潮位站基础信息
  * @author evaseemefly
  * @date 2023/03/28
  * @class StationBaseInfo
@@ -172,6 +172,45 @@ class StationBaseInfo {
 								element.rid,
 								element.station_code,
 								element.station_name,
+								element.lat,
+								element.lon
+							)
+						)
+					})
+				}
+			}
+		)
+	}
+
+	/**
+	 * @description 获取全部国内的站点基础信息集合
+	 * @author evaseemefly
+	 * @date 2023/07/12
+	 * @returns {*}  {Promise<void>}
+	 * @memberof StationBaseInfo
+	 */
+	async getAllInlandStationInfo(): Promise<void> {
+		const that = this
+		await loadInlandStationList().then(
+			(
+				res: IHttpResponse<
+					{
+						code: string
+						name: string
+						lat: number
+						lon: number
+						rid: number
+					}[]
+				>
+			) => {
+				if (res.status === 200) {
+					this.allStationBaseInfoList = []
+					res.data.forEach((element) => {
+						that.allStationBaseInfoList.push(
+							new StationBaseInfoMidModel(
+								element.rid,
+								element.code,
+								element.name,
 								element.lat,
 								element.lon
 							)
