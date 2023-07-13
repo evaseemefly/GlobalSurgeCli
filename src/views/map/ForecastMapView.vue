@@ -125,7 +125,11 @@ import { LayerTypeEnum, MapLayerEnum } from '@/enum/map'
 
 // api
 import { loadTyRealDataList, loadStationTideDataList } from '@/api/typhoon'
-import { loadStationDetailDataList, loadStationNameDict } from '@/api/station'
+import {
+	loadStationDetailDataList,
+	loadStationNameDict,
+	loadInlandStationMaxSurge,
+} from '@/api/station'
 // 各类插件
 import { TyMiniMarker } from '@/plugins/customerMarker'
 import {
@@ -279,8 +283,9 @@ export default class ForecastMapView extends Vue {
 
 	mounted() {
 		const that = this
-
+		const issueTs = 1687953600
 		this.loadBaseStationList()
+		this.loadInlandStationMaxSurgeList(issueTs)
 		// this.loadSurgeStationList()
 		// TODO:[*] + 23-04-04 加入点击地图不再显示 form
 		const mymap: L.Map = this.$refs.basemap['mapObject']
@@ -391,24 +396,21 @@ export default class ForecastMapView extends Vue {
 	/** 设置当前圈选中心位置 */
 	@Mutation(SET_BOX_LOOP_LATLNG, { namespace: 'map' }) setBoxLoopLatlng: (val: L.LatLng) => void
 
-	/** + 23-03-27 加载 指定时间|当前时间 的全部潮位站 */
-	loadLastSurgeStationList(is_recent = true, now: Date = new Date(), pid?: number): void {
+	loadInlandStationMaxSurgeList(issueTs: number, is_recent = true): void {
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		const that = this
 		this.clearLayersByIds(this.markersIdList)
 		if (is_recent) {
 			this.surgeStationList = []
-			loadAllStationLastSurge(pid)
+			// step1: 加载大陆的指定发布时间的72小时站点增水极值集合
+			loadInlandStationMaxSurge(issueTs)
 				.then(
 					(
 						res: IHttpResponse<
 							{
-								station_code: string
-								forecast_dt: string
-								issue_dt: string
-								status: number
+								code: string
 								surge: number
-								tid: number
+								name: string
 								lat: number
 								lon: number
 							}[]
@@ -417,8 +419,8 @@ export default class ForecastMapView extends Vue {
 						let tempStationList: IStationInfo[] = []
 						res.data.forEach((temp) => {
 							tempStationList.push({
-								station_code: temp.station_code,
-								gmt_realtime: new Date(temp.gmt_realtime), // 注意此处为str->date
+								station_code: temp.code,
+								gmt_realtime: new Date(issueTs), // 注意此处为str->date
 								lat: temp.lat,
 								lon: temp.lon,
 								surge: temp.surge,
@@ -437,7 +439,7 @@ export default class ForecastMapView extends Vue {
 							console.log(`当前点击了code:${msg.code},name:${msg.name}`)
 							that.loadStationAndShow(msg.code)
 						},
-						IconTypeEnum.FIXED_CIRCLE_ICON,
+						IconTypeEnum.FIXED_STATION_SURGE_ICON,
 						StationIconShowTypeEnum.SHOW_STATION_STATUS,
 						that.now
 					)
@@ -504,11 +506,6 @@ export default class ForecastMapView extends Vue {
 					'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'
 				break
 		}
-	}
-
-	@Watch('getRegionPid')
-	onPid(val: number): void {
-		this.loadSurgeStationList(true, new Date(), val)
 	}
 
 	toHideStationSurgeForm(): void {}

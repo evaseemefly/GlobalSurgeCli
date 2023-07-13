@@ -20,6 +20,11 @@ export enum IconTypeEnum {
 	FIXED_CIRCLE_ICON,
 
 	/**
+	 * 静态半径的海洋站增水 icon
+	 */
+	FIXED_STATION_SURGE_ICON,
+
+	/**
 	 * 台风路径示意 icon
 	 */
 	TY_PATH_ICON,

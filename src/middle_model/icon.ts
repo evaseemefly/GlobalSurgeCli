@@ -335,6 +335,68 @@ class FixedIconCirle extends AbsIconCirle {
 }
 
 /**
+ * @description 根据传入的 surge 生成对应的 cls
+ * @author evaseemefly
+ * @date 2023/07/13
+ * @class FixedStationSurgeIcon
+ * @extends {AbsIconCirle}
+ */
+class FixedStationSurgeIcon extends AbsIconCirle {
+	constructor(options: IIconPlusingOptions) {
+		super(options)
+	}
+
+	toHtml(): string {
+		// 固定宽度 cirle icon 半径和高度为固定值
+		const fixedRadius = 8
+		const divHtml = `<div class="my-leaflet-pulsing-marker" >              
+              <div class="my-leaflet-pulsing-icon ${this.getAlarmColor()}" style="width: ${fixedRadius}px;height:${fixedRadius}px;left:${
+			-fixedRadius / 2
+		}px;top:${-fixedRadius / 2}px"></div>
+            </div>`
+		return divHtml
+	}
+
+	/**
+	 * @description 重写抽象父类中的实现方法——改为由当前的gmt_realtime 与 比对的时间计算时间差获取对应的状态color
+	 * @author evaseemefly
+	 * @date 2023/03/29
+	 * @protected
+	 * @returns {*}  {string}
+	 * @memberof FixedIconCirle
+	 */
+	protected getAlarmColor(): string {
+		/** 增水值 */
+		const surge = this.config.val
+		let colorStr = 'green'
+
+		switch (true) {
+			// < 1h
+			case surge <= 20:
+				colorStr = 'green-icon'
+				break
+			// < 2h
+			case surge <= 50:
+				colorStr = 'blue'
+				break
+			// < 6h
+			case surge <= 70:
+				colorStr = 'yellow'
+				break
+			// < 24h
+			case surge <= 100:
+				colorStr = 'orange'
+				break
+			case surge > 100:
+				colorStr = 'red'
+				break
+		}
+
+		return colorStr
+	}
+}
+
+/**
  * @description 台风脉冲圆 icon
  * @author evaseemefly
  * @date 2022/10/24
@@ -706,6 +768,15 @@ const addStationIcon2Map = (
 					gmtNow: now,
 				})
 				break
+			// - 23-07-13
+			case IconTypeEnum.FIXED_STATION_SURGE_ICON:
+				icon = new FixedStationSurgeIcon({
+					val: temp.surge,
+					max: surgeMax,
+					min: 0,
+					iconType: iconType,
+				})
+				break
 			case IconTypeEnum.TY_PULSING_ICON:
 				icon = new IconCirlePulsing({
 					val: temp.surge,
@@ -828,6 +899,7 @@ export {
 	IconDetailedStationSurge,
 	IconTyphoonCirlePulsing,
 	IconTyphoonCustom,
+	FixedStationSurgeIcon,
 	getTyIconUrlByType,
 	addStationIcon2Map,
 }

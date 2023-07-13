@@ -231,6 +231,30 @@ const loadAllStationLastSurge = (pid?: number) => {
 }
 
 /**
+ * + 23-07-12 获取issueTs发布时间的未来72小时的高潮位
+ * @param issueTs
+ * @returns {
+        "id": 78,
+        "code": "AJS",
+        "name": "鳌江S",
+        "lat": 27.567,
+        "lon": 120.6229,
+        "sort": -1,
+        "is_in_common_use": true,
+        "surge": 2.48
+    },
+ */
+const loadInlandStationMaxSurge = (issueTs: number) => {
+	const url = `${host}${area}/surge/max/list`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: {
+			issue_ts: issueTs,
+		},
+	})
+}
+
+/**
  *
  * @param code
  * @returns
@@ -257,4 +281,5 @@ export {
 	loadStaionRegionCountry,
 	loadInlandStationList,
 	loadAllStationLastSurge,
+	loadInlandStationMaxSurge,
 }
