@@ -420,6 +420,7 @@ export default class ForecastMapView extends Vue {
 						res.data.forEach((temp) => {
 							tempStationList.push({
 								station_code: temp.code,
+								name: temp.name,
 								gmt_realtime: new Date(issueTs), // 注意此处为str->date
 								lat: temp.lat,
 								lon: temp.lon,

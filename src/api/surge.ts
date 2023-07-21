@@ -54,8 +54,24 @@ const loadTargetStationTideRealdataList = (code: string, start: Date, end: Date)
 	})
 }
 
+/**
+ * + 23-07-21 获取国内站点的天文潮集合
+ * @param code
+ * @param start
+ * @param end
+ * @returns
+ */
+const loadInLandAstronomictideList = (code: string, start: number, end: number) => {
+	const url = `${host}${area}/surge/astronomictide/list`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: { station_code: code, start_ts: start, end_ts: end },
+	})
+}
+
 export {
 	loadSurgeListByRecently,
 	loadTargetStationSurgeRealdataList,
 	loadTargetStationTideRealdataList,
+	loadInLandAstronomictideList,
 }

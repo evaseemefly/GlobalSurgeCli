@@ -797,16 +797,20 @@ const addStationIcon2Map = (
 		/** 当前站点英文名 */
 		const stationNameEn = temp.name
 		/** 当前站点中文名 */
-		const stationNameCh = filterStationNameCh(stationNameEn, stationNameDict)
+		const stationNameCh =
+			filterStationNameCh(stationNameEn, stationNameDict) !== undefined
+				? filterStationNameCh(stationNameEn, stationNameDict)
+				: temp.station_code
+		// TODO:[*] 23-07-16 此处将 之前的 name=code => name=stationNameCh
 		const tempStationSurge = new StationSurgeMidModel(
-			temp.station_code,
+			stationNameCh,
 			temp.station_code,
 			'',
 			'',
 			new Date()
 		)
 		const iconSurgeMin = tempStationSurge.getImplements(zoom, {
-			stationName: temp.station_code,
+			stationName: stationNameCh,
 			stationCode: temp.station_code,
 			surgeMax: surgeMax,
 			surgeMin: 0,

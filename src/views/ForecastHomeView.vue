@@ -5,7 +5,7 @@
 		</div>
 		<div class="layout-bottom"><SubNavMenuView></SubNavMenuView></div>
 		<!-- <WaveGridForecastDataFormView></WaveGridForecastDataFormView> -->
-		<StationSurgeDataFormView></StationSurgeDataFormView>
+		<StationInlandSurgeDataFormView></StationInlandSurgeDataFormView>
 		<!-- <div><StationTideFormView></StationTideFormView></div> -->
 		<!-- <StationLayoutView :tyNum="tyNum"></StationLayoutView> -->
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
@@ -28,6 +28,7 @@ import ThumbListView from '@/components/thumbs/thumbListView.vue'
 import HeaderLogoView from '@/components/header/headerLogoView.vue'
 import LegendListView from '@/components/toolsBar/legendListView.vue'
 import WaveGridForecastDataFormView from '@/components/forms/WaveGridForecastDataForm.vue'
+import StationInlandSurgeDataFormView from '@/components/forms/StationInlandSurgeDataFormView.vue'
 import StationSurgeDataFormView from '@/components/forms/StationSurgeDataFormView.vue'
 import RegionStatisticsCard from '@/components/cards/regionStatisticsCard.vue'
 
@@ -56,7 +57,8 @@ import moment from 'moment'
 		HeaderLogoView,
 		LegendListView,
 		WaveGridForecastDataFormView,
-		StationSurgeDataFormView,
+		// StationSurgeDataFormView,
+		StationInlandSurgeDataFormView,
 		RegionStatisticsCard,
 	},
 })
