@@ -34,4 +34,21 @@ const loadTargetStationSurgeForecastList = (
 	})
 }
 
-export { loadTargetStationSurgeForecastList }
+/**
+ * 获取单站四色警戒潮位
+ * @param code
+ * @returns [{
+        "station_code": "BHI",
+        "tide": 526.0,
+        "alert": 5001
+    },]
+ */
+const loadInLandAlertLevels = (code: string) => {
+	const url = `${host}${area}/alert/one`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: { station_code: code },
+	})
+}
+
+export { loadTargetStationSurgeForecastList, loadInLandAlertLevels }

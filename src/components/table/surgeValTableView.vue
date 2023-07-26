@@ -8,15 +8,15 @@
 				</div>
 				<div class="table-legend-row table-legend-item">
 					<div class="legend-title">实况</div>
-					<div class="legend-unit">m</div>
+					<div class="legend-unit">cm</div>
 				</div>
 				<div class="table-legend-row table-legend-item">
 					<div class="legend-title">天文潮</div>
-					<div class="legend-unit">m</div>
+					<div class="legend-unit">cm</div>
 				</div>
 				<div class="table-legend-row table-legend-item">
 					<div class="legend-title">增水</div>
-					<div class="legend-unit">m</div>
+					<div class="legend-unit">cm</div>
 				</div>
 			</div>
 		</section>
@@ -40,7 +40,7 @@
 						scope="col"
 						v-for="(item, index) in splitSurgeList"
 						:key="index"
-						:style="{ background: toColor(item) }"
+						:style="{ background: baseColorStr }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
@@ -55,7 +55,7 @@
 						scope="col"
 						v-for="(item, index) in splitTideList"
 						:key="index"
-						:style="{ background: toColor(item) }"
+						:style="{ background: baseColorStr }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
@@ -89,11 +89,12 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import {
 	formatDir2Int,
 	formatSurgeFixed2Str,
-	filterWaveColor,
+	filterSurgeColorStr,
 	formatDate2DayHM,
 } from '@/util/filter'
 import { DEFAULT_SURGE_TD_STEP } from '@/const/default'
-/** 海浪 */
+import { AlertTideEnum } from '@/enum/surge'
+/** 风暴潮 tab */
 @Component({ filters: { formatDir2Int, formatSurgeFixed2Str, formatDate2DayHM } })
 export default class SurgeTableView extends Vue {
 	/** 实况潮位 */
@@ -108,6 +109,10 @@ export default class SurgeTableView extends Vue {
 	@Prop({ type: Array, default: [] })
 	diffSurgeList: { val: number }[]
 
+	/** 当前 code 对应的警戒潮位 */
+	@Prop({ type: Array, default: [] })
+	alertLevels: { stationCode: string; tide: number; alert: AlertTideEnum }[]
+
 	@Prop({ type: Array, default: [] })
 	forecastDtList: { val: Date }[]
 
@@ -117,6 +122,8 @@ export default class SurgeTableView extends Vue {
 
 	@Prop({ type: Number, default: 0 })
 	propHoverIndex: number
+
+	baseColorStr: '#153C83'
 
 	/** 当前移入的index索引 */
 	hoverIndex = 0
@@ -131,7 +138,7 @@ export default class SurgeTableView extends Vue {
 	}
 
 	toColor(val: number): string {
-		return filterWaveColor(val)
+		return filterSurgeColorStr(val)
 	}
 
 	@Watch('propHoverIndex')

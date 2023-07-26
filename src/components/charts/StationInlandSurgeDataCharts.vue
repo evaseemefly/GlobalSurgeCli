@@ -92,7 +92,7 @@ import {
 	loadTargetStationTideRealdataList,
 	loadInLandAstronomictideList,
 } from '@/api/surge'
-import { loadTargetStationSurgeForecastList } from '@/api/forecast/surge'
+import { loadTargetStationSurgeForecastList, loadInLandAlertLevels } from '@/api/forecast/surge'
 import { loadStaionRegionCountry, loadStationStaus } from '@/api/station'
 // 工具方法
 // filter
@@ -113,6 +113,7 @@ import { LayerTypeEnum } from '@/enum/map'
 
 import { loadWaveProductForecastRealDataList } from '@/api/wave'
 import { filter } from 'vue/types/umd'
+import { AlertTideEnum } from '@/enum/surge'
 
 const MARGIN_TOP = 20
 const MARGIN_BOTTOM = 20
@@ -157,6 +158,11 @@ export default class StationInlandSurgeChartView extends Vue {
 	/** 当前选中的位置 */
 	latlng: L.LatLng = DEFAULT_BOX_LOOP_LATLNG
 
+	alertBlue: number = DEFAULT_ALERT_TIDE
+	alertYellow: number = DEFAULT_ALERT_TIDE
+	alertOrange: number = DEFAULT_ALERT_TIDE
+	alertRed: number = DEFAULT_ALERT_TIDE
+
 	stationBaseInfo: {
 		station_code: string
 		station_name: string
@@ -200,6 +206,8 @@ export default class StationInlandSurgeChartView extends Vue {
 	hoverDtIndex = 0
 	/** 表格中的海浪观测数据 */
 	tableWaveValsList: { mwd: number; mwp: number; forecastDt: Date }[] = []
+	/** 警戒潮位集合 */
+	alertLevels: { stationCode: string; tide: number; alert: AlertTideEnum }[] = []
 	startTs = 1687953600
 	endTs = 1688558400
 	issueTs = 1687953600
@@ -223,7 +231,12 @@ export default class StationInlandSurgeChartView extends Vue {
 	 * step 2: * 加载天文潮位集合
 	 * step 3: * 记载四色警戒潮位
 	 */
-	loadTargetStationSurgeDataList(code: string, issue: number, start: number, end: number): void {
+	async loadTargetStationSurgeDataList(
+		code: string,
+		issue: number,
+		start: number,
+		end: number
+	): Promise<void> {
 		const that = this
 		/** FIELD:读取结果的限制长度 */
 		let limitCount = 24
@@ -266,8 +279,8 @@ export default class StationInlandSurgeChartView extends Vue {
 					return surgeList
 				}
 			)
-			.then((surgeList) => {
-				loadInLandAstronomictideList(code, start, end).then(
+			.then(async (surgeList) => {
+				await loadInLandAstronomictideList(code, start, end).then(
 					(
 						res: IHttpResponse<
 							{
@@ -316,32 +329,55 @@ export default class StationInlandSurgeChartView extends Vue {
 							return val !== DEFAULT_SURGE_VAL && val !== null
 						})
 
-						that.yAxisMax = Math.max(
-							...noNanSurgeList,
-							...noDefaultTideList,
-							...noDefaultdiffSurgeList
-						)
-
-						that.yAxisMin = Math.min(
-							...noNanSurgeList,
-							...noDefaultTideList,
-							...noDefaultdiffSurgeList
-						)
 						// TODO:[-] 23-07-21 统一更新当前页面的三个潮位集合
 						that.tideList = tideList
 						that.diffSurgeList = surgeList
 						that.surgeList = sumSurgeList
-						that.initCharts(
-							that.dtList,
-							[
-								{ fieldName: 'obs', yList: sumSurgeList },
-								{ fieldName: 'tide', yList: tideList },
-							],
-							{ fieldName: 'surge', vals: surgeList },
-							'潮位',
-							0
-						)
 					}
+				)
+				await loadInLandAlertLevels(code).then(
+					(
+						res: IHttpResponse<
+							{
+								station_code: string
+								tide: number
+								alert: number
+							}[]
+						>
+					) => {
+						that.alertLevels = []
+						if (res.status === 200) {
+							res.data.forEach((val) => {
+								switch (true) {
+									case val.alert === AlertTideEnum.BLUE:
+										this.alertBlue = val.tide
+										break
+									case val.alert === AlertTideEnum.YELLOW:
+										this.alertYellow = val.tide
+										break
+									case val.alert === AlertTideEnum.ORANGE:
+										this.alertOrange = val.tide
+										break
+									case val.alert === AlertTideEnum.RED:
+										this.alertRed = val.tide
+										break
+								}
+							})
+						}
+					}
+				)
+			})
+			.then(() => {
+				// TODO:[-] 23-07-25 加入了警戒潮位，将init chart 放在最后的 then 中
+				that.initCharts(
+					that.dtList,
+					[
+						{ fieldName: 'obs', yList: that.surgeList },
+						{ fieldName: 'tide', yList: that.tideList },
+					],
+					{ fieldName: 'surge', vals: that.diffSurgeList },
+					'潮位',
+					0
 				)
 			})
 	}
@@ -562,6 +598,98 @@ export default class StationInlandSurgeChartView extends Vue {
 				},
 			}
 			series.push(tempSeries)
+
+			// TODO:[*] 23-07-25 添加四色警戒潮位
+			// TODO: 21-08-25 新加入的四色警戒潮位标线
+			series.push({
+				name: '警戒潮位',
+				type: 'line',
+				markLine: {
+					symbol: 'none', // 虚线不显示端点的圆圈及箭头
+					itemStyle: {
+						color: 'rgb(19, 184, 196)',
+					},
+					data: [
+						{
+							name: '蓝色警戒潮位',
+							yAxis: this.alertBlue,
+						},
+					],
+				},
+			})
+			series.push({
+				name: '警戒潮位',
+				type: 'line',
+				markLine: {
+					symbol: 'none',
+					itemStyle: {
+						color: 'rgb(245, 241, 20)',
+					},
+					data: [
+						{
+							name: '黄色警戒潮位',
+							yAxis: this.alertYellow,
+						},
+					],
+				},
+			})
+			series.push({
+				name: '警戒潮位',
+				type: 'line',
+				markLine: {
+					symbol: 'none',
+					itemStyle: {
+						color: 'rgb(235, 134, 19)',
+					},
+					data: [
+						{
+							name: '橙色警戒潮位',
+							yAxis: this.alertOrange,
+						},
+					],
+				},
+			})
+			series.push({
+				name: '警戒潮位',
+				type: 'line',
+				markLine: {
+					symbol: 'none',
+					itemStyle: {
+						color: 'rgb(241, 11, 11)',
+						lineStyle: {
+							cap: 'round',
+							type: 'dotted',
+						},
+					},
+					data: [
+						{
+							name: '红色警戒潮位',
+							yAxis: this.alertRed,
+						},
+					],
+				},
+			})
+			//
+			that.yAxisMax = Math.max(
+				...[
+					that.yAxisMax,
+					that.alertBlue,
+					that.alertYellow,
+					that.alertOrange,
+					that.alertRed,
+				]
+			)
+
+			// that.yAxisMin ==
+			// 	Math.min(
+			// 		...[
+			// 			that.,
+			// 			that.alertBlue,
+			// 			that.alertYellow,
+			// 			that.alertOrange,
+			// 			that.alertRed,
+			// 		]
+			// 	)
 			// this.surgeByGroupPath = []
 			const option = {
 				title: {

@@ -248,6 +248,23 @@ const filterWaveColor = (val: number): string => {
 }
 
 /**
+ * @description 根据增水值显示对应的颜色
+ * 与 filterSurgeAlarmColor 遵循风暴潮强度等级分级
+ * @author evaseemefly
+ * @date 2023/07/25
+ * @param {number} val
+ * @returns {*}  {string}
+ */
+const filterSurgeColorStr = (val: number): string => {
+	// chroma.scale(['yellow', 'lightgreen', '008ae5']).domain([0, 0.25, 1])
+	const scale = chroma
+		.scale(['#153C83', '#4899D9', '#FFFB58', '#F1C712', '#E79325', '#F22015', '#C40E0F'])
+		.domain([50, 100, 150, 200, 250])
+	const colorStr = scale(val).hex()
+	return colorStr
+}
+
+/**
  * @description 根据字典获取对应的海洋站中文名
  * @author evaseemefly
  * @date 2022/11/09
@@ -418,4 +435,5 @@ export {
 	formatContry2Str,
 	filterWaveColor,
 	filterSpiderStationStatusCls,
+	filterSurgeColorStr,
 }
