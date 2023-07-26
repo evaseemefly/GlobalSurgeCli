@@ -8,7 +8,7 @@ export interface IRasterTif<T> {
 	getGeoTifUrl(forecastDt: Date): Promise<T>
 }
 
-abstract class SurgeRasterTifLayer<T> implements IRasterTif<T> {
+abstract class AbsSurgeRasterTifLayer<T> implements IRasterTif<T> {
 	issueTimestamp: string
 	// forecastDt: Date
 	layerType: LayerTypeEnum
@@ -23,7 +23,7 @@ abstract class SurgeRasterTifLayer<T> implements IRasterTif<T> {
 /**
  * + 23-01-04 海浪标量场 tif 图层
  */
-class SurgeMaxScalarRasterTifLayer<T> extends SurgeRasterTifLayer<T> {
+class SurgeMaxScalarRasterTifLayer<T> extends AbsSurgeRasterTifLayer<T> {
 	/**
 	 * - 22-06-11 注意此处存在一个bug若请求出现异常则会返回 '' 注意!
 	 *
@@ -65,4 +65,4 @@ class SurgeMaxScalarRasterTifLayer<T> extends SurgeRasterTifLayer<T> {
 	}
 }
 
-export { WaveRasterTifLayer, WaveScalarRasterTifLayer }
+export { AbsSurgeRasterTifLayer, SurgeMaxScalarRasterTifLayer }

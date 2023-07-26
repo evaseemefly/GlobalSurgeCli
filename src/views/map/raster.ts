@@ -26,6 +26,7 @@ import * as plotty from 'plotty'
 import { ElMessage } from 'element-ui/types/message'
 
 import { WaveScalarRasterTifLayer } from './waveRasterInstance'
+import { SurgeMaxScalarRasterTifLayer } from './surgeRasterInstance'
 
 import { LayerTypeEnum } from '@/enum/map'
 // COMMON
@@ -314,18 +315,15 @@ class RasterGeoLayer implements ISurgeRasterLayer {
 		forecastDt: Date,
 		layerType: LayerTypeEnum
 	): Promise<string> {
-		const waveTif = new WaveScalarRasterTifLayer<{
-			relative_path: string
-			file_name: string
-			file_size: number
-			host: string
-			port: number
-			area: string
+		const surgeTif = new SurgeMaxScalarRasterTifLayer<{
+			remote_url: string
 		}>(issueTimestamp, layerType)
 
-		const awaitUrl = await waveTif.getGeoTifUrl(forecastDt)
-		const store_url = `http://${awaitUrl.host}:${awaitUrl.port}/images/${awaitUrl.area}/${awaitUrl.relative_path}/${awaitUrl.file_name}`
-		return store_url
+		const awaitUrl = await surgeTif.getGeoTifUrl(forecastDt)
+		// const store_url = `http://${awaitUrl.host}:${awaitUrl.port}/images/${awaitUrl.area}/${awaitUrl.relative_path}/${awaitUrl.file_name}`
+		const storeUrl: string = awaitUrl.remote_url
+
+		return storeUrl
 	}
 
 	public async loadTifUrl(forecastDt: Date, coverageType?: LayerTypeEnum): Promise<string> {
