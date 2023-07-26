@@ -53,9 +53,9 @@ export interface IRaster {
  * + 23-01-03
  * 海浪 raster layer 接口
  * @export
- * @interface IWaveRasterLayer
+ * @interface ISurgeRasterLayer
  */
-export interface IWaveRasterLayer {
+export interface ISurgeRasterLayer {
 	/**
 	 * 将 surge 栅格图层 添加至地图中
 	 * 执行后可获取对应的 geotiff url
@@ -120,9 +120,9 @@ class RasterBase {
  * - 22-04-20
  * 该类为 max surge layer 使用
  *
- * @class SurgeRasterGeoLayer
+ * @class RasterGeoLayer
  */
-class WaveRasterGeoLayer implements IWaveRasterLayer {
+class RasterGeoLayer implements ISurgeRasterLayer {
 	options: {
 		rasterLayer: L.Layer
 
@@ -195,7 +195,7 @@ class WaveRasterGeoLayer implements IWaveRasterLayer {
 	 * @date 2023/01/04
 	 * @readonly
 	 * @type {string}
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	get issueTimestamp(): string {
 		return this.options.issueTimestamp
@@ -207,7 +207,7 @@ class WaveRasterGeoLayer implements IWaveRasterLayer {
 	 * @date 2023/01/04
 	 * @readonly
 	 * @type {LayerTypeEnum}
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	get layerType(): LayerTypeEnum {
 		return this.options.layerType
@@ -231,7 +231,7 @@ class WaveRasterGeoLayer implements IWaveRasterLayer {
 	 * + 21-08-19 新加入的 chroma.scale 色标变量，在构造函数中给与赋值
 	 *
 	 * @type {*}
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	// scale = this.options.scale
 	get scaleList(): string[] | string {
@@ -241,19 +241,19 @@ class WaveRasterGeoLayer implements IWaveRasterLayer {
 	 * 色标的范围(乘以了系数=this.rasterMax * this.options.customCoefficient)
 	 *
 	 * @type {number[]}
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	scaleRange: number[] = []
 	/**
 	 * raster的实际最大值
 	 *
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	rasterMax = 0
 	/**
 	 * raster的实际最小值
 	 *
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	rasterMin = 0
 
@@ -278,7 +278,7 @@ class WaveRasterGeoLayer implements IWaveRasterLayer {
 	 * @description 设置当前的预报时间
 	 * @author evaseemefly
 	 * @date 2023/01/03
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	public set setForecastDt(val: Date) {
 		this.options.forecastDt = val
@@ -288,7 +288,7 @@ class WaveRasterGeoLayer implements IWaveRasterLayer {
 	 * @description 设置当前图层类型
 	 * @author evaseemefly
 	 * @date 2023/01/03
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	public set setLayerType(val: LayerTypeEnum) {
 		this.options.layerType = val
@@ -307,7 +307,7 @@ class WaveRasterGeoLayer implements IWaveRasterLayer {
 	 * @param {string} tyCode
 	 * @param {string} tyTs
 	 * @return {*}  {string}
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	public async getGeoTiff(
 		issueTimestamp: string,
@@ -348,7 +348,7 @@ class WaveRasterGeoLayer implements IWaveRasterLayer {
 	 * @param {(opt: { message: string; type: string }) => void} pretreatmentCallBackFun
 	 * @param {boolean} [isShowRasterLayer=true] 是否在地图中加载 raster layer
 	 * @returns {Promise<number>}
-	 * @memberof WaveRasterGeoLayer
+	 * @memberof RasterGeoLayer
 	 */
 	public async add2map(
 		map: L.Map,
@@ -494,4 +494,4 @@ class WaveRasterGeoLayer implements IWaveRasterLayer {
 	}
 }
 
-export { WaveRasterGeoLayer }
+export { RasterGeoLayer }

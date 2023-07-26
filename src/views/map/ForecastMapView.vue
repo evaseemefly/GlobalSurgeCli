@@ -121,7 +121,7 @@ import {
 // enum
 import { IconTypeEnum, ScalarShowTypeEnum, StationIconShowTypeEnum } from '@/enum/common'
 import { MenuType, TyScatterMenuType } from '@/enum/menu'
-import { LayerTypeEnum, MapLayerEnum } from '@/enum/map'
+import { LayerTypeEnum, MapLayerEnum, RasterLayerEnum } from '@/enum/map'
 
 // api
 import { loadTyRealDataList, loadStationTideDataList } from '@/api/typhoon'
@@ -165,18 +165,20 @@ import {
 } from '@/bus/types'
 import { FilterType4ScattersEnum, FilterTypeEnum } from '@/enum/filter'
 import { MS_UNIT } from '@/const/unit'
-import { WaveRasterGeoLayer } from './raster'
+import { ISurgeRasterLayer, RasterGeoLayer } from './raster'
 import { Sosurface } from './isosurface'
 import { DEFAULT_COLOR_SCALE } from '@/const/colorBar'
 import wave from '@/store/modules/wave'
 import { WaveArrow } from './arrow'
 import { StationBaseInfo } from './station'
 import { WaveBarOptType } from '@/middle_model/geo'
+import { loading } from '@/common/common'
 
 // - 23-03-27 api
 import { loadSurgeListByRecently } from '@/api/surge' // 获取所有潮位站距离当前最近的潮值
 import { loadAllStationStatusJoinGeoInfo, loadAllStationLastSurge } from '@/api/station'
 import { StationBaseInfoMidModel } from '@/middle_model/station'
+import { IWdSurgeLayerOptions } from './types/types'
 
 /**
  * - 23-03-27 继承之前海浪可视化系统的 cli
@@ -466,6 +468,88 @@ export default class ForecastMapView extends Vue {
 		const stationBaseInfo = new StationBaseInfo()
 		await stationBaseInfo.getAllInlandStationInfo()
 		this.stationBaseInfoList = stationBaseInfo.allStationBaseInfoList
+	}
+
+	/** +23 -07-07-26 加载潮位栅格图层至地图
+	 * step1: * 加载指定的栅格tiff图层
+	 */
+	async addSurgeRasterLayer2Map(
+		val: IWdSurgeLayerOptions,
+		surgeRasterInstance: ISurgeRasterLayer,
+		isosurfaceOpts: { colorScale?: string[]; valScale?: number[] } = {}
+	): Promise<void> {
+		const that = this
+		const mymap: L.Map = this.$refs.basemap['mapObject']
+
+		if (val.isShow) {
+			// this.clearUniquerRasterLayer()
+			this.clearSosurfaceLayer()
+			const loadInstance = loading('等待加载等值面', {
+				fullscreen: true,
+				background: 'rgba(49, 59, 89, 0.733)',
+			})
+
+			/** 是否加载等 raster layer */
+			const isLoadingRasterLayer =
+				val.rasterLayerType == RasterLayerEnum.RASTER_LAYER ? true : false
+
+			// this.setIsShowRasterLayerLegend(true)
+			surgeRasterInstance
+				.add2map(mymap, that.$message, isLoadingRasterLayer, 0.5, val.layerType)
+				.then((layerId) => {
+					// - 22-06-16 注意此处设置 scale 时可能会出现一致性错误
+					// 为 raster 色标传递色标 range
+					// this.setScaleRange(surgeRasterInstance.scaleRange || [])
+					// this.setScaleDesc(surgeRasterInstance.desc)
+					// this.uniqueRasterLayerId = layerId
+				})
+				.then(async (_) => {
+					if (!isLoadingRasterLayer && surgeRasterInstance.tiffUrl !== null) {
+						// TODO:[*] 22-06-02 添加等值面
+						// const maxSosurface = new SurgeSosurface(
+						// 	surgeRasterInstance.tiffUrl,
+						// 	isosurfaceOpts
+						// 	// sosurfaceOptions
+						// )
+						// // 此处会有可能出现错误，对于加载的地主不存在指定文件时会出现错误，但 catch 无法捕捉到
+						// const sosurfaceOpts = await maxSosurface.addSosurface2MapbyScale(
+						// 	mymap,
+						// 	that.$message,
+						// 	true
+						// )
+						// const valScale =
+						// 	isosurfaceOpts.valScale !== undefined
+						// 		? isosurfaceOpts.valScale
+						// 		: sosurfaceOpts.valScale
+						// const colorScale =
+						// 	isosurfaceOpts.colorScale !== undefined
+						// 		? isosurfaceOpts.colorScale
+						// 		: sosurfaceOpts.colorScale
+						// this.setIsoSurgeColorScaleValRange(valScale)
+						// this.setIsoSurgeColorScaleStrList(colorScale)
+						// that.sosurfaceLayerId = maxSosurface.getLayerId()
+						// that.surgeGridTitleLayerId = maxSosurface.getPointsTitleLayerId()
+						// that.sosurfaceLayer = maxSosurface.getLayer()
+					}
+				})
+				.then((_) => {
+					// loadInstance.close()
+				})
+				.catch((err) => {
+					that.$message({
+						message: err,
+						center: true,
+						type: 'warning',
+					})
+					loadInstance.close()
+				})
+				.finally((_) => {
+					loadInstance.close()
+				})
+		} else {
+			// this.clearUniquerRasterLayer()
+			// this.clearSosurfaceLayer()
+		}
 	}
 
 	@Watch('getSelectLoop')
