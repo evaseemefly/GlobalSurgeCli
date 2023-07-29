@@ -165,7 +165,7 @@ import {
 } from '@/bus/types'
 import { FilterType4ScattersEnum, FilterTypeEnum } from '@/enum/filter'
 import { MS_UNIT } from '@/const/unit'
-import { ISurgeRasterLayer, RasterGeoLayer } from './raster'
+import { ISurgeRasterLayer, SurgeRasterGeoLayer } from './raster'
 import { Sosurface } from './isosurface'
 import { DEFAULT_COLOR_SCALE } from '@/const/colorBar'
 import wave from '@/store/modules/wave'
@@ -296,6 +296,39 @@ export default class ForecastMapView extends Vue {
 			console.log(el)
 			that.setShowStationSurgeForm(false)
 		})
+		// TODO:[-] 23-07-27 测试加载最大增水场栅格图层
+		const scaleList = [
+			'#153C83',
+			'#4899D9',
+			'#FFFB58',
+			'#F1C712',
+			'#E79325',
+			'#F22015',
+			'#C40E0F',
+		]
+		const tempTs = 1685620800
+		const tempDt: Date = moment(tempTs).toDate()
+		const wdRasterLayerOpts: IWdSurgeLayerOptions = {
+			forecastDt: tempDt,
+			rasterLayerType: RasterLayerEnum.RASTER_LAYER,
+			isShow: true,
+			layerType: LayerTypeEnum.RASTER_LAYER_ALL_SCALAR,
+			tyTimeStamp: tempTs.toString(),
+			scaleList: scaleList,
+			tyCode: '',
+		}
+		const surgeRasterLayer = new SurgeRasterGeoLayer({
+			issueTimestamp: wdRasterLayerOpts.tyTimeStamp,
+
+			scaleList: scaleList,
+			customMin: 0, // 自定义下限为0
+			customMax: 2, // TODO:[-] 22-04-14 加入的自定义上限为2
+			customCoefficient: 0.8,
+			customCoeffMax: 1,
+			desc: '对于大于1.0的原值,色标会对其乘0.8',
+		})
+
+		this.addSurgeRasterLayer2Map(wdRasterLayerOpts, surgeRasterLayer)
 	}
 
 	/** 清除当前选定的圈选位置的中心点 */
@@ -495,7 +528,7 @@ export default class ForecastMapView extends Vue {
 
 			// this.setIsShowRasterLayerLegend(true)
 			surgeRasterInstance
-				.add2map(mymap, that.$message, isLoadingRasterLayer, 0.5, val.layerType)
+				.add2map(mymap, that.$message, isLoadingRasterLayer, val.forecastDt, val.layerType)
 				.then((layerId) => {
 					// - 22-06-16 注意此处设置 scale 时可能会出现一致性错误
 					// 为 raster 色标传递色标 range
@@ -543,6 +576,7 @@ export default class ForecastMapView extends Vue {
 					})
 					loadInstance.close()
 				})
+				// @ts-ignore
 				.finally((_) => {
 					loadInstance.close()
 				})

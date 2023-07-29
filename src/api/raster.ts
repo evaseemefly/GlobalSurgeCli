@@ -9,7 +9,7 @@ import { LayerTypeEnum } from '@/enum/map'
 // export const host = host
 axios.defaults.withCredentials = true
 
-const area = '/covrage'
+const area = '/coverage'
 
 /**
  * 根据取72小时最大增水场对应发布时间的 coverage info
@@ -24,7 +24,7 @@ const area = '/covrage'
 }
  */
 const loadMaxSurgeCoverageInfoByIssue = (issueTs: number) => {
-	const url = `${host}${area}/covrage/one/info/ts`
+	const url = `${host}${area}/one/info/ts`
 	return axios.get(url, {
 		headers: authHeader(),
 		params: { issue_ts: issueTs },
@@ -32,7 +32,7 @@ const loadMaxSurgeCoverageInfoByIssue = (issueTs: number) => {
 }
 
 const loadMaxSurgeCoverageTifUlrByIssue = (issueTs: number) => {
-	const url = `${host}${area}/covrage/one/url/ts`
+	const url = `${host}${area}/one/url/ts`
 	return axios.get(url, {
 		headers: authHeader(),
 		params: { issue_ts: issueTs },

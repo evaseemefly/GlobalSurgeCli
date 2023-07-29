@@ -161,7 +161,6 @@ import {
 } from '@/bus/types'
 import { FilterType4ScattersEnum, FilterTypeEnum } from '@/enum/filter'
 import { MS_UNIT } from '@/const/unit'
-import { WaveRasterGeoLayer } from './raster'
 import { Sosurface } from './isosurface'
 import { DEFAULT_COLOR_SCALE } from '@/const/colorBar'
 import wave from '@/store/modules/wave'

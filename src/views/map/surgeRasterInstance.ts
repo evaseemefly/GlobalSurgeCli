@@ -1,5 +1,5 @@
 import moment from 'moment'
-import { loadMaxSurgeCoverageInfoByIssue } from '@/api/raster'
+import { loadMaxSurgeCoverageInfoByIssue, loadMaxSurgeCoverageTifUlrByIssue } from '@/api/raster'
 import { LayerTypeEnum } from '@/enum/map'
 import { TifInfoType } from './types/types'
 import { IHttpResponse } from '@/interface/common'
@@ -49,7 +49,7 @@ class SurgeMaxScalarRasterTifLayer<T> extends AbsSurgeRasterTifLayer<T> {
                 "coverage_type": 2102
             }
              */
-			return loadMaxSurgeCoverageInfoByIssue(forecastTs).then((res: IHttpResponse<T>) => {
+			return loadMaxSurgeCoverageTifUlrByIssue(forecastTs).then((res: IHttpResponse<T>) => {
 				if (res.status === 200) {
 					return res.data
 				}

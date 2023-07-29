@@ -1,4 +1,4 @@
-import { loadWaveProductTifInfo } from '@/api/raster'
+import { loadWaveProductTifInfo } from '@/api/wave'
 import { LayerTypeEnum } from '@/enum/map'
 import { TifInfoType } from './types/types'
 

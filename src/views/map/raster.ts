@@ -123,7 +123,7 @@ class RasterBase {
  *
  * @class RasterGeoLayer
  */
-class RasterGeoLayer implements ISurgeRasterLayer {
+class SurgeRasterGeoLayer implements ISurgeRasterLayer {
 	options: {
 		rasterLayer: L.Layer
 
@@ -492,4 +492,4 @@ class RasterGeoLayer implements ISurgeRasterLayer {
 	}
 }
 
-export { RasterGeoLayer }
+export { SurgeRasterGeoLayer }
