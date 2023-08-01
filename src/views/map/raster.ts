@@ -107,6 +107,8 @@ export interface ISurgeRasterLayer {
 	 * @memberof ISurgeRasterLayer
 	 */
 	desc: string
+
+	loadTifUrl(forecastDt: Date, coverageType?: LayerTypeEnum): Promise<string>
 }
 
 class RasterBase {

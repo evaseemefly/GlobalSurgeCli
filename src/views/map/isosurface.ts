@@ -79,7 +79,8 @@ class Sosurface implements ISosurface {
 			'#93003a',
 		],
 
-		valScale: [0.6, 0.8, 1.0, 1.4, 1.8, 2.0, 2.4, 2.8],
+		valScale: [0, 0.6, 0.8, 1.0, 1.4, 1.8, 2.0, 3],
+		// valScale: [0.6, 0.8, 1.0, 1.4, 1.8, 2.0, 2.4, 2.8],
 	}
 
 	/**
@@ -133,7 +134,7 @@ class Sosurface implements ISosurface {
 				'#F22015',
 				'#C40E0F',
 			],
-			valScale: [2, 3, 4, 6, 9, 12, 14],
+			valScale: [0, 0.5, 1, 1.5, 2, 2.5, 3, 5],
 		}
 	) {
 		this.url = url
@@ -173,7 +174,7 @@ class Sosurface implements ISosurface {
 		map: L.Map,
 		errorCallBackFun: (ElMessage) => void,
 		pretreatmentCallBackFun: (params: any) => void,
-		isShowTitle = true
+		isShowTitle = false
 	): Promise<void> {
 		const that = this
 		return fetch(that.url, {
@@ -226,6 +227,26 @@ class Sosurface implements ISosurface {
                         ymax: 26.00000012734953
                         ymin: 14.999999872650472
                     */
+
+					/**
+					 *  height: 250
+						maxs: [0.8943]
+						mins: [0]
+						noDataValue: null
+						numberOfRasters: 1
+						pixelHeight: 0.10000000000000142
+						pixelWidth: 0.09999999999999432
+						projection: 4326
+						ranges: [0.8943]
+						rasterType: "geotiff"
+						sourceType: "ArrayBuffer"
+						values: [Array(250)]
+						width: 220
+						xmax: 126.94999999999875
+						xmin: 104.95
+						ymax: 41.05
+						ymin: 16.049999999999642
+					 */
 
 					const grid = parseRes
 					that.geoOptions = {
@@ -295,6 +316,7 @@ class Sosurface implements ISosurface {
 					this.options.valScale.forEach((temp) => {
 						valScale.push(temp)
 					})
+					// valScale.push(3)
 					valScale.push(rasterMax)
 					// @ts-ignore
 					const isobands = turf.isobands(gridPoints, valScale, isobandsOptions)

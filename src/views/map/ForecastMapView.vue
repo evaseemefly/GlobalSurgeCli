@@ -317,6 +317,8 @@ export default class ForecastMapView extends Vue {
 			scaleList: scaleList,
 			tyCode: '',
 		}
+		/** + 23-07-31 加载的栅格图层的样式 栅格|等值面 */
+		const scalarLayerType: ScalarShowTypeEnum = ScalarShowTypeEnum.ISOSURFACE
 		const surgeRasterLayer = new SurgeRasterGeoLayer({
 			issueTimestamp: wdRasterLayerOpts.tyTimeStamp,
 
@@ -328,7 +330,18 @@ export default class ForecastMapView extends Vue {
 			desc: '对于大于1.0的原值,色标会对其乘0.8',
 		})
 
-		this.addSurgeRasterLayer2Map(wdRasterLayerOpts, surgeRasterLayer)
+		switch (scalarLayerType) {
+			// @ts-ignore
+			case ScalarShowTypeEnum.RASTER:
+				this.addSurgeRasterLayer2Map(wdRasterLayerOpts, surgeRasterLayer)
+				break
+			// @ts-ignore
+			case ScalarShowTypeEnum.ISOSURFACE:
+				this.addSurgeIsosurfaceLayer2Map(wdRasterLayerOpts, surgeRasterLayer)
+				break
+			default:
+				break
+		}
 	}
 
 	/** 清除当前选定的圈选位置的中心点 */
@@ -584,6 +597,42 @@ export default class ForecastMapView extends Vue {
 			// this.clearUniquerRasterLayer()
 			// this.clearSosurfaceLayer()
 		}
+	}
+
+	/** + 23-07-31 加载指定潮位栅格图层->等值面 -> 地图 */
+	async addSurgeIsosurfaceLayer2Map(
+		val: IWdSurgeLayerOptions,
+		surgeRasterInstance: ISurgeRasterLayer,
+		isosurfaceOpts: { colorScale?: string[]; valScale?: number[] } = {}
+	) {
+		const that = this
+		const mymap: L.Map = this.$refs.basemap['mapObject']
+		// 获取tif路径
+		const tifUlr: string = await surgeRasterInstance.loadTifUrl(val.forecastDt, val.layerType)
+
+		// TODO:[*] 22-06-02 添加等值面
+		const maxSosurface = new Sosurface(
+			tifUlr,
+			isosurfaceOpts
+			// sosurfaceOptions
+		)
+		// 此处会有可能出现错误，对于加载的地主不存在指定文件时会出现错误，但 catch 无法捕捉到
+		const sosurfaceOpts = await maxSosurface.addSosurface2MapbyScale(
+			mymap,
+			that.$message,
+			() => {},
+			true
+		)
+		const valScale =
+			isosurfaceOpts.valScale !== undefined ? isosurfaceOpts.valScale : sosurfaceOpts.valScale
+		const colorScale =
+			isosurfaceOpts.colorScale !== undefined
+				? isosurfaceOpts.colorScale
+				: sosurfaceOpts.colorScale
+
+		// this.setIsoSurgeColorScaleValRange(valScale)
+		// this.setIsoSurgeColorScaleStrList(colorScale)
+		that.sosurfaceLayerId = maxSosurface.getLayerId()
 	}
 
 	@Watch('getSelectLoop')
