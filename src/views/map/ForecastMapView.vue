@@ -248,6 +248,8 @@ export default class ForecastMapView extends Vue {
 	/** 格点文字 layer id */
 	gridTitlesLayerId = DEFAULT_LAYER_ID
 
+	uniqueRasterLayerId = DEFAULT_LAYER_ID
+
 	/** 目前添加至map的markers id 集合 */
 	markersIdList: number[] = []
 
@@ -281,6 +283,9 @@ export default class ForecastMapView extends Vue {
 
 	@Getter(GET_CURRENT_TY, { namespace: 'typhoon' }) getCurrentTy
 
+	/** 获取栅格图层的显示类型 */
+	@Getter(GET_SCALAR_SHOW_TYPE, { namespace: 'common' }) getScalarType: ScalarShowTypeEnum
+
 	created() {}
 
 	mounted() {
@@ -296,52 +301,7 @@ export default class ForecastMapView extends Vue {
 			console.log(el)
 			that.setShowStationSurgeForm(false)
 		})
-		// TODO:[-] 23-07-27 测试加载最大增水场栅格图层
-		const scaleList = [
-			'#153C83',
-			'#4899D9',
-			'#FFFB58',
-			'#F1C712',
-			'#E79325',
-			'#F22015',
-			'#C40E0F',
-		]
-		const tempTs = 1685620800
-		const tempDt: Date = moment(tempTs).toDate()
-		const wdRasterLayerOpts: IWdSurgeLayerOptions = {
-			forecastDt: tempDt,
-			rasterLayerType: RasterLayerEnum.RASTER_LAYER,
-			isShow: true,
-			layerType: LayerTypeEnum.RASTER_LAYER_ALL_SCALAR,
-			tyTimeStamp: tempTs.toString(),
-			scaleList: scaleList,
-			tyCode: '',
-		}
-		/** + 23-07-31 加载的栅格图层的样式 栅格|等值面 */
-		const scalarLayerType: ScalarShowTypeEnum = ScalarShowTypeEnum.ISOSURFACE
-		const surgeRasterLayer = new SurgeRasterGeoLayer({
-			issueTimestamp: wdRasterLayerOpts.tyTimeStamp,
-
-			scaleList: scaleList,
-			customMin: 0, // 自定义下限为0
-			customMax: 2, // TODO:[-] 22-04-14 加入的自定义上限为2
-			customCoefficient: 0.8,
-			customCoeffMax: 1,
-			desc: '对于大于1.0的原值,色标会对其乘0.8',
-		})
-
-		switch (scalarLayerType) {
-			// @ts-ignore
-			case ScalarShowTypeEnum.RASTER:
-				this.addSurgeRasterLayer2Map(wdRasterLayerOpts, surgeRasterLayer)
-				break
-			// @ts-ignore
-			case ScalarShowTypeEnum.ISOSURFACE:
-				this.addSurgeIsosurfaceLayer2Map(wdRasterLayerOpts, surgeRasterLayer)
-				break
-			default:
-				break
-		}
+		this.initMaxSurgeScalarLayer2Map(ScalarShowTypeEnum.ISOSURFACE)
 	}
 
 	/** 清除当前选定的圈选位置的中心点 */
@@ -497,6 +457,66 @@ export default class ForecastMapView extends Vue {
 		}
 	}
 
+	initMaxSurgeScalarLayer2Map(scalarLayerType: ScalarShowTypeEnum): void {
+		// TODO:[-] 23-07-27 测试加载最大增水场栅格图层
+		const scaleList = [
+			'#153C83',
+			'#4899D9',
+			'#FFFB58',
+			'#F1C712',
+			'#E79325',
+			'#F22015',
+			'#C40E0F',
+		]
+		this.clearUniquerRasterLayer()
+		const tempTs = 1690804800
+		const tempDt: Date = moment(tempTs).toDate()
+		const wdRasterLayerOpts: IWdSurgeLayerOptions = {
+			forecastDt: tempDt,
+			rasterLayerType: RasterLayerEnum.RASTER_LAYER,
+			isShow: true,
+			layerType: LayerTypeEnum.RASTER_LAYER_ALL_SCALAR,
+			tyTimeStamp: tempTs.toString(),
+			scaleList: scaleList,
+			tyCode: '',
+		}
+		/** + 23-07-31 加载的栅格图层的样式 栅格|等值面 */
+
+		const surgeRasterLayer = new SurgeRasterGeoLayer({
+			issueTimestamp: wdRasterLayerOpts.tyTimeStamp,
+
+			scaleList: scaleList,
+			customMin: 0, // 自定义下限为0
+			customMax: 2, // TODO:[-] 22-04-14 加入的自定义上限为2
+			customCoefficient: 0.8,
+			customCoeffMax: 1,
+			desc: '对于大于1.0的原值,色标会对其乘0.8',
+		})
+
+		switch (scalarLayerType) {
+			// @ts-ignore
+			case ScalarShowTypeEnum.RASTER:
+				this.addSurgeRasterLayer2Map(wdRasterLayerOpts, surgeRasterLayer)
+				break
+			// @ts-ignore
+			case ScalarShowTypeEnum.ISOSURFACE:
+				this.addSurgeIsosurfaceLayer2Map(wdRasterLayerOpts, surgeRasterLayer)
+				break
+			default:
+				break
+		}
+	}
+
+	/**  清除唯一的栅格图层——以后将所有清除 raster 均调用此方法 */
+	clearUniquerRasterLayer(): void {
+		if (this.uniqueRasterLayerId !== DEFAULT_LAYER_ID) {
+			// this.setIsShowRasterLayerLegend(false)
+			// @ts-ignore
+			this.clearLayerById(this.uniqueRasterLayerId)
+			this.uniqueRasterLayerId = DEFAULT_LAYER_ID
+		}
+	}
+
 	/** 将地图缩放至当前 surgeStationList  */
 	zoom2Country(): void {
 		if (this.surgeStationList.length > 0) {
@@ -547,7 +567,7 @@ export default class ForecastMapView extends Vue {
 					// 为 raster 色标传递色标 range
 					// this.setScaleRange(surgeRasterInstance.scaleRange || [])
 					// this.setScaleDesc(surgeRasterInstance.desc)
-					// this.uniqueRasterLayerId = layerId
+					this.uniqueRasterLayerId = layerId
 				})
 				.then(async (_) => {
 					if (!isLoadingRasterLayer && surgeRasterInstance.tiffUrl !== null) {
@@ -579,7 +599,7 @@ export default class ForecastMapView extends Vue {
 					}
 				})
 				.then((_) => {
-					// loadInstance.close()
+					loadInstance.close()
 				})
 				.catch((err) => {
 					that.$message({
@@ -594,8 +614,8 @@ export default class ForecastMapView extends Vue {
 					loadInstance.close()
 				})
 		} else {
-			// this.clearUniquerRasterLayer()
-			// this.clearSosurfaceLayer()
+			this.clearUniquerRasterLayer()
+			this.clearSosurfaceLayer()
 		}
 	}
 
@@ -606,6 +626,8 @@ export default class ForecastMapView extends Vue {
 		isosurfaceOpts: { colorScale?: string[]; valScale?: number[] } = {}
 	) {
 		const that = this
+		this.clearUniquerRasterLayer()
+		this.clearSosurfaceLayer()
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		// 获取tif路径
 		const tifUlr: string = await surgeRasterInstance.loadTifUrl(val.forecastDt, val.layerType)
@@ -632,7 +654,7 @@ export default class ForecastMapView extends Vue {
 
 		// this.setIsoSurgeColorScaleValRange(valScale)
 		// this.setIsoSurgeColorScaleStrList(colorScale)
-		that.sosurfaceLayerId = maxSosurface.getLayerId()
+		that.uniqueRasterLayerId = maxSosurface.getLayerId()
 	}
 
 	@Watch('getSelectLoop')
@@ -655,6 +677,11 @@ export default class ForecastMapView extends Vue {
 	@Watch('getStationCode')
 	onStationCode(val: string): void {
 		this.loadStationAndShow(val)
+	}
+
+	@Watch('getScalarType')
+	onScalarType(val: ScalarShowTypeEnum): void {
+		this.initMaxSurgeScalarLayer2Map(val)
 	}
 
 	@Watch('getBaseMapKey')

@@ -208,9 +208,9 @@ export default class StationInlandSurgeChartView extends Vue {
 	tableWaveValsList: { mwd: number; mwp: number; forecastDt: Date }[] = []
 	/** 警戒潮位集合 */
 	alertLevels: { stationCode: string; tide: number; alert: AlertTideEnum }[] = []
-	startTs = 1687953600
-	endTs = 1688558400
-	issueTs = 1687953600
+	startTs = 1690804800
+	endTs = 1691409600
+	issueTs = 1690804800
 
 	created() {
 		// EventBus.$on(TO_LOAD_FORECASTDATALIST_COORDS, this.loadWaveForecastDataListbyCoords)

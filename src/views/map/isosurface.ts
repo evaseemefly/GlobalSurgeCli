@@ -5,6 +5,7 @@ import { DEFAULT_LAYER_ID } from '@/const/default'
 import { max } from 'moment'
 import { Message } from 'element-ui'
 import { ElMessage } from 'element-ui/types/message'
+import { getIntegerList } from '@/util/math'
 /**
  * 等值面实现类接口
  *
@@ -261,6 +262,12 @@ class Sosurface implements ISosurface {
 						valMin: parseRes.mins.length > 0 ? parseRes.mins[0] : 0,
 					}
 					const scale: { fill: string }[] = []
+					// TODO:[-] 23-08-03 根据max生成动态的色标
+					const scaleNums: number[] = getIntegerList(
+						this.geoOptions.valMax,
+						this.options.colorScale.length
+					)
+					this.options.valScale = scaleNums
 					this.options.colorScale.forEach((temp) =>
 						scale.push({
 							fill: temp,
@@ -341,7 +348,7 @@ class Sosurface implements ISosurface {
 							arr,
 							width,
 							height,
-							{ ignoreVal: 0.5 }
+							{ ignoreVal: 0.2 }
 						)
 					}
 					// return that._id
@@ -370,12 +377,7 @@ class Sosurface implements ISosurface {
 		pretreatmentCallBackFun: (params: any) => void,
 		isShowGridTitle = true
 	): Promise<{ colorScale: string[]; valScale?: number[] }> {
-		await this.addSosurfaceToMap(
-			map,
-			errorCallBackFun,
-			pretreatmentCallBackFun,
-			isShowGridTitle
-		)
+		const that = this
 
 		if (this.options.valScale !== undefined) {
 			if (this.geoOptions.valMax < this.options.valScale[this.options.valScale.length - 1]) {
@@ -385,6 +387,13 @@ class Sosurface implements ISosurface {
 				this.options.valScale.push(this.geoOptions.valMax)
 			}
 		}
+		await this.addSosurfaceToMap(
+			map,
+			errorCallBackFun,
+			pretreatmentCallBackFun,
+			isShowGridTitle
+		)
+
 		return this.options
 	}
 
