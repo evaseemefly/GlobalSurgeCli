@@ -164,6 +164,7 @@ class Sosurface implements ISosurface {
 
 	/**
 	 * 加载 this.url 的 geotiff 加载为 等值线 layer 与 grid title layer ，并记录id this._id , this._pointsTitleLayerId
+	 * 根据加载的 geotiff 动态的生成等值面图例
 	 *
 	 * @param {L.Mapm} map
 	 * @param {(any) => void} pretreatmentCallBackFun 预处理函数(清除当前已存在的图层)

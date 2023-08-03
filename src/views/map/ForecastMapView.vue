@@ -404,6 +404,7 @@ export default class ForecastMapView extends Vue {
 	/** 设置当前圈选中心位置 */
 	@Mutation(SET_BOX_LOOP_LATLNG, { namespace: 'map' }) setBoxLoopLatlng: (val: L.LatLng) => void
 
+	/**  加载国内wd各个站位的最大增水 */
 	loadInlandStationMaxSurgeList(issueTs: number, is_recent = true): void {
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		const that = this
@@ -457,6 +458,7 @@ export default class ForecastMapView extends Vue {
 		}
 	}
 
+	/** + 23-08-03 加载wd最大增水场栅格图层至地图 */
 	initMaxSurgeScalarLayer2Map(scalarLayerType: ScalarShowTypeEnum): void {
 		// TODO:[-] 23-07-27 测试加载最大增水场栅格图层
 		const scaleList = [
@@ -571,7 +573,8 @@ export default class ForecastMapView extends Vue {
 				})
 				.then(async (_) => {
 					if (!isLoadingRasterLayer && surgeRasterInstance.tiffUrl !== null) {
-						// TODO:[*] 22-06-02 添加等值面
+						// TODO:[*] 23-08-03 缺少获取动态的栅格图层图例
+						// 22-06-02 添加等值面
 						// const maxSosurface = new SurgeSosurface(
 						// 	surgeRasterInstance.tiffUrl,
 						// 	isosurfaceOpts
@@ -645,6 +648,8 @@ export default class ForecastMapView extends Vue {
 			() => {},
 			true
 		)
+
+		// 对于等值面在 加载 图层后通过 options获取等值面图例
 		const valScale =
 			isosurfaceOpts.valScale !== undefined ? isosurfaceOpts.valScale : sosurfaceOpts.valScale
 		const colorScale =
