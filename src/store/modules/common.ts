@@ -37,12 +37,15 @@ import {
 	GET_TIMESPAN,
 	SET_NOW,
 	GET_NOW,
+	SET_ISSUE_TS,
+	GET_ISSUE_TS,
 } from '../types'
 
 import {
 	DEFAULT_DATE,
 	DEFAULT_DATE_STEP,
 	DEFAULT_SURGE_TD_STEP,
+	DEFAULT_TIMESTAMP,
 	DEFAULT_TIME_SPAN,
 } from '@/const/default'
 import { IExpandEnum, ScalarShowTypeEnum } from '@/enum/common'
@@ -79,6 +82,8 @@ interface Common {
 	surgeTdStep: number
 	timeSpan: number
 	now: Date
+	/** 发布时间戳 */
+	issueTs: number
 }
 
 const state: Common = {
@@ -102,6 +107,7 @@ const state: Common = {
 
 	// now: new Date(2023, 3, 2, 23, 0),
 	now: new Date(),
+	issueTs: DEFAULT_TIMESTAMP,
 }
 const getters = {
 	[GET_SCALE_RANGE](state: Common): number[] {
@@ -154,6 +160,9 @@ const getters = {
 	},
 	[GET_NOW](state: Common): Date {
 		return state.now
+	},
+	[GET_ISSUE_TS](state: Common): number {
+		return state.issueTs
 	},
 }
 // 使用dispatch调用
@@ -214,6 +223,9 @@ const mutations = {
 	},
 	[SET_NOW](state: Common, val: Date): void {
 		state.now = val
+	},
+	[SET_ISSUE_TS](state: Common, val: number): void {
+		state.issueTs = val
 	},
 }
 

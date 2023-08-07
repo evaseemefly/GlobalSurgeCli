@@ -172,6 +172,11 @@ export const SET_NOW = 'SET_NOW'
 /** 获取当前时间 */
 export const GET_NOW = 'GET_NOW'
 
+/** 设置当前的发布时间戳 */
+export const SET_ISSUE_TS = 'SET_ISSUE_TS'
+/** 获取当前的发布时间戳 */
+export const GET_ISSUE_TS = 'GET_ISSUE_TS'
+
 /** 潮位 table 中的 td 之间的时间间隔(h) */
 export const SET_SURGE_TD_STEP = 'SET_SURGE_TD_STEP'
 /** 潮位 table 中的 td 之间的时间间隔(h) */

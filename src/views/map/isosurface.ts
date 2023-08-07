@@ -209,27 +209,6 @@ class Sosurface implements ISosurface {
 					height: number
 					width: number
 				}) => {
-					/*
-                        height: 660
-                        maxs: [2.2799999713897705]
-                        mins: [0]
-                        noDataValue: NaN
-                        numberOfRasters: 1
-                        pixelHeight: 0.01666666705257433
-                        pixelWidth: 0.01666667043776066
-                        projection: 4326
-                        ranges: [2.2799999713897705]
-                        rasterType: "geotiff"
-                        sourceType: "ArrayBuffer"
-                        toCanvas: ƒ (e)
-                        values: [Array(660)]
-                        width: 1080
-                        xmax: 123.00000203639075
-                        xmin: 104.99999796360925
-                        ymax: 26.00000012734953
-                        ymin: 14.999999872650472
-                    */
-
 					/**
 					 *  height: 250
 						maxs: [0.8943]

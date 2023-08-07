@@ -39,4 +39,20 @@ const loadMaxSurgeCoverageTifUlrByIssue = (issueTs: number) => {
 	})
 }
 
-export { loadMaxSurgeCoverageInfoByIssue, loadMaxSurgeCoverageTifUlrByIssue }
+/**
+ * 加载不同的发布栅格图层时间戳
+ * @param limitNum
+ * @returns
+ */
+const loadDistCoverageIssueTs = (limitNum = 10) => {
+	const url = `${host}${area}/dist/ts`
+	return axios.get(url, {
+		headers: authHeader(),
+	})
+}
+
+export {
+	loadMaxSurgeCoverageInfoByIssue,
+	loadMaxSurgeCoverageTifUlrByIssue,
+	loadDistCoverageIssueTs,
+}
