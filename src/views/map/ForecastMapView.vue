@@ -102,6 +102,10 @@ import {
 	GET_STATION_CODE,
 	GET_NOW,
 	GET_ISSUE_TS,
+	SET_ISOSURGE_COLOR_SCALE_STR_LIST,
+	SET_ISOSURGE_COLOR_SCALE_VAL_RANGE,
+	SET_IS_SHOW_RASTER_LEGEND,
+	SET_SCALAR_SHOW_TYPE,
 } from '@/store/types'
 // 默认常量
 import {
@@ -375,6 +379,21 @@ export default class ForecastMapView extends Vue {
 
 	/** 设置 显示|隐藏 station surge form */
 	@Mutation(SET_SHOW_STATION_SURGE_FORM, { namespace: 'station' }) setShowStationSurgeForm
+
+	/** 设置当前 潮位等值面色标 实际值数组 */
+	@Mutation(SET_ISOSURGE_COLOR_SCALE_VAL_RANGE, { namespace: 'common' })
+	setIsoSurgeColorScaleValRange
+
+	@Mutation(SET_ISOSURGE_COLOR_SCALE_STR_LIST, { namespace: 'common' })
+	setIsoSurgeColorScaleStrList
+
+	/** 设置是否显示 raster layer 图例 */
+	@Mutation(SET_IS_SHOW_RASTER_LEGEND, { namespace: 'map' })
+	setIsShowRasterLayerLegend
+
+	/** 显示网格图层类型 */
+	@Mutation(SET_SCALAR_SHOW_TYPE, { namespace: 'common' })
+	setScalarShowType
 
 	/** 获取当前地图key */
 	@Getter(GET_BASE_MAP_KEY, { namespace: 'map' }) getBaseMapKey
@@ -669,8 +688,10 @@ export default class ForecastMapView extends Vue {
 				? isosurfaceOpts.colorScale
 				: sosurfaceOpts.colorScale
 
-		// this.setIsoSurgeColorScaleValRange(valScale)
-		// this.setIsoSurgeColorScaleStrList(colorScale)
+		this.setIsoSurgeColorScaleValRange(valScale)
+		this.setIsoSurgeColorScaleStrList(colorScale)
+		this.setIsShowRasterLayerLegend(true)
+		this.setScalarShowType(ScalarShowTypeEnum.ISOSURFACE)
 		that.uniqueRasterLayerId = maxSosurface.getLayerId()
 		this.gridTitlesLayerId = maxSosurface.getPointsTitleLayerId()
 	}

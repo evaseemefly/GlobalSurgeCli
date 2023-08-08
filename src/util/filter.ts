@@ -388,6 +388,17 @@ const formatSurgeFixed2Str = (val: number | null): string => {
 	return surgeStr
 }
 
+const formatSurgeFiex1NumStr = (val: number | null): string => {
+	return formatSurgeFixed2NumStr(1, val)
+}
+
+const formatSurgeFixed2NumStr = (fixedNum: number, val: number | null): string => {
+	if (val === null || val === DEFAULT_SURGE_VAL || val === -DEFAULT_SURGE_VAL) {
+		return '-'
+	}
+	const surgeStr = val.toFixed(fixedNum)
+	return surgeStr
+}
 /**
  * @description 将 s -> hour
  * @author evaseemefly
@@ -436,4 +447,6 @@ export {
 	filterWaveColor,
 	filterSpiderStationStatusCls,
 	filterSurgeColorStr,
+	formatSurgeFixed2NumStr,
+	formatSurgeFiex1NumStr,
 }

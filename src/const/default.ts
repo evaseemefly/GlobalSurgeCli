@@ -53,6 +53,9 @@ const DEFAULT_SURGE_DIFF = -999999
 /** 潮位不存在的默认值 与后台对应 */
 const DEFAULT_SURGE_VAL = -9999.99
 
+// 对应 db: dict_base -> 默认的 code
+const DEFAULT_DICT_KEY = -1
+
 /** 用于 复杂唯一性查询 的 year 与 month 的默认值 */
 const DEFAULT_COMPLEX_NUM = -1
 
@@ -78,4 +81,5 @@ export {
 	DEFAULT_PRODUCT_TYPE_NAME,
 	DEFAULT_SURGE_TD_STEP,
 	DEFAULT_TIME_SPAN,
+	DEFAULT_DICT_KEY,
 }
