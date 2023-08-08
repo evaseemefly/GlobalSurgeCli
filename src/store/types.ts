@@ -38,6 +38,16 @@ export const SET_SCALE_DESC = 'SET_SCALE_DESC'
 /** @type {*} color bar 的描述信息(提示信息)*/
 export const GET_SCALE_DESC = 'GET_SCALE_DESC'
 
+export const SET_RASTER_COLOR_SCALE_VAL_RANGE = 'SET_RASTER_COLOR_SCALE_VAL_RANGE'
+
+export const GET_RASTER_COLOR_SCALE_VAL_RANGE = 'GET_RASTER_COLOR_SCALE_VAL_RANGE'
+
+/** 设置栅格图层色标范围 */
+export const SET_RASTER_COLOR_SCALE_RANGE = 'SET_RASTER_COLOR_SCALE_RANGE'
+
+/** 获取栅格图层色标范围 */
+export const GET_RASTER_COLOR_SCALE_RANGE = 'GET_RASTER_COLOR_SCALE_RANGE'
+
 /** 设置 潮位等值线 色标对应的值 range */
 export const SET_ISOSURGE_COLOR_SCALE_VAL_RANGE = 'SET_ISOSURGE_COLOR_SCALE_RANGE'
 /** 获取 潮位等值线 色标对应的值 range */
@@ -47,7 +57,6 @@ export const GET_ISOSURGE_COLOR_SCALE_VAL_RANGE = 'GET_ISOSURGE_COLOR_SCALE_VAL_
 /** 设置 潮位等值线 色标颜色str list */
 export const SET_ISOSURGE_COLOR_SCALE_STR_LIST = 'SET_ISOSURGE_COLOR_SCALE_STR_LIST'
 /** 获取 潮位等值线 色标颜色str list */
-
 export const GET_ISOSURGE_COLOR_SCALE_STR_LIST = 'GET_ISOSURGE_COLOR_SCALE_STR_LIST'
 
 // 产品的种类(主要是oil还是rescue)

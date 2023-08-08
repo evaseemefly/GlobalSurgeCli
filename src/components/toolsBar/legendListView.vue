@@ -4,6 +4,7 @@
 		<!-- <TyphoonLevelLegend></TyphoonLevelLegend> -->
 		<StationLevelLegend></StationLevelLegend>
 		<GirdColorBar></GirdColorBar>
+		<RasterColorBar></RasterColorBar>
 	</div>
 </template>
 <script lang="ts">
@@ -13,9 +14,16 @@ import SwitchBackgroundMap from '@/components/toolsBar/switchBackgroundMapBar.vu
 import TyphoonLevelLegend from '@/components/toolsBar/typhoonLevelLegend.vue'
 import StationLevelLegend from '@/components/toolsBar/stationLevelLegend.vue'
 import GirdColorBar from '@/components/bars/gridColorBar.vue'
+import RasterColorBar from '@/components/bars/rasterColorBar.vue'
 /** 图例集合汇总视图 */
 @Component({
-	components: { SwitchBackgroundMap, TyphoonLevelLegend, StationLevelLegend, GirdColorBar },
+	components: {
+		SwitchBackgroundMap,
+		TyphoonLevelLegend,
+		StationLevelLegend,
+		GirdColorBar,
+		RasterColorBar,
+	},
 })
 export default class LegendListView extends Vue {}
 </script>

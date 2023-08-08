@@ -11,6 +11,8 @@ import {
 	SET_SHOW_OPTS_FORM,
 	SET_ISOSURGE_COLOR_SCALE_VAL_RANGE,
 	GET_ISOSURGE_COLOR_SCALE_VAL_RANGE,
+	SET_RASTER_COLOR_SCALE_RANGE,
+	GET_RASTER_COLOR_SCALE_RANGE,
 	SET_ISOSURGE_COLOR_SCALE_STR_LIST,
 	GET_ISOSURGE_COLOR_SCALE_STR_LIST,
 	SET_DATE_STEP,
@@ -55,6 +57,12 @@ interface Common {
 	scaleRange: number[]
 	isoSurgeScaleValRange: number[]
 	isoSurgeScaleStrList: string[]
+	/**
+	 * 栅格图层色标范围
+	 * val: 数值
+	 * colorstr: 对应色标str
+	 */
+	rasterScaleRange: { val: number; colorstr: string }[]
 	isShowOptionsForm: boolean
 	scaleDesc: string
 	step: number
@@ -91,6 +99,7 @@ const state: Common = {
 	isShowOptionsForm: false,
 	isoSurgeScaleStrList: [],
 	isoSurgeScaleValRange: [],
+	rasterScaleRange: [],
 	scaleDesc: '',
 	step: DEFAULT_DATE_STEP,
 	/** 是否为选择圈选 t:进行圈选 ; f:未进行圈选 */
@@ -226,6 +235,9 @@ const mutations = {
 	},
 	[SET_ISSUE_TS](state: Common, val: number): void {
 		state.issueTs = val
+	},
+	[SET_RASTER_COLOR_SCALE_RANGE](state: Common, val: { val: number; colorstr: string }[]): void {
+		state.rasterScaleRange = val
 	},
 }
 

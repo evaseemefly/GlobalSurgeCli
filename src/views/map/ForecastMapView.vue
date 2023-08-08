@@ -384,6 +384,7 @@ export default class ForecastMapView extends Vue {
 	@Mutation(SET_ISOSURGE_COLOR_SCALE_VAL_RANGE, { namespace: 'common' })
 	setIsoSurgeColorScaleValRange
 
+	/** 设置当前 潮位等值面色标 色标颜色数组 */
 	@Mutation(SET_ISOSURGE_COLOR_SCALE_STR_LIST, { namespace: 'common' })
 	setIsoSurgeColorScaleStrList
 
