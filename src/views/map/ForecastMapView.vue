@@ -106,6 +106,7 @@ import {
 	SET_ISOSURGE_COLOR_SCALE_VAL_RANGE,
 	SET_IS_SHOW_RASTER_LEGEND,
 	SET_SCALAR_SHOW_TYPE,
+	SET_RASTER_COLOR_SCALE_RANGE,
 } from '@/store/types'
 // 默认常量
 import {
@@ -184,6 +185,8 @@ import { loadSurgeListByRecently } from '@/api/surge' // 获取所有潮位站�
 import { loadAllStationStatusJoinGeoInfo, loadAllStationLastSurge } from '@/api/station'
 import { StationBaseInfoMidModel } from '@/middle_model/station'
 import { IWdSurgeLayerOptions } from './types/types'
+import { IScale } from '@/const/colorBar'
+import { getIntegerList } from '@/util/math'
 
 /**
  * - 23-03-27 继承之前海浪可视化系统的 cli
@@ -379,6 +382,14 @@ export default class ForecastMapView extends Vue {
 
 	/** 设置 显示|隐藏 station surge form */
 	@Mutation(SET_SHOW_STATION_SURGE_FORM, { namespace: 'station' }) setShowStationSurgeForm
+
+	/** 设置栅格图层色标范围 {
+	range?: number[]
+	scaleColorList: string | string[]
+} */
+	@Mutation(SET_RASTER_COLOR_SCALE_RANGE, { namespace: 'common' }) setRasterColorScaleRange: (
+		val: IScale
+	) => void
 
 	/** 设置当前 潮位等值面色标 实际值数组 */
 	@Mutation(SET_ISOSURGE_COLOR_SCALE_VAL_RANGE, { namespace: 'common' })
@@ -597,7 +608,34 @@ export default class ForecastMapView extends Vue {
 				.then((layerId) => {
 					// - 22-06-16 注意此处设置 scale 时可能会出现一致性错误
 					// 为 raster 色标传递色标 range
-					// this.setScaleRange(surgeRasterInstance.scaleRange || [])
+					// range:Array[2]
+					// 	0:0
+					// 	1:0.72616
+					// scaleColorList:Array[9]
+					// 	0:"#4575b4"
+					// 	1:"#74add1"
+					// 	2:"#abd9e9"
+					// 	3:"#e0f3f8"
+					// 	4:"#ffffbf"
+					// 	5:"#fee090"
+					// 	6:"#fdae61"
+					// 	7:"#f46d43"
+					// 	8:"#d73027"
+
+					// TODO:[-] 23-08-09 根据 raster 的动态范围以及 scaleColorList 的长度切分
+					/** 根据 raster 的动态范围以及 scaleColorList 的长度生成色标数组 */
+					const customScaleRange: number[] = getIntegerList(
+						surgeRasterInstance.scaleRange[1],
+						DEFAULT_COLOR_SCALE.scaleColorList.length,
+						surgeRasterInstance.scaleRange[0]
+					)
+
+					/** 色标实例 */
+					const scaleRange: IScale = {
+						range: customScaleRange,
+						scaleColorList: DEFAULT_COLOR_SCALE.scaleColorList,
+					}
+					this.setRasterColorScaleRange(scaleRange)
 					// this.setScaleDesc(surgeRasterInstance.desc)
 					this.uniqueRasterLayerId = layerId
 				})

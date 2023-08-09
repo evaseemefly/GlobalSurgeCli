@@ -42,10 +42,18 @@ export const SET_RASTER_COLOR_SCALE_VAL_RANGE = 'SET_RASTER_COLOR_SCALE_VAL_RANG
 
 export const GET_RASTER_COLOR_SCALE_VAL_RANGE = 'GET_RASTER_COLOR_SCALE_VAL_RANGE'
 
-/** 设置栅格图层色标范围 */
+/** 设置栅格图层色标范围 {
+	range?: number[]
+	scaleColorList: string | string[]
+}
+*/
 export const SET_RASTER_COLOR_SCALE_RANGE = 'SET_RASTER_COLOR_SCALE_RANGE'
 
-/** 获取栅格图层色标范围 */
+/** 获取栅格图层色标范围 {
+	range?: number[]
+	scaleColorList: string | string[]
+}
+ */
 export const GET_RASTER_COLOR_SCALE_RANGE = 'GET_RASTER_COLOR_SCALE_RANGE'
 
 /** 设置 潮位等值线 色标对应的值 range */

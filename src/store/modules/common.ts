@@ -43,6 +43,8 @@ import {
 	GET_ISSUE_TS,
 } from '../types'
 
+import { IScale, DEFAULT_COLOR_SCALE } from '@/const/colorBar'
+
 import {
 	DEFAULT_DATE,
 	DEFAULT_DATE_STEP,
@@ -62,7 +64,7 @@ interface Common {
 	 * val: 数值
 	 * colorstr: 对应色标str
 	 */
-	rasterScaleRange: { val: number; colorstr: string }[]
+	rasterScaleRange: IScale
 	isShowOptionsForm: boolean
 	scaleDesc: string
 	step: number
@@ -99,7 +101,7 @@ const state: Common = {
 	isShowOptionsForm: false,
 	isoSurgeScaleStrList: [],
 	isoSurgeScaleValRange: [],
-	rasterScaleRange: [],
+	rasterScaleRange: DEFAULT_COLOR_SCALE,
 	scaleDesc: '',
 	step: DEFAULT_DATE_STEP,
 	/** 是否为选择圈选 t:进行圈选 ; f:未进行圈选 */
@@ -173,6 +175,9 @@ const getters = {
 	[GET_ISSUE_TS](state: Common): number {
 		return state.issueTs
 	},
+	[GET_RASTER_COLOR_SCALE_RANGE](state: Common): IScale {
+		return state.rasterScaleRange
+	},
 }
 // 使用dispatch调用
 const actions = {}
@@ -236,7 +241,7 @@ const mutations = {
 	[SET_ISSUE_TS](state: Common, val: number): void {
 		state.issueTs = val
 	},
-	[SET_RASTER_COLOR_SCALE_RANGE](state: Common, val: { val: number; colorstr: string }[]): void {
+	[SET_RASTER_COLOR_SCALE_RANGE](state: Common, val: IScale): void {
 		state.rasterScaleRange = val
 	},
 }

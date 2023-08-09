@@ -2,17 +2,13 @@
 	<transition name="color-bar-fade">
 		<div class="color-bar-list">
 			<transition name="color-bar-fade">
-				<div class="color-bar">
-					<div
-						class="color-bar-title"
-						v-show="isShow"
-						:style="getBackgroundColorFirstStr(colorScale)"
-					>
+				<div class="color-bar" v-show="isShow">
+					<div class="color-bar-title" :style="getBackgroundColorFirstStr(colorScale)">
 						<span>单位:m</span>
 					</div>
 					<div class="color-bar-content" :style="getCustomerStyleObj(colorScale)">
 						<span v-for="tempRange in colorScale.scale.range" :key="tempRange.id">{{
-							tempRange
+							tempRange | formatSurgeFiex1NumStr
 						}}</span>
 					</div>
 				</div>
@@ -25,33 +21,27 @@ import { Prop, Vue, Watch } from 'vue-property-decorator'
 import Component from 'vue-class-component'
 import { Mutation, State, namespace, Getter } from 'vuex-class'
 // 本项目
-import { IColorScale, ColorScales, IScale } from '@/const/colorBar'
+import { IColorScale, ColorScales, IScale, DEFAULT_COLOR_SCALE } from '@/const/colorBar'
 import { DEFAULT_DICT_KEY } from '@/const/default'
-import { SET_SCALE_KEY, GET_SCALE_RANGE, GET_SCALE_DESC, GET_SCALAR_SHOW_TYPE } from '@/store/types'
+import {
+	SET_SCALE_KEY,
+	GET_SCALE_RANGE,
+	GET_SCALE_DESC,
+	GET_SCALAR_SHOW_TYPE,
+	GET_RASTER_COLOR_SCALE_RANGE,
+} from '@/store/types'
+import { formatSurgeFiex1NumStr } from '@/util/filter'
 import { GET_RASTER_LAYER_KEY } from '@/store/types'
 import { RasterLayerEnum } from '@/enum/map'
 import { ScalarShowTypeEnum } from '@/enum/common'
 @Component({
-	filters: {},
+	filters: { formatSurgeFiex1NumStr },
 })
 export default class RasterColorBar extends Vue {
 	// isShow: boolean = false
 	colorScale: { key: string; scale: IScale } = {
 		key: 'my-colour',
-		scale: {
-			range: [0.6, 1.0, 1.4, 1.8, 2.2, 2.6, 3.0],
-			scaleColorList: [
-				'#4575b4',
-				'#74add1',
-				'#abd9e9',
-				'#e0f3f8',
-				'#ffffbf',
-				'#fee090',
-				'#fdae61',
-				'#f46d43',
-				'#d73027',
-			],
-		},
+		scale: DEFAULT_COLOR_SCALE,
 	}
 	selectedScaleIndex = DEFAULT_DICT_KEY
 	colorRange: number[] = []
@@ -59,9 +49,7 @@ export default class RasterColorBar extends Vue {
 	splitNum = 6 // 对当前 range 进行切分的数量
 	color1 = 'rgb(151, 75, 145)'
 	angle = '50'
-	// color1 = 'red'
 	color2 = 'blue'
-	color3 = 'linear-gradient(to right,rgb(98, 113, 184),rgb(151, 75, 145));'
 
 	toolTip = '对于大于1.0m的增水会色标进行原值*0.8'
 
@@ -137,19 +125,21 @@ export default class RasterColorBar extends Vue {
 	@Getter(GET_SCALE_DESC, { namespace: 'common' }) getColorScaleDesc
 
 	/** + 21-08-20 监听 vuex -> color scale range */
-	@Getter(GET_SCALE_RANGE, { namespace: 'common' }) getColorScaleRange
+	@Getter(GET_RASTER_COLOR_SCALE_RANGE, { namespace: 'common' }) getColorScaleRange
 
 	@Watch('getColorScaleRange')
-	onColorScaleRange(range: number[]): void {
+	onColorScaleRange(val: IScale): void {
 		// console.log(range)
-		const max = Math.max(...range)
-		const min = Math.min(...range)
-		const spaceUnit = (max - min) / this.splitNum
-		const rangeList: number[] = []
-		for (let i = 0; i <= this.splitNum; i++) {
-			const tempVal = parseFloat((min + i * spaceUnit).toFixed(1))
-			rangeList.push(tempVal)
-		}
+		const max = Math.max(...val.range)
+		const min = Math.min(...val.range)
+		// TODO:[-] 23-08-09 此处修改为 IScale.range
+		// const spaceUnit = (max - min) / this.splitNum
+		// const rangeList: number[] = []
+		// for (let i = 0; i <= this.splitNum; i++) {
+		// 	const tempVal = parseFloat((min + i * spaceUnit).toFixed(1))
+		// 	rangeList.push(tempVal)
+		// }
+		this.colorScale = { key: 'my-color', scale: val }
 	}
 
 	/** 显示当前网格图层的显示种类 显示等值面则加载此图例 */
@@ -173,7 +163,7 @@ export default class RasterColorBar extends Vue {
 }
 .color-bar {
 	display: flex;
-	width: 300px;
+	width: 350px;
 	border-radius: 0.4em;
 	box-shadow: 0 0 4px 0 black;
 	// 加入边角弧度并仿制内部填色溢出
