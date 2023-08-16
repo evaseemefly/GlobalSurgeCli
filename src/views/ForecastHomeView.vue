@@ -7,7 +7,7 @@
 		<!-- <WaveGridForecastDataFormView></WaveGridForecastDataFormView> -->
 		<StationInlandSurgeDataFormView></StationInlandSurgeDataFormView>
 		<!-- <div><StationTideFormView></StationTideFormView></div> -->
-		<!-- <StationLayoutView :tyNum="tyNum"></StationLayoutView> -->
+		<StationLayoutView :tyNum="tyNum"></StationLayoutView>
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
 		<!-- <ThumbListView></ThumbListView> -->
 		<HeaderLogoView title="风暴潮预报观测系统"></HeaderLogoView>
