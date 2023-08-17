@@ -87,6 +87,15 @@ export default class StationExtremumListView extends Vue {
 	/** 海洋站数量 */
 	stationCount = 0
 
+	/** 总潮位集合 */
+	@Prop({ default: [], type: Object })
+	distStationsTotalSurgeList: {
+		station_code: string
+		forecast_ts_list: number[]
+		tide_list: number[]
+		surge_list: number[]
+	}[] = []
+
 	/** 页面加载时的背景颜色 */
 	loadBackground = '#20262cd9'
 

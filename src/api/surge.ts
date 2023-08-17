@@ -69,9 +69,25 @@ const loadInLandAstronomictideList = (code: string, start: number, end: number) 
 	})
 }
 
+/**
+ * 获取国内所有站点的 [start,end] issueTs 发布的总潮位集合
+ * @param startTs
+ * @param endTs
+ * @param issueTs
+ * @returns
+ */
+const loadInLandDistStationTotalSurgeList = (startTs: number, endTs: number, issueTs: number) => {
+	const url = `${host}${area}/dist/stations/totalsurge`
+	return axios.get(url, {
+		headers: authHeader(),
+		params: { start_ts: startTs, end_ts: endTs, issue_ts: issueTs },
+	})
+}
+
 export {
 	loadSurgeListByRecently,
 	loadTargetStationSurgeRealdataList,
 	loadTargetStationTideRealdataList,
 	loadInLandAstronomictideList,
+	loadInLandDistStationTotalSurgeList,
 }

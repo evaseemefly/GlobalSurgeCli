@@ -3,10 +3,12 @@
 		<StationExtremumListView
 			:tyNum="tyNum"
 			:stationNameDict="stationNameDict"
+			:distStationsTotalSurgeList="distStationsTotalSurgeList"
 		></StationExtremumListView>
 		<StationAlertListView
 			:tyNum="tyNum"
 			:stationNameDict="stationNameDict"
+			:distStationsTotalSurgeList="distStationsTotalSurgeList"
 		></StationAlertListView>
 	</div>
 </template>
@@ -22,6 +24,8 @@ import StationExtremumListView from './stationExtremumListView.vue'
 import { AlertTideEnum } from '@/enum/surge'
 import { GET_SHOW_STATION_EXTREMUM_FORM } from '@/store/types'
 import { IExpandEnum } from '@/enum/common'
+import { loadInLandDistStationTotalSurgeList } from '@/api/surge'
+/** - 23-08-17 由于本系统获取增水+天文潮通过一个统一接口获取，将获取逻辑放在外侧 */
 @Component({
 	components: {
 		StationAlertListView,
@@ -32,8 +36,25 @@ export default class StationLayoutView extends Vue {
 	@Prop({ type: String })
 	tyNum: string
 
+	@Prop({ type: Number })
+	startTs: number
+
+	@Prop({ type: Number })
+	endTs: number
+
+	@Prop({ type: Number })
+	issueTs: number
+
 	/** 海洋站名称中英文对照字典 */
 	stationNameDict: { name: string; chname: string }[] = []
+
+	/** 不同站点的总潮位集合(surge+tide) */
+	distStationsTotalSurgeList: {
+		station_code: string
+		forecast_ts_list: number[]
+		tide_list: number[]
+		surge_list: number[]
+	}[] = []
 
 	mounted() {
 		const self = this
@@ -48,6 +69,30 @@ export default class StationLayoutView extends Vue {
 					: ''
 			}
 		})
+		this.loadDistStationTotalsSurgeList(this.startTs, this.endTs, this.issueTs)
+	}
+
+	/** 加载所有站点的总潮位集合(增水+天文潮)
+	 * step 1: 加载对应的总潮位集合
+	 * step 2: 分别获取 surge 集合与 tide集合
+	 */
+	loadDistStationTotalsSurgeList(startTs: number, endTs: number, issueTs: number) {
+		loadInLandDistStationTotalSurgeList(startTs, endTs, issueTs).then(
+			(
+				res: IHttpResponse<
+					{
+						station_code: string
+						forecast_ts_list: number[]
+						tide_list: number[]
+						surge_list: number[]
+					}[]
+				>
+			) => {
+				if (res.status == 200) {
+					this.distStationsTotalSurgeList = res.data
+				}
+			}
+		)
 	}
 
 	/** store -> 是否显示fom t:显示 */

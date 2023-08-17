@@ -7,9 +7,14 @@
 		<!-- <WaveGridForecastDataFormView></WaveGridForecastDataFormView> -->
 		<StationInlandSurgeDataFormView></StationInlandSurgeDataFormView>
 		<!-- <div><StationTideFormView></StationTideFormView></div> -->
-		<StationLayoutView :tyNum="tyNum"></StationLayoutView>
+		<StationLayoutView
+			:tyNum="tyNum"
+			:startTs="startTs"
+			:endTs="endTs"
+			:issueTs="issueTs"
+		></StationLayoutView>
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
-		<!-- <ThumbListView></ThumbListView> -->
+		<ThumbListView></ThumbListView>
 		<HeaderLogoView title="风暴潮预报观测系统"></HeaderLogoView>
 		<LegendListView></LegendListView>
 		<!-- <RegionStatisticsCard></RegionStatisticsCard> -->
@@ -29,6 +34,7 @@ import HeaderLogoView from '@/components/header/headerLogoView.vue'
 import LegendListView from '@/components/toolsBar/legendListView.vue'
 import WaveGridForecastDataFormView from '@/components/forms/WaveGridForecastDataForm.vue'
 import StationInlandSurgeDataFormView from '@/components/forms/StationInlandSurgeDataFormView.vue'
+import StationLayoutView from '@/components/table/stationLayoutView.vue'
 import StationSurgeDataFormView from '@/components/forms/StationSurgeDataFormView.vue'
 import RegionStatisticsCard from '@/components/cards/regionStatisticsCard.vue'
 
@@ -60,9 +66,14 @@ import moment from 'moment'
 		// StationSurgeDataFormView,
 		StationInlandSurgeDataFormView,
 		RegionStatisticsCard,
+		StationLayoutView,
 	},
 })
 export default class HomeView extends Vue {
+	startTs = 1690819200
+	endTs = 1690992000
+	issueTs = 1690804800
+
 	mounted() {}
 	/** vuex 设置当前海浪产品的发布时间 */
 	@Mutation(SET_WAVE_PRODUCT_ISSUE_DATETIME, { namespace: 'wave' }) setWaveProductIssueDatetime

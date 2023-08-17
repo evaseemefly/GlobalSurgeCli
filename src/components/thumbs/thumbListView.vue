@@ -1,10 +1,8 @@
 <template>
 	<div class="thumb-list">
-		<TySearchThumbView title="潮位详情查询"></TySearchThumbView>
-		<!-- <StationExtremumListThumbView title="潮位站极值列表"></StationExtremumListThumbView>
-		<StationSurgeListThumbView title="潮位站详情"></StationSurgeListThumbView> -->
-		<!-- <BaseThumbView title="站点极值列表"></BaseThumbView>
-		<BaseThumbView title="站点详情"></BaseThumbView> -->
+		<!-- <TySearchThumbView title="潮位详情查询"></TySearchThumbView> -->
+		<StationExtremumListThumbView title="潮位站极值列表"></StationExtremumListThumbView>
+		<!-- <StationSurgeListThumbView title="潮位站详情"></StationSurgeListThumbView> -->
 	</div>
 </template>
 <script lang="ts">
