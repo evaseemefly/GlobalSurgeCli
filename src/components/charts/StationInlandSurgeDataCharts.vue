@@ -43,14 +43,16 @@
 			<!-- 对于非集合路径才提供叠加天文潮位的选项 -->
 			<div id="surge_scalar_chart"></div>
 			<div class="down-section">
-				<SurgeTableView
+				<SurgeValsTableInLand
+					:startTs="startTs"
+					:endTs="endTs"
 					:surgeList="surgeList"
 					:tideList="tideList"
 					:forecastDtList="dtList"
 					:diffSurgeList="diffSurgeList"
 					:surgeTdStep="getSurgeTdStep"
 					:propHoverIndex="hoverDtIndex"
-				></SurgeTableView>
+				></SurgeValsTableInLand>
 			</div>
 		</div>
 	</div>
@@ -75,7 +77,7 @@ import { IHttpResponse } from '@/interface/common'
 // 枚举
 import { TaskStatusEnum } from '@/enum/status'
 
-import SurgeTableView from '@/components/table/surgeValTableView.vue'
+import SurgeValsTableInLand from '@/components/table/SurgeValsTableInland.vue'
 
 // store
 import {
@@ -127,7 +129,7 @@ const MARGIN_BOTTOM = 20
 		formatSurgeFixed2Str,
 	},
 	components: {
-		SurgeTableView,
+		SurgeValsTableInLand,
 	},
 })
 export default class StationInlandSurgeChartView extends Vue {
