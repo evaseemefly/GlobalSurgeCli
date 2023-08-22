@@ -1,19 +1,21 @@
 <template>
 	<div v-draggable id="station_list_main_layout" v-show="getIsShow">
 		<StationExtremumListView
-			:tyNum="tyNum"
 			:stationNameDict="stationNameDict"
 			:distStationsTotalSurgeList="distStationsTotalSurgeList"
 		></StationExtremumListView>
 		<StationAlertListView
-			:tyNum="tyNum"
 			:stationNameDict="stationNameDict"
 			:distStationsTotalSurgeList="distStationsTotalSurgeList"
 		></StationAlertListView>
 	</div>
 </template>
 <script lang="ts">
-import { loadStationAlertLevelDataList, loadStationNameDict } from '@/api/station'
+import {
+	loadInlandStationList,
+	loadStationAlertLevelDataList,
+	loadStationNameDict,
+} from '@/api/station'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import { Getter, Mutation, State, namespace } from 'vuex-class'
 // 接口
@@ -33,9 +35,6 @@ import { loadInLandDistStationTotalSurgeList } from '@/api/surge'
 	},
 })
 export default class StationLayoutView extends Vue {
-	@Prop({ type: String })
-	tyNum: string
-
 	@Prop({ type: Number })
 	startTs: number
 
@@ -46,9 +45,16 @@ export default class StationLayoutView extends Vue {
 	issueTs: number
 
 	/** 海洋站名称中英文对照字典 */
-	stationNameDict: { name: string; chname: string }[] = []
+	stationNameDict: { name: string; chname: string; sort: number }[] = []
 
-	/** 不同站点的总潮位集合(surge+tide) */
+	/** 不同站点的总潮位集合(surge+tide) 
+	 * TODO:[-] 23-08-18 注意此处需要将 以下格式转换为 {
+		surge: number
+		dt: Date
+		realdata: number
+		tide: number
+	}[]
+	*/
 	distStationsTotalSurgeList: {
 		station_code: string
 		forecast_ts_list: number[]
@@ -60,16 +66,33 @@ export default class StationLayoutView extends Vue {
 		const self = this
 		self.stationNameDict = []
 		//1- 页面首次加载加载站点对应字典
-		loadStationNameDict().then((res: IHttpResponse<{ name: string; chname: string }[]>) => {
-			if (res.status === 200) {
-				res.data.length > 0
-					? res.data.forEach((temp) => {
-							self.stationNameDict.push(temp)
-					  })
-					: ''
+		loadInlandStationList().then(
+			(res: IHttpResponse<{ code: string; name: string; sort: number }[]>) => {
+				if (res.status === 200) {
+					res.data.length > 0
+						? res.data.forEach((temp) => {
+								self.stationNameDict.push({
+									name: temp.code,
+									sort: temp.sort,
+									chname: temp.name,
+								})
+						  })
+						: ''
+				}
 			}
-		})
-		this.loadDistStationTotalsSurgeList(this.startTs, this.endTs, this.issueTs)
+		)
+		// this.loadDistStationTotalsSurgeList(this.startTs, this.endTs, this.issueTs)
+	}
+
+	/** { issueTs, startTs, endTs } options */
+	get timestampOpt(): { issueTs: number; startTs: number; endTs: number } {
+		const { issueTs, startTs, endTs } = this
+		return { issueTs, startTs, endTs }
+	}
+
+	@Watch('timestampOpt')
+	onTimestampOpt(val: { issueTs: number; startTs: number; endTs: number }): void {
+		this.loadDistStationTotalsSurgeList(val.startTs, val.endTs, val.issueTs)
 	}
 
 	/** 加载所有站点的总潮位集合(增水+天文潮)

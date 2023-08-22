@@ -48,7 +48,11 @@ import { fortmatData2MDHM, filterSurgeAlarmColor, filterStationNameCh } from '@/
 // 其他组件
 import TideValuePrgressLineView from '@/components/progress/tideValueProgressView.vue'
 import { AlertTideEnum } from '@/enum/surge'
-import { loadStationAlertLevelDataList, loadStationExtremumRealDataist } from '@/api/station'
+import {
+	loadDistStationsAlertLevelList,
+	loadStationAlertLevelDataList,
+	loadStationExtremumRealDataist,
+} from '@/api/station'
 import { IHttpResponse } from '@/interface/common'
 import {
 	SET_COMPLEX_OPTS_CURRENT_STATION,
@@ -56,6 +60,8 @@ import {
 	SET_SHADE_NAV_TIME,
 	SET_STATION_CODE,
 } from '@/store/types'
+import { MS_UNIT } from '@/const/unit'
+import { NONE_STATION_NAME } from '@/const/default'
 
 @Component({
 	filters: {
@@ -104,10 +110,7 @@ export default class StationAlertListView extends Vue {
 
 	/** 海洋站名称中英文对照字典 */
 	@Prop({ type: Array, required: true })
-	stationNameDict: { name: string; chname: string }[]
-
-	@Prop({ type: String, required: true })
-	tyNum: string
+	stationNameDict: { name: string; chname: string; sort: number }[]
 
 	isLoading = false
 
@@ -117,65 +120,8 @@ export default class StationAlertListView extends Vue {
 	/** 页面加载时的背景颜色 */
 	loadBackground = '#20262cd9'
 
-	@Watch('tyNum')
-	onTyNum(val: string): void {
-		const self = this
-		self.stationExtremumList = []
-		this.isLoading = true
-		loadStationExtremumRealDataist(val)
-			.then(
-				(
-					res: IHttpResponse<
-						{
-							station_code: string
-							max_val: number
-							max_date: string
-							realdata_val: number
-							tide_val: number
-						}[]
-					>
-				) => {
-					/** 
-					 * max_date: "2012-08-05T16:00:00Z"
-						max_val: 534
-						realdata_val: 534
-						station_code: "AOJIANG"
-						tide_val: 518
-					 */
-					if (res.status === 200) {
-						let tempStationExtremumList: {
-							stationCode: string
-							stationName: string
-							/** 增水 */
-							surge: number
-							dt: Date
-							/** 实况 */
-							realdata: number
-							/** 天文潮 */
-							tide: number
-						}[] = []
-						res.data.forEach((temp) => {
-							const nameEn = filterStationNameCh(
-								temp.station_code,
-								self.stationNameDict
-							)
-							tempStationExtremumList.push({
-								stationCode: temp.station_code,
-								stationName: nameEn,
-								surge: temp.realdata_val - temp.tide_val, // 最大潮位实况出现时对应的增水值
-								realdata: temp.realdata_val, // 最大潮位实况
-								tide: temp.tide_val, // 天文潮
-								dt: new Date(temp.max_date),
-							})
-						})
-						self.stationExtremumList = tempStationExtremumList
-					}
-					// console.log(res.data)
-				}
-			)
-			.finally(() => {
-				self.isLoading = false
-			})
+	mounted() {
+		this.loadDistStationAlertList()
 	}
 
 	get maxVal(): number {
@@ -184,6 +130,87 @@ export default class StationAlertListView extends Vue {
 				return temp.realdata
 			})
 		)
+	}
+
+	@Watch('distStationsTotalSurgeList')
+	onDistStationsTotalSurgeList(
+		val: {
+			station_code: string
+			forecast_ts_list: number[]
+			tide_list: number[]
+			surge_list: number[]
+		}[]
+	): void {
+		const codes: string[] = val.map((temp) => {
+			return temp.station_code
+		})
+		loadDistStationsAlertLevelList().then((alert) => {
+			if (alert.status == 200) {
+				/** 
+				 * alert_level_list: (4) [5001, 5002, 5003, 5004]
+					alert_tide_list: (4) [571, 596, 621, 646]
+					station_code: "AJS"
+				 */
+				// 将海洋站极值集合与四色警戒潮位集合merge
+				let stationExtreMergeList = []
+				val.forEach((tempTide) => {
+					const filterRes = alert.data.filter((temp) => {
+						return temp.station_code == tempTide.station_code
+					})
+					if (filterRes.length > 0) {
+						// TODO:[-] 23-08-21 找到 增水极值
+						/** 总潮位集合 */
+						const totalSurgeList: number[] = []
+						for (let index = 0; index < tempTide.surge_list.length; index++) {
+							totalSurgeList.push(
+								tempTide.surge_list[index] + tempTide.tide_list[index]
+							)
+						}
+						let tempStationFilter = this.stationNameDict.filter((x) => {
+							return x.name == tempTide.station_code
+						})
+						let tempStationName: string =
+							tempStationFilter.length > 0
+								? tempStationFilter[0].chname
+								: NONE_STATION_NAME
+						// 找到总潮位极值所在位置
+						/** 总潮位极值位置 */
+						let maxIndex = 0
+						totalSurgeList.reduce((accuVal, currentVal, currentIndex) => {
+							if (accuVal > currentVal) {
+								return accuVal
+							} else {
+								maxIndex = currentIndex
+								return currentVal
+							}
+						})
+						const tempBaseInfo = {
+							// surge: totalSurgeList,
+							code: tempTide.station_code,
+							stationName: tempStationName,
+							realdata: totalSurgeList[maxIndex],
+							tide: tempTide.tide_list[maxIndex],
+							surge: tempTide.surge_list[maxIndex],
+							dt: new Date(tempTide.forecast_ts_list[maxIndex] * MS_UNIT),
+						}
+						const targetAlert = filterRes[0]
+						const alerts: { code: string; alert: AlertTideEnum; tide: number }[] = []
+						for (let index = 0; index < targetAlert.alert_level_list.length; index++) {
+							const tempAlertLevel = targetAlert.alert_level_list[index]
+							const tempAlertTide = targetAlert.alert_tide_list[index]
+							alerts.push({
+								code: tempTide.station_code,
+								alert: tempAlertLevel,
+								tide: tempAlertTide,
+							})
+						}
+						let stationExtremumMerge = { alerts: alerts, ...tempBaseInfo }
+						stationExtreMergeList.push(stationExtremumMerge)
+					}
+				})
+				this.stationExtremumMergeList = stationExtreMergeList
+			}
+		})
 	}
 
 	@Watch('stationExtremumList')
@@ -202,6 +229,7 @@ export default class StationAlertListView extends Vue {
 		const codes: string[] = val.map((temp) => {
 			return temp.stationCode
 		})
+
 		loadStationAlertLevelDataList(codes).then(
 			(
 				res: IHttpResponse<
@@ -239,11 +267,22 @@ export default class StationAlertListView extends Vue {
 						}
 					})
 					this.stationExtremumMergeList = stationExtreMergeList
-
-					// console.log(res.data)
 				}
 			}
 		)
+	}
+
+	loadDistStationAlertList() {
+		loadDistStationsAlertLevelList().then((alert) => {
+			if (alert.status == 200) {
+				/** 
+				 * alert_level_list: (4) [5001, 5002, 5003, 5004]
+					alert_tide_list: (4) [571, 596, 621, 646]
+					station_code: "AJS"
+				 */
+				console.log(alert.data)
+			}
+		})
 	}
 
 	/** 提交选中的 海洋站极值info */
@@ -261,12 +300,6 @@ export default class StationAlertListView extends Vue {
 		this.setTyForecastDt(val.dt)
 		this.setShadeTimebar(false)
 		this.selectedTrIndex = index
-		this.setStationComplexOpts({
-			tyNum: this.tyNum,
-			tyCode: this.tyNum,
-			stationName: val.stationName,
-			stationCode: val.stationCode,
-		})
 	}
 
 	/** 设置当前选中的 海洋站code */

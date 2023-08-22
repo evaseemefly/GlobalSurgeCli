@@ -120,6 +120,7 @@ import {
 	DEFAULT_DATE_STEP,
 	DEFAULT_TIMESTAMP,
 	DEFAULT_TIME_SPAN,
+	DEFAULT_TIME_SPAN_WD,
 } from '@/const/default'
 import { MS_UNIT } from '@/const/unit'
 // api
@@ -206,7 +207,7 @@ export default class SubNavMenuView extends Vue {
 	timeSpan: number = DEFAULT_TIME_SPAN
 
 	/** 最大可提供的查询时间间隔(default:7d) */
-	timeSpanMax: number = 60 * 60 * 24 * 3
+	timeSpanMax: number = 60 * 60 * 24 * 7
 
 	/** 增加的时间步长(1d) */
 	timeStep: number = 60 * 60 * 24

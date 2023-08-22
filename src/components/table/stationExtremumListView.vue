@@ -47,7 +47,7 @@
 <script lang="ts">
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import { Getter, Mutation, State, namespace } from 'vuex-class'
-import { DEFAULT_TY_NUM } from '@/const/default'
+import { DEFAULT_TY_NUM, NONE_STATION_NAME } from '@/const/default'
 // 父类
 // import x from './baseExpandView.vue'
 // store
@@ -69,6 +69,8 @@ import { fortmatData2MDHM, filterSurgeAlarmColor, filterStationNameCh } from '@/
 import { IExpandEnum } from '@/enum/common'
 // 其他组件
 import SurgeValuePrgressLineView from '@/components/progress/surgeValueProgressView.vue'
+import station from '@/store/modules/station'
+import { MS_UNIT } from '@/const/unit'
 /** 海洋站极值列表 */
 @Component({
 	filters: {
@@ -114,7 +116,7 @@ export default class StationExtremumListView extends Vue {
 
 	/** 海洋站名称中英文对照字典 */
 	@Prop({ type: Array, required: true })
-	stationNameDict: { name: string; chname: string }[]
+	stationNameDict: { name: string; chname: string; sort: number }[]
 
 	/** 是否加载 */
 	isLoading = false
@@ -131,47 +133,69 @@ export default class StationExtremumListView extends Vue {
 		this.setShowExtremumForm(val)
 	}
 
-	@Watch('tyNum')
-	onTyNum(val: string): void {
-		const self = this
-		self.stationExtremumList = []
-		this.isLoading = true
-		loadStationExtremumDataList(val)
-			.then(
-				(
-					res: IHttpResponse<
-						{
-							station_code: string
-							max_val: number
-							max_date: string
-							realdata_val: number
-							tide_val: number
-						}[]
-					>
-				) => {
-					if (res.status === 200) {
-						res.data.forEach((temp) => {
-							const nameEn = filterStationNameCh(
-								temp.station_code,
-								self.stationNameDict
-							)
-							self.stationExtremumList.push({
-								stationCode: temp.station_code,
-								stationName: nameEn,
-								surge: temp.max_val,
-								realdata: temp.realdata_val,
-								tide: temp.tide_val,
-								dt: new Date(temp.max_date),
-							})
-						})
-					}
-					// console.log(res.data)
-				}
-			)
-			.finally(() => {
-				self.isLoading = false
-				self.commitStationExtremumList()
+	/** TODO:[-] 23-08-18
+	 * 将 所有站点的总潮位集合 按照 station_code 提取每个站点的极值及出现时间
+	 */
+	@Watch('distStationsTotalSurgeList')
+	onDistStationsTotalSurgeList(
+		val: {
+			station_code: string
+			forecast_ts_list: number[]
+			tide_list: number[]
+			surge_list: number[]
+		}[]
+	): void {
+		/** 海洋站增水极值集合 */
+		let stationSurgeExtremumList: {
+			stationCode: string
+			stationName: string
+			/** 增水 */
+			surge: number
+			dt: Date
+			/** 实况 */
+			realdata: number
+			/** 天文潮 */
+			tide: number
+		}[] = []
+		for (let index = 0; index < val.length; index++) {
+			const stationElement = val[index]
+			/** 极大值所在位置 */
+			let maxIndex = 0
+			let tempStationFilter = this.stationNameDict.filter((x) => {
+				return x.name == stationElement.station_code
 			})
+			let tempStationName: string =
+				tempStationFilter.length > 0 ? tempStationFilter[0].chname : NONE_STATION_NAME
+			stationElement.surge_list.reduce((accuVal, currentVal, currentIndex) => {
+				if (accuVal > currentVal) {
+					return accuVal
+				} else {
+					maxIndex = currentIndex
+					return currentVal
+				}
+			})
+
+			const tempStationExtremum: {
+				stationCode: string
+				stationName: string
+				/** 增水 */
+				surge: number
+				dt: Date
+				/** 实况 */
+				realdata: number
+				/** 天文潮 */
+				tide: number
+			} = {
+				stationCode: stationElement.station_code,
+				stationName: tempStationName,
+				realdata: 0,
+				surge: stationElement.surge_list[maxIndex],
+				tide: stationElement.tide_list[maxIndex],
+				dt: new Date(stationElement.forecast_ts_list[maxIndex] * MS_UNIT),
+			}
+			stationSurgeExtremumList.push(tempStationExtremum)
+		}
+		this.stationExtremumList = stationSurgeExtremumList
 	}
 
 	get getStationCount(): number {

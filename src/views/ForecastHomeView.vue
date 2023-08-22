@@ -7,12 +7,7 @@
 		<!-- <WaveGridForecastDataFormView></WaveGridForecastDataFormView> -->
 		<StationInlandSurgeDataFormView></StationInlandSurgeDataFormView>
 		<!-- <div><StationTideFormView></StationTideFormView></div> -->
-		<StationLayoutView
-			:tyNum="tyNum"
-			:startTs="startTs"
-			:endTs="endTs"
-			:issueTs="issueTs"
-		></StationLayoutView>
+		<StationLayoutView :startTs="issueTs" :endTs="endTs" :issueTs="issueTs"></StationLayoutView>
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
 		<ThumbListView></ThumbListView>
 		<HeaderLogoView title="风暴潮预报观测系统"></HeaderLogoView>
@@ -45,6 +40,8 @@ import {
 	SET_WAVE_PRODUCT_ISSUE_DATETIME,
 	GET_WAVE_PRODUCT_LAYER_TYPE,
 	SET_WAVE_PRODUCT_ISSUE_TIMESTAMP,
+	GET_ISSUE_TS,
+	GET_TIMESPAN,
 } from '@/store/types'
 import { LayerTypeEnum } from '@/enum/map'
 // interface
@@ -52,6 +49,7 @@ import { IHttpResponse } from '@/interface/common'
 // api
 import { loadRecentWaveProductIssus } from '@/api/wave'
 import moment from 'moment'
+import { MS_UNIT } from '@/const/unit'
 
 @Component({
 	components: {
@@ -70,9 +68,7 @@ import moment from 'moment'
 	},
 })
 export default class HomeView extends Vue {
-	startTs = 1690819200
-	endTs = 1690992000
-	issueTs = 1690804800
+	// issueTs = 1690804800
 
 	mounted() {}
 	/** vuex 设置当前海浪产品的发布时间 */
@@ -83,6 +79,19 @@ export default class HomeView extends Vue {
 	/** 当前选中的海浪预报产品 */
 	@Getter(GET_WAVE_PRODUCT_LAYER_TYPE, { namespace: 'wave' })
 	getWaveProductLayerType: LayerTypeEnum
+
+	/** 当前的发布时间 单位 s */
+	@Getter(GET_ISSUE_TS, { namespace: 'common' })
+	issueTs: number
+
+	/** 起止时间间隔 单位s  */
+	@Getter(GET_TIMESPAN, { namespace: 'common' })
+	timespan: number
+
+	/** 结束时间戳 (issueTs+ timespan) */
+	get endTs(): number {
+		return this.issueTs + this.timespan * MS_UNIT
+	}
 
 	@Watch('getWaveProductLayerType')
 	onWaveProductLayerType(val: LayerTypeEnum): void {

@@ -36,6 +36,9 @@ const DEFAULT_STATION_CODE = 'DEFAULT_CODE'
 /** 默认海洋站 name */
 const DEFAULT_STATION_NAME = 'DEFAULT_NAME'
 
+/** 不存在的站点名 */
+const NONE_STATION_NAME = 'None'
+
 /** 默认时间间隔(对应时间组件——由当前台风的时间间隔决定) */
 const DEFAULT_DATE_STEP = 1
 
@@ -44,6 +47,9 @@ const DEFAULT_SURGE_TD_STEP = 1
 
 /** 查询的起止时间间隔(单位:s) */
 const DEFAULT_TIME_SPAN = 60 * 60 * 24
+
+/** 温带起止时间间隔(单位:s)——温带预报为七天 */
+const DEFAULT_TIME_SPAN_WD = 60 * 60 * 7
 
 /** 圆的半径的单位系数 @type {*} */
 const DEFAULT_ALERT_TIDE = -999999
@@ -82,4 +88,6 @@ export {
 	DEFAULT_SURGE_TD_STEP,
 	DEFAULT_TIME_SPAN,
 	DEFAULT_DICT_KEY,
+	DEFAULT_TIME_SPAN_WD,
+	NONE_STATION_NAME,
 }

@@ -79,6 +79,23 @@ const loadStationAlertLevelDataList = (
 }
 
 /**
+ * @description 获取所有站点的警戒潮位集合
+ * @author evaseemefly
+ * @date 2023/08/21
+ * @returns {*}  {Promise<
+ * 	AxiosResponse<{ station_code: string; alert_tide_List: number[]; alert_level_list: number[] }[]>
+ * >}
+ */
+const loadDistStationsAlertLevelList = (): Promise<
+	AxiosResponse<{ station_code: string; alert_tide_list: number[]; alert_level_list: number[] }[]>
+> => {
+	const url = `${host}${area}/dist/stations/alertlevel`
+	return axios.get(url, {
+		headers: authHeader(),
+	})
+}
+
+/**
  * 获取海洋站中英文字典
  * @returns  [{
         "name": "AOJIANG",
@@ -282,4 +299,5 @@ export {
 	loadInlandStationList,
 	loadAllStationLastSurge,
 	loadInlandStationMaxSurge,
+	loadDistStationsAlertLevelList,
 }
