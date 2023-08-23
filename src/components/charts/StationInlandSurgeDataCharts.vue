@@ -133,6 +133,16 @@ const MARGIN_BOTTOM = 20
 	},
 })
 export default class StationInlandSurgeChartView extends Vue {
+	// TODO:[*] 23-08-23 此处的起止时间及发布时间需要修改为动态获取
+	@Prop({ type: Number })
+	startTs: number
+
+	@Prop({ type: Number })
+	endTs: number
+
+	@Prop({ type: Number })
+	issueTs: number
+
 	isLoading = false
 
 	/** 当前的图表charts对象(唯一) */
@@ -210,9 +220,6 @@ export default class StationInlandSurgeChartView extends Vue {
 	tableWaveValsList: { mwd: number; mwp: number; forecastDt: Date }[] = []
 	/** 警戒潮位集合 */
 	alertLevels: { stationCode: string; tide: number; alert: AlertTideEnum }[] = []
-	startTs = 1690804800
-	endTs = 1691409600
-	issueTs = 1690804800
 
 	created() {
 		// EventBus.$on(TO_LOAD_FORECASTDATALIST_COORDS, this.loadWaveForecastDataListbyCoords)
@@ -943,6 +950,8 @@ export default class StationInlandSurgeChartView extends Vue {
 		}
 	}
 	.right-section {
+		width: 1060px;
+		max-width: 1200px;
 		padding: 5px;
 		margin: 5px;
 		display: flex;

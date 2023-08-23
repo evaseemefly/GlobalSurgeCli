@@ -5,7 +5,11 @@
 		</div>
 		<div class="layout-bottom"><SubNavMenuView></SubNavMenuView></div>
 		<!-- <WaveGridForecastDataFormView></WaveGridForecastDataFormView> -->
-		<StationInlandSurgeDataFormView></StationInlandSurgeDataFormView>
+		<StationInlandSurgeDataFormView
+			:startTs="issueTs"
+			:endTs="endTs"
+			:issueTs="issueTs"
+		></StationInlandSurgeDataFormView>
 		<!-- <div><StationTideFormView></StationTideFormView></div> -->
 		<StationLayoutView :startTs="issueTs" :endTs="endTs" :issueTs="issueTs"></StationLayoutView>
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
@@ -88,9 +92,9 @@ export default class HomeView extends Vue {
 	@Getter(GET_TIMESPAN, { namespace: 'common' })
 	timespan: number
 
-	/** 结束时间戳 (issueTs+ timespan) */
+	/** 结束时间戳 (issueTs+ timespan) 单位 s */
 	get endTs(): number {
-		return this.issueTs + this.timespan * MS_UNIT
+		return this.issueTs + this.timespan
 	}
 
 	@Watch('getWaveProductLayerType')

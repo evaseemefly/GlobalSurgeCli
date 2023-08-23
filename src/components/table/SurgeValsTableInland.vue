@@ -40,7 +40,6 @@
 						scope="col"
 						v-for="(item, index) in splitSurgeList"
 						:key="index"
-						:style="{ background: baseColorStr }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
@@ -52,7 +51,6 @@
 						scope="col"
 						v-for="(item, index) in splitTideList"
 						:key="index"
-						:style="{ background: baseColorStr }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
@@ -85,6 +83,7 @@ import {
 } from '@/util/filter'
 import { DEFAULT_SURGE_TD_STEP } from '@/const/default'
 import { AlertTideEnum } from '@/enum/surge'
+import { MS_UNIT } from '@/const/unit'
 /** 风暴潮 tab */
 @Component({ filters: { formatDir2Int, formatSurgeFixed2Str, formatDate2DayHM } })
 export default class SurgeValsTableInLand extends Vue {
@@ -98,15 +97,15 @@ export default class SurgeValsTableInLand extends Vue {
 
 	/** 实况潮位 */
 	@Prop({ type: Array, default: [] })
-	surgeList: { val: number }[]
+	surgeList: number[]
 
 	/** 天文潮位 */
 	@Prop({ type: Array, default: [] })
-	tideList: { val: number }[]
+	tideList: number[]
 
 	/** 实况-天文潮 */
 	@Prop({ type: Array, default: [] })
-	diffSurgeList: { val: number }[]
+	diffSurgeList: number[]
 
 	/** 当前 code 对应的警戒潮位 */
 	@Prop({ type: Array, default: [] })
@@ -129,8 +128,10 @@ export default class SurgeValsTableInLand extends Vue {
 
 	get splitCellStep(): number {
 		const diffTs: number = this.endTs - this.startTs
+		const HOUR: number = 60 * 60
+		const hours: number = diffTs / HOUR
 		let splitStep = 1
-		switch (diffTs) {
+		switch (hours) {
 			case 48:
 				splitStep = 2
 				break
@@ -149,7 +150,7 @@ export default class SurgeValsTableInLand extends Vue {
 		return splitStep
 	}
 
-	baseColorStr: '#153C83'
+	// baseColorStr: '#153C83'
 
 	/** 当前移入的index索引 */
 	hoverIndex = 0
@@ -183,15 +184,14 @@ export default class SurgeValsTableInLand extends Vue {
 	// }
 
 	/** */
-	get splitSurgeList(): { val: number }[] {
-		let surgeList: { val: number }[] = []
+	get splitSurgeList(): number[] {
+		let surgeList: number[] = []
 		for (let index = 0; index < this.surgeList.length / this.splitCellStep; index++) {
-			const tempSplitMax = Math.max(
-				this.surgeList.splice[
-					(index * this.splitCellStep, (index + 1) * this.splitCellStep)
-				]
-			)
-			surgeList.push({ val: tempSplitMax })
+			const startIndex = index * this.splitCellStep
+			const endIndex = (index + 1) * this.splitCellStep
+			const sliceList: number[] = this.surgeList.slice(startIndex, endIndex)
+			const tempSplitMax = Math.max(...sliceList)
+			surgeList.push(tempSplitMax)
 		}
 		return surgeList
 	}
@@ -206,13 +206,14 @@ export default class SurgeValsTableInLand extends Vue {
 	// 	return surgeList
 	// }
 
-	get splitTideList(): { val: number }[] {
-		let surgeList: { val: number }[] = []
+	get splitTideList(): number[] {
+		let surgeList: number[] = []
 		for (let index = 0; index < this.tideList.length / this.splitCellStep; index++) {
-			const tempSplitMax = Math.max(
-				this.tideList.splice[(index * this.splitCellStep, (index + 1) * this.splitCellStep)]
-			)
-			surgeList.push({ val: tempSplitMax })
+			const startIndex = index * this.splitCellStep
+			const endIndex = (index + 1) * this.splitCellStep
+			const sliceList: number[] = this.tideList.slice(startIndex, endIndex)
+			const tempSplitMax = Math.max(...sliceList)
+			surgeList.push(tempSplitMax)
 		}
 		return surgeList
 	}
@@ -226,15 +227,15 @@ export default class SurgeValsTableInLand extends Vue {
 	// 	}
 	// 	return surgeList
 	// }
-	get splitDiffSurgeList(): { val: number }[] {
-		let surgeList: { val: number }[] = []
+	get splitDiffSurgeList(): number[] {
+		let surgeList: number[] = []
 		for (let index = 0; index < this.diffSurgeList.length / this.splitCellStep; index++) {
-			const tempSplitMax = Math.max(
-				this.diffSurgeList.splice[
-					(index * this.splitCellStep, (index + 1) * this.splitCellStep)
-				]
-			)
-			surgeList.push({ val: tempSplitMax })
+			const startIndex = index * this.splitCellStep
+			const endIndex = (index + 1) * this.splitCellStep
+			const sliceList: number[] = this.diffSurgeList.slice(startIndex, endIndex)
+			const tempSplitMax = Math.max(...sliceList)
+
+			surgeList.push(tempSplitMax)
 		}
 		return surgeList
 	}

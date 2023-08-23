@@ -20,7 +20,11 @@
 				<!-- <div class="my-sub-title right" @click="setExpanded()">最小化</div> -->
 			</div>
 			<div class="detail-content">
-				<StationInlandSurgeChartView></StationInlandSurgeChartView>
+				<StationInlandSurgeChartView
+					:startTs="issueTs"
+					:endTs="endTs"
+					:issueTs="issueTs"
+				></StationInlandSurgeChartView>
 			</div>
 		</div>
 	</div>
@@ -34,12 +38,14 @@ import StationInlandSurgeChartView from '@/components/charts/StationInlandSurgeD
 import { GET_SHOW_STATION_SURGE_FORM } from '@/store/types'
 @Component({ components: { StationInlandSurgeChartView } })
 export default class StationInlandSurgeDataFormView extends Vue {
-	mydata: any = null
-	mounted() {}
-	get computedTest() {
-		return null
-	}
-	// getIsShow = true
+	@Prop({ type: Number })
+	startTs: number
+
+	@Prop({ type: Number })
+	endTs: number
+
+	@Prop({ type: Number })
+	issueTs: number
 
 	@Getter(GET_SHOW_STATION_SURGE_FORM, { namespace: 'station' }) getIsShow: boolean
 }
