@@ -121,6 +121,10 @@ export default class SurgeValsTableInLand extends Vue {
 	@Prop({ type: Number, default: 0 })
 	propHoverIndex: number
 
+	/** 传入的时间偏移量 + 向后移动 ; - 向之前移动 */
+	@Prop({ type: Number, default: 0 })
+	offsetNum: number
+
 	/** 起止时间戳的间隔(单位:s) */
 	get splitTs(): number {
 		return this.endTs - this.startTs
@@ -173,15 +177,11 @@ export default class SurgeValsTableInLand extends Vue {
 		this.hoverIndex = val
 	}
 
-	// get splitSurgeList(): { val: number }[] {
-	// 	let surgeList: { val: number }[] = []
-	// 	for (let index = 0; index < this.surgeList.length; index++) {
-	// 		if (index === 0 || index % this.surgeTdStep === 0) {
-	// 			surgeList.push(this.surgeList[index])
-	// 		}
-	// 	}
-	// 	return surgeList
-	// }
+	/** + 23-08-22 添加了监听传入的时间偏移量 */
+	@Watch('offsetNum')
+	onOffsetNum(val: number): void {
+		this.surgeList = this.surgeList.slice(0 + val, this.surgeList.length)
+	}
 
 	/** */
 	get splitSurgeList(): number[] {
@@ -196,16 +196,6 @@ export default class SurgeValsTableInLand extends Vue {
 		return surgeList
 	}
 
-	// get splitTideList(): { val: number }[] {
-	// 	let surgeList: { val: number }[] = []
-	// 	for (let index = 0; index < this.tideList.length; index++) {
-	// 		if (index === 0 || index % this.surgeTdStep === 0) {
-	// 			surgeList.push(this.tideList[index])
-	// 		}
-	// 	}
-	// 	return surgeList
-	// }
-
 	get splitTideList(): number[] {
 		let surgeList: number[] = []
 		for (let index = 0; index < this.tideList.length / this.splitCellStep; index++) {
@@ -218,15 +208,6 @@ export default class SurgeValsTableInLand extends Vue {
 		return surgeList
 	}
 
-	// get splitDiffSurgeList(): { val: number }[] {
-	// 	let surgeList: { val: number }[] = []
-	// 	for (let index = 0; index < this.diffSurgeList.length; index++) {
-	// 		if (index === 0 || index % this.surgeTdStep === 0) {
-	// 			surgeList.push(this.diffSurgeList[index])
-	// 		}
-	// 	}
-	// 	return surgeList
-	// }
 	get splitDiffSurgeList(): number[] {
 		let surgeList: number[] = []
 		for (let index = 0; index < this.diffSurgeList.length / this.splitCellStep; index++) {
@@ -239,16 +220,6 @@ export default class SurgeValsTableInLand extends Vue {
 		}
 		return surgeList
 	}
-
-	// get splitForecastDtListList(): { val: Date }[] {
-	// 	let dtList: { val: Date }[] = []
-	// 	for (let index = 0; index < this.forecastDtList.length; index++) {
-	// 		if (index === 0 || index % this.surgeTdStep === 0) {
-	// 			dtList.push(this.forecastDtList[index])
-	// 		}
-	// 	}
-	// 	return dtList
-	// }
 
 	get splitForecastDtListList(): { val: Date }[] {
 		let dtList: { val: Date }[] = []

@@ -52,6 +52,7 @@
 					:diffSurgeList="diffSurgeList"
 					:surgeTdStep="getSurgeTdStep"
 					:propHoverIndex="hoverDtIndex"
+					:offsetNum="offsetNum"
 				></SurgeValsTableInLand>
 			</div>
 		</div>
@@ -144,6 +145,8 @@ export default class StationInlandSurgeChartView extends Vue {
 	issueTs: number
 
 	isLoading = false
+
+	offsetNum = 0
 
 	/** 当前的图表charts对象(唯一) */
 	myChart: echarts.ECharts = null
