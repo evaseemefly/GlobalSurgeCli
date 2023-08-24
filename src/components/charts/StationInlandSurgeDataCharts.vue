@@ -52,7 +52,6 @@
 					:diffSurgeList="diffSurgeList"
 					:surgeTdStep="getSurgeTdStep"
 					:propHoverIndex="hoverDtIndex"
-					:offsetNum="offsetNum"
 				></SurgeValsTableInLand>
 			</div>
 		</div>
@@ -154,6 +153,8 @@ export default class StationInlandSurgeChartView extends Vue {
 	/** 预报时间列表 */
 	forecastDtList: Date[] = []
 	dtList: Date[] = []
+	/** + 23-08-23 surgeList 基于 offseNum 进行的偏移 */
+	mergeDiffSurgeList: number[] = []
 	/** 实况潮位 */
 	surgeList: number[] = []
 	/** 天文潮 */
@@ -234,6 +235,28 @@ export default class StationInlandSurgeChartView extends Vue {
 		)
 		this.loadStationRegionCountry(this.getStationCode)
 		// console.log(`当前charts窗口大小:${document.getElementById('wave_scalar_chart')}`)
+	}
+
+	/** + 23-08-23 加入的数组偏移 */
+	@Watch('offsetNum')
+	onOffsetNumChanged(val: number) {
+		// step1: 生成新的 surge 数组并填充Nan
+		let newSurgeList = new Array(val)
+		newSurgeList.fill(NaN)
+		// step2: 将数组进行偏移
+		let sliceSurgeList: number[] = this.diffSurgeList.slice(0, this.diffSurgeList.length - val)
+		let mergeSurgeList = [...newSurgeList, ...sliceSurgeList]
+		this.mergeDiffSurgeList = mergeSurgeList
+		this.initCharts(
+			this.dtList,
+			[
+				{ fieldName: 'obs', yList: this.surgeList },
+				{ fieldName: 'tide', yList: this.tideList },
+			],
+			{ fieldName: 'surge', vals: this.mergeDiffSurgeList },
+			'潮位',
+			0
+		)
 	}
 
 	/**
@@ -455,9 +478,20 @@ export default class StationInlandSurgeChartView extends Vue {
 		selectIndex: number
 	): void {
 		const that = this
-		const nodeDiv = document.getElementById('surge_scalar_chart')
+		const echartsId = 'surge_scalar_chart'
+		const nodeDiv = document.getElementById(echartsId)
+		let myChart: echarts.ECharts = null
+		// TODO:[-] 23-08-24 若当前 mychart 已经被初始化，则需要先销毁
+		if (this.myChart != null) {
+			// [ECharts] Instance ec_1692844450070 has been disposed
+			// this.myChart.dispose()
+			myChart = echarts.getInstanceByDom(nodeDiv)
+		} else {
+			myChart = echarts.init(nodeDiv)
+		}
 		if (nodeDiv) {
-			const myChart: echarts.ECharts = echarts.init(nodeDiv)
+			// There is a chart instance already initialized on the dom.
+
 			let legendData: {
 				name: string
 				itemStyle: {

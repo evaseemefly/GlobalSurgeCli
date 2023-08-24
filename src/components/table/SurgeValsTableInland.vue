@@ -95,7 +95,7 @@ export default class SurgeValsTableInLand extends Vue {
 	@Prop({ type: Number })
 	endTs: number
 
-	/** 实况潮位 */
+	/** 总潮位 */
 	@Prop({ type: Array, default: [] })
 	surgeList: number[]
 
@@ -103,7 +103,7 @@ export default class SurgeValsTableInLand extends Vue {
 	@Prop({ type: Array, default: [] })
 	tideList: number[]
 
-	/** 实况-天文潮 */
+	/** 增水 */
 	@Prop({ type: Array, default: [] })
 	diffSurgeList: number[]
 
@@ -120,10 +120,6 @@ export default class SurgeValsTableInLand extends Vue {
 
 	@Prop({ type: Number, default: 0 })
 	propHoverIndex: number
-
-	/** 传入的时间偏移量 + 向后移动 ; - 向之前移动 */
-	@Prop({ type: Number, default: 0 })
-	offsetNum: number
 
 	/** 起止时间戳的间隔(单位:s) */
 	get splitTs(): number {
@@ -178,18 +174,39 @@ export default class SurgeValsTableInLand extends Vue {
 	}
 
 	/** + 23-08-22 添加了监听传入的时间偏移量 */
-	@Watch('offsetNum')
-	onOffsetNum(val: number): void {
-		this.surgeList = this.surgeList.slice(0 + val, this.surgeList.length)
+	// @Watch('offsetNum')
+	// onOffsetNum(val: number): void {
+	// 	this.surgeList = this.surgeList.slice(0 + val, this.surgeList.length)
+	// }
+
+	/** TODO:[-] 23-08-24 修改总潮位为动态计算 */
+	// get splitSurgeList(): number[] {
+	// 	let surgeList: number[] = []
+	// 	for (let index = 0; index < this.surgeList.length / this.splitCellStep; index++) {
+	// 		const startIndex = index * this.splitCellStep
+	// 		const endIndex = (index + 1) * this.splitCellStep
+	// 		const sliceList: number[] = this.surgeList.slice(startIndex, endIndex)
+	// 		const tempSplitMax = Math.max(...sliceList)
+	// 		surgeList.push(tempSplitMax)
+	// 	}
+	// 	return surgeList
+	// }
+
+	get totalSurgeList(): number[] {
+		let totalSurgeList: number[] = []
+		for (let index = 0; index < this.tideList.length; index++) {
+			totalSurgeList.push(this.tideList[index] + this.diffSurgeList[index])
+		}
+		return totalSurgeList
 	}
 
-	/** */
 	get splitSurgeList(): number[] {
 		let surgeList: number[] = []
-		for (let index = 0; index < this.surgeList.length / this.splitCellStep; index++) {
+
+		for (let index = 0; index < this.totalSurgeList.length / this.splitCellStep; index++) {
 			const startIndex = index * this.splitCellStep
 			const endIndex = (index + 1) * this.splitCellStep
-			const sliceList: number[] = this.surgeList.slice(startIndex, endIndex)
+			const sliceList: number[] = this.totalSurgeList.slice(startIndex, endIndex)
 			const tempSplitMax = Math.max(...sliceList)
 			surgeList.push(tempSplitMax)
 		}
