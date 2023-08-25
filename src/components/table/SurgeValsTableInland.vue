@@ -96,8 +96,8 @@ export default class SurgeValsTableInLand extends Vue {
 	endTs: number
 
 	/** 总潮位 */
-	@Prop({ type: Array, default: [] })
-	surgeList: number[]
+	// @Prop({ type: Array, default: [] })
+	// surgeList: number[]
 
 	/** 天文潮位 */
 	@Prop({ type: Array, default: [] })
@@ -105,7 +105,7 @@ export default class SurgeValsTableInLand extends Vue {
 
 	/** 增水 */
 	@Prop({ type: Array, default: [] })
-	diffSurgeList: number[]
+	surgeList: number[]
 
 	/** 当前 code 对应的警戒潮位 */
 	@Prop({ type: Array, default: [] })
@@ -195,7 +195,7 @@ export default class SurgeValsTableInLand extends Vue {
 	get totalSurgeList(): number[] {
 		let totalSurgeList: number[] = []
 		for (let index = 0; index < this.tideList.length; index++) {
-			totalSurgeList.push(this.tideList[index] + this.diffSurgeList[index])
+			totalSurgeList.push(this.tideList[index] + this.surgeList[index])
 		}
 		return totalSurgeList
 	}
@@ -227,10 +227,10 @@ export default class SurgeValsTableInLand extends Vue {
 
 	get splitDiffSurgeList(): number[] {
 		let surgeList: number[] = []
-		for (let index = 0; index < this.diffSurgeList.length / this.splitCellStep; index++) {
+		for (let index = 0; index < this.surgeList.length / this.splitCellStep; index++) {
 			const startIndex = index * this.splitCellStep
 			const endIndex = (index + 1) * this.splitCellStep
-			const sliceList: number[] = this.diffSurgeList.slice(startIndex, endIndex)
+			const sliceList: number[] = this.surgeList.slice(startIndex, endIndex)
 			const tempSplitMax = Math.max(...sliceList)
 
 			surgeList.push(tempSplitMax)

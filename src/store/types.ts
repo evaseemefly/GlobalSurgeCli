@@ -307,3 +307,23 @@ export const GET_WAVE_PRODUCT_ISSUE_TIMESTAMP = 'GET_WAVE_PRODUCT_ISSUE_TIMESTAM
 export const SET_WAVE_PRODUCT_LAYER_TYPE = 'SET_WAVE_PRODUCT_LAYER_TYPE'
 /** 获取海浪产品 */
 export const GET_WAVE_PRODUCT_LAYER_TYPE = 'GET_WAVE_PRODUCT_LAYER_TYPE'
+
+/** 设置海洋站基础信息字典 
+ * @type{
+ * rid: number
+	stationCode: string
+	stationName: string
+	lat: number
+	lon: number}
+*/
+export const SET_STATIONS_BASEINFO_LIST = 'SET_STATIONS_BASEINFO_LIST'
+
+/** 获取海洋站基础信息字典
+ * @type{
+ * rid: number
+	stationCode: string
+	stationName: string
+	lat: number
+	lon: number}
+ */
+export const GET_STATIONS_BASEINFO_LIST = 'GET_STATIONS_BASEINFO_LIST'

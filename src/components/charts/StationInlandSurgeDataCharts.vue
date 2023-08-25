@@ -43,13 +43,13 @@
 			<!-- 对于非集合路径才提供叠加天文潮位的选项 -->
 			<div id="surge_scalar_chart"></div>
 			<div class="down-section">
+				<!-- + 23-08-24 不传入 总潮位集合 totalSurgeList 改为在组件内计算生成 -->
 				<SurgeValsTableInLand
 					:startTs="startTs"
 					:endTs="endTs"
-					:surgeList="surgeList"
 					:tideList="tideList"
 					:forecastDtList="dtList"
-					:diffSurgeList="diffSurgeList"
+					:surgeList="surgeList"
 					:surgeTdStep="getSurgeTdStep"
 					:propHoverIndex="hoverDtIndex"
 				></SurgeValsTableInLand>
@@ -64,61 +64,40 @@ import * as echarts from 'echarts'
 import * as L from 'leaflet'
 import chroma from 'chroma-js'
 // 常量
-import {
-	DEFAULT_ALERT_TIDE,
-	DEFAULT_DATE,
-	DEFAULT_SURGE_DIFF,
-	DEFAULT_BOX_LOOP_LATLNG,
-	DEFAULT_SURGE_VAL,
-} from '@/const/default'
+import { DEFAULT_ALERT_TIDE, DEFAULT_BOX_LOOP_LATLNG, DEFAULT_SURGE_VAL } from '@/const/default'
 // 接口
 import { IHttpResponse } from '@/interface/common'
-//
-// 枚举
-import { TaskStatusEnum } from '@/enum/status'
 
 import SurgeValsTableInLand from '@/components/table/SurgeValsTableInland.vue'
 
 // store
 import {
 	GET_CURRENT_FORECAST_DT,
+	GET_STATIONS_BASEINFO_LIST,
 	GET_STATION_CODE,
 	GET_SURGE_TD_STEP,
 	GET_TIMESPAN,
-	GET_WAVE_PRODUCT_ISSUE_DATETIME,
 } from '@/store/types'
 //
 // api
-import {
-	loadTargetStationSurgeRealdataList,
-	loadTargetStationTideRealdataList,
-	loadInLandAstronomictideList,
-} from '@/api/surge'
+import { loadInLandAstronomictideList } from '@/api/surge'
 import { loadTargetStationSurgeForecastList, loadInLandAlertLevels } from '@/api/forecast/surge'
 import { loadStaionRegionCountry, loadStationStaus } from '@/api/station'
 // 工具方法
 // filter
 import {
 	fortmatData2YMDHM,
-	fortmatData2MDHM,
 	filterProductTypeName,
 	filterLatlng2Str,
 	formatSurge2Str,
 	formatSurgeFixed2Str,
 } from '@/util/filter'
 import moment from 'moment'
-import { MenuType } from '@/enum/menu'
-import station from '@/store/modules/station'
-import { TO_LOAD_FORECASTDATALIST_COORDS } from '@/bus/types'
-import { EventBus } from '@/bus/BUS'
+
 import { LayerTypeEnum } from '@/enum/map'
 
-import { loadWaveProductForecastRealDataList } from '@/api/wave'
-import { filter } from 'vue/types/umd'
 import { AlertTideEnum } from '@/enum/surge'
-
-const MARGIN_TOP = 20
-const MARGIN_BOTTOM = 20
+import { StationBaseInfoMidModel } from '@/middle_model/station'
 
 @Component({
 	filters: {
@@ -155,12 +134,12 @@ export default class StationInlandSurgeChartView extends Vue {
 	dtList: Date[] = []
 	/** + 23-08-23 surgeList 基于 offseNum 进行的偏移 */
 	mergeDiffSurgeList: number[] = []
-	/** 实况潮位 */
-	surgeList: number[] = []
+	/** 总潮位集合 : 增水 surge + 天文潮 tide */
+	totalSurgeList: number[] = []
 	/** 天文潮 */
 	tideList: number[] = []
 	/** 实况潮位-天文潮=增水 */
-	diffSurgeList: number[] = []
+	surgeList: number[] = []
 	/** 预报值(天文潮)列表 */
 	forcastValList: number[] = []
 
@@ -244,13 +223,13 @@ export default class StationInlandSurgeChartView extends Vue {
 		let newSurgeList = new Array(val)
 		newSurgeList.fill(NaN)
 		// step2: 将数组进行偏移
-		let sliceSurgeList: number[] = this.diffSurgeList.slice(0, this.diffSurgeList.length - val)
+		let sliceSurgeList: number[] = this.surgeList.slice(0, this.surgeList.length - val)
 		let mergeSurgeList = [...newSurgeList, ...sliceSurgeList]
 		this.mergeDiffSurgeList = mergeSurgeList
 		this.initCharts(
 			this.dtList,
 			[
-				{ fieldName: 'obs', yList: this.surgeList },
+				{ fieldName: 'obs', yList: this.totalSurgeList },
 				{ fieldName: 'tide', yList: this.tideList },
 			],
 			{ fieldName: 'surge', vals: this.mergeDiffSurgeList },
@@ -287,10 +266,10 @@ export default class StationInlandSurgeChartView extends Vue {
 							issue_ts: number
 						}[]
 					>
-				) => {
+				): number[] => {
 					/** 时间集合 */
 					let dtList: Date[] = []
-					/** 与时间集合相对应的潮位集合 */
+					/** 与时间集合相对应的增水集合 */
 					let surgeList: number[] = []
 					limitCount = res.data.length
 					res.data.forEach((element) => {
@@ -303,9 +282,9 @@ export default class StationInlandSurgeChartView extends Vue {
 						surgeList.push(tempSurge)
 					})
 					that.dtList = []
-					that.surgeList = []
+					that.totalSurgeList = []
 					that.dtList = dtList
-					that.surgeList = surgeList
+					that.totalSurgeList = surgeList
 					that.yAxisMax = Math.max(...surgeList)
 					const noNanList = surgeList.filter((val) => {
 						return val != null
@@ -315,6 +294,7 @@ export default class StationInlandSurgeChartView extends Vue {
 				}
 			)
 			.then(async (surgeList) => {
+				// 加载起止时间内的天文潮集合
 				await loadInLandAstronomictideList(code, start, end).then(
 					(
 						res: IHttpResponse<
@@ -337,6 +317,7 @@ export default class StationInlandSurgeChartView extends Vue {
 						tideList = tideList.slice(0, limitCount)
 						/** FIELD: 总潮位集合 */
 						let sumSurgeList = []
+						// 总潮位集合: sumSurgeList = surgeList + tideList
 						for (let index = 0; index < surgeList.length; index++) {
 							if (
 								surgeList[index] !== DEFAULT_SURGE_VAL &&
@@ -352,7 +333,7 @@ export default class StationInlandSurgeChartView extends Vue {
 							}
 						}
 						const diffTideList: number[] = []
-						that.diffSurgeList = diffTideList
+						that.surgeList = diffTideList
 						const noNanSurgeList = surgeList.filter((val) => {
 							return val != null
 						})
@@ -366,8 +347,8 @@ export default class StationInlandSurgeChartView extends Vue {
 
 						// TODO:[-] 23-07-21 统一更新当前页面的三个潮位集合
 						that.tideList = tideList
-						that.diffSurgeList = surgeList
-						that.surgeList = sumSurgeList
+						that.surgeList = surgeList
+						that.totalSurgeList = sumSurgeList
 					}
 				)
 				await loadInLandAlertLevels(code).then(
@@ -407,28 +388,14 @@ export default class StationInlandSurgeChartView extends Vue {
 				that.initCharts(
 					that.dtList,
 					[
-						{ fieldName: 'obs', yList: that.surgeList },
+						{ fieldName: 'obs', yList: that.totalSurgeList },
 						{ fieldName: 'tide', yList: that.tideList },
 					],
-					{ fieldName: 'surge', vals: that.diffSurgeList },
+					{ fieldName: 'surge', vals: that.surgeList },
 					'潮位',
 					0
 				)
 			})
-	}
-
-	/** + 23-04-03 获取当前 code 的站点状态 */
-	loadTargetStationStatus(code: string): void {
-		loadStationStaus(code).then(
-			(
-				res: IHttpResponse<{
-					station_code: string
-					status: TaskStatusEnum
-					tid: number
-					gmt_realtime: Date
-				}>
-			) => {}
-		)
 	}
 
 	loadStationRegionCountry(code: string): void {
@@ -470,6 +437,7 @@ export default class StationInlandSurgeChartView extends Vue {
 		return all_layer_type
 	}
 
+	/** 初始化并加载 echarts */
 	initCharts(
 		xList: Date[],
 		yVals: { yList: number[]; fieldName: string }[],
@@ -540,19 +508,7 @@ export default class StationInlandSurgeChartView extends Vue {
 					name: element.fieldName,
 					type: 'line',
 					silent: false,
-					// areaStyle: {
-					// 	opacity: 0.8,
-					// 	color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-					// 		{
-					// 			offset: 0,
-					// 			color: scale(index / fieldsCount).hex(),
-					// 		},
-					// 		{
-					// 			offset: 1,
-					// 			color: scale((index + 1) / fieldsCount).hex(),
-					// 		},
-					// 	]),
-					// },
+
 					lineStyle: { color: scale(index / fieldsCount).hex() },
 					emphasis: {
 						focus: 'series',
@@ -726,17 +682,6 @@ export default class StationInlandSurgeChartView extends Vue {
 				]
 			)
 
-			// that.yAxisMin ==
-			// 	Math.min(
-			// 		...[
-			// 			that.,
-			// 			that.alertBlue,
-			// 			that.alertYellow,
-			// 			that.alertOrange,
-			// 			that.alertRed,
-			// 		]
-			// 	)
-			// this.surgeByGroupPath = []
 			const option = {
 				title: {
 					text: title,
@@ -871,10 +816,9 @@ export default class StationInlandSurgeChartView extends Vue {
 
 	@Getter(GET_TIMESPAN, { namespace: 'common' }) getTimespan: number
 
-	// @Watch('getForecastDt')
-	// onGetForecastDt(now: Date): void {
-	// 	this.selecetdDt = now
-	// }
+	/** 获取海洋站的基础信息集合 */
+	@Getter(GET_STATIONS_BASEINFO_LIST, { namespace: 'station' })
+	getStationBaseInfoList: StationBaseInfoMidModel[]
 
 	@Watch('currentForecastDtIndex')
 	onCurrentForecastDtIndex(val: number): void {
@@ -884,13 +828,18 @@ export default class StationInlandSurgeChartView extends Vue {
 	@Watch('getStationCode')
 	onGetStationCode(code: string): void {
 		this.stationCode = code
+		const stationTemp = this.getStationBaseInfoList.filter((val) => {
+			return val.stationCode === code
+		})
+		if (stationTemp.length > 0) {
+			this.stationBaseInfo.station_code = stationTemp[0].stationCode
+			this.stationBaseInfo.val_en = stationTemp[0].stationCode
+			this.stationBaseInfo.station_name = stationTemp[0].stationName
+			this.stationBaseInfo.val_ch = stationTemp[0].stationName
+			this.stationBaseInfo.lat = stationTemp[0].lat
+			this.stationBaseInfo.lon = stationTemp[0].lon
+		}
 	}
-
-	// @Watch('stationCode')
-	// onStationCode(code: string): void {
-	// 	this.loadTargetStationSurgeDataList(code, this.startDt, this.endDt)
-	// 	this.loadStationRegionCountry(code)
-	// }
 
 	/** 当前预报时间在 forecastDtList 中的所在 index */
 	get currentForecastDtIndex(): number {

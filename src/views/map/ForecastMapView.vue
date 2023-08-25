@@ -107,6 +107,7 @@ import {
 	SET_IS_SHOW_RASTER_LEGEND,
 	SET_SCALAR_SHOW_TYPE,
 	SET_RASTER_COLOR_SCALE_RANGE,
+	SET_STATIONS_BASEINFO_LIST,
 } from '@/store/types'
 // 默认常量
 import {
@@ -440,6 +441,11 @@ export default class ForecastMapView extends Vue {
 	/** 设置当前圈选中心位置 */
 	@Mutation(SET_BOX_LOOP_LATLNG, { namespace: 'map' }) setBoxLoopLatlng: (val: L.LatLng) => void
 
+	/** 设置字典基础信息集合 */
+	@Mutation(SET_STATIONS_BASEINFO_LIST, { namespace: 'station' }) setStationsBaseInfo: (
+		val: StationBaseInfoMidModel[]
+	) => void
+
 	/** 当前发布时间戳 */
 	@Getter(GET_ISSUE_TS, { namespace: 'common' })
 	getIssueTs: number
@@ -576,6 +582,7 @@ export default class ForecastMapView extends Vue {
 		const stationBaseInfo = new StationBaseInfo()
 		await stationBaseInfo.getAllInlandStationInfo()
 		this.stationBaseInfoList = stationBaseInfo.allStationBaseInfoList
+		this.setStationsBaseInfo(stationBaseInfo.allStationBaseInfoList)
 	}
 
 	/** +23 -07-07-26 加载潮位栅格图层至地图

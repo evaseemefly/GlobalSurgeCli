@@ -51,6 +51,7 @@ import {
 	DEFAULT_SURGE_TD_STEP,
 	DEFAULT_TIMESTAMP,
 	DEFAULT_TIME_SPAN,
+	DEFAULT_WD_TIME_SPAN,
 } from '@/const/default'
 import { IExpandEnum, ScalarShowTypeEnum } from '@/enum/common'
 // import { faL } from '@fortawesome/free-solid-svg-icons'
@@ -114,7 +115,7 @@ const state: Common = {
 	currentForecastDt: DEFAULT_DATE,
 	scalarShowType: ScalarShowTypeEnum.RASTER,
 	surgeTdStep: DEFAULT_SURGE_TD_STEP,
-	timeSpan: DEFAULT_TIME_SPAN,
+	timeSpan: DEFAULT_WD_TIME_SPAN,
 
 	// now: new Date(2023, 3, 2, 23, 0),
 	now: new Date(),

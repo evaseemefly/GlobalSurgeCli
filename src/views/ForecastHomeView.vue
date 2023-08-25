@@ -15,7 +15,7 @@
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
 		<ThumbListView></ThumbListView>
 		<HeaderLogoView title="风暴潮预报观测系统"></HeaderLogoView>
-		<LegendListView></LegendListView>
+		<WdLegendListView></WdLegendListView>
 		<!-- <RegionStatisticsCard></RegionStatisticsCard> -->
 	</div>
 </template>
@@ -30,7 +30,7 @@ import SubNavMenuView from '@/components/nav/SubNavMenuView.vue'
 import ForecastMapView from '@/views/map/ForecastMapView.vue'
 import ThumbListView from '@/components/thumbs/thumbListView.vue'
 import HeaderLogoView from '@/components/header/headerLogoView.vue'
-import LegendListView from '@/components/toolsBar/legendListView.vue'
+import WdLegendListView from '@/components/toolsBar/wdLegendListView.vue'
 import WaveGridForecastDataFormView from '@/components/forms/WaveGridForecastDataForm.vue'
 import StationInlandSurgeDataFormView from '@/components/forms/StationInlandSurgeDataFormView.vue'
 import StationLayoutView from '@/components/table/stationLayoutView.vue'
@@ -63,7 +63,7 @@ import { MS_UNIT } from '@/const/unit'
 		ForecastMapView,
 		ThumbListView,
 		HeaderLogoView,
-		LegendListView,
+		WdLegendListView,
 		WaveGridForecastDataFormView,
 		// StationSurgeDataFormView,
 		StationInlandSurgeDataFormView,

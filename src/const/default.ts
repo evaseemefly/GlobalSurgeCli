@@ -48,6 +48,9 @@ const DEFAULT_SURGE_TD_STEP = 1
 /** 查询的起止时间间隔(单位:s) */
 const DEFAULT_TIME_SPAN = 60 * 60 * 24
 
+/** 温带预报系统的起止时间间隔(单位:s) */
+const DEFAULT_WD_TIME_SPAN = 60 * 60 * 24 * 7
+
 /** 温带起止时间间隔(单位:s)——温带预报为七天 */
 const DEFAULT_TIME_SPAN_WD = 60 * 60 * 7
 
@@ -90,4 +93,5 @@ export {
 	DEFAULT_DICT_KEY,
 	DEFAULT_TIME_SPAN_WD,
 	NONE_STATION_NAME,
+	DEFAULT_WD_TIME_SPAN,
 }

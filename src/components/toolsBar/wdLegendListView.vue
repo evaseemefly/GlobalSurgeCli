@@ -2,7 +2,7 @@
 	<div id="legend_list">
 		<SwitchBackgroundMap></SwitchBackgroundMap>
 		<!-- <TyphoonLevelLegend></TyphoonLevelLegend> -->
-		<StationLevelLegend></StationLevelLegend>
+		<StationSurgeLevelLegengInland></StationSurgeLevelLegengInland>
 		<GirdColorBar></GirdColorBar>
 		<RasterColorBar></RasterColorBar>
 	</div>
@@ -12,7 +12,7 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 import SwitchBackgroundMap from '@/components/toolsBar/switchBackgroundMapBar.vue'
 import TyphoonLevelLegend from '@/components/toolsBar/typhoonLevelLegend.vue'
-import StationLevelLegend from '@/components/toolsBar/stationLevelLegend.vue'
+import StationSurgeLevelLegengInland from '@/components/toolsBar/stationLevelLegendInland.vue'
 import GirdColorBar from '@/components/bars/gridColorBar.vue'
 import RasterColorBar from '@/components/bars/rasterColorBar.vue'
 /** 图例集合汇总视图 */
@@ -20,12 +20,12 @@ import RasterColorBar from '@/components/bars/rasterColorBar.vue'
 	components: {
 		SwitchBackgroundMap,
 		TyphoonLevelLegend,
-		StationLevelLegend,
+		StationSurgeLevelLegengInland,
 		GirdColorBar,
 		RasterColorBar,
 	},
 })
-export default class LegendListView extends Vue {}
+export default class WdLegendListView extends Vue {}
 </script>
 <style scoped lang="less">
 #legend_list {
