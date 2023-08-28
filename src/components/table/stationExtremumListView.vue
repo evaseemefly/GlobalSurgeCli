@@ -93,6 +93,7 @@ export default class StationExtremumListView extends Vue {
 	@Prop({ default: [], type: Object })
 	distStationsTotalSurgeList: {
 		station_code: string
+		sort: number
 		forecast_ts_list: number[]
 		tide_list: number[]
 		surge_list: number[]
@@ -140,6 +141,7 @@ export default class StationExtremumListView extends Vue {
 	onDistStationsTotalSurgeList(
 		val: {
 			station_code: string
+			sort: number
 			forecast_ts_list: number[]
 			tide_list: number[]
 			surge_list: number[]

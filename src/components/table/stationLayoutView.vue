@@ -57,6 +57,7 @@ export default class StationLayoutView extends Vue {
 	*/
 	distStationsTotalSurgeList: {
 		station_code: string
+		sort: number
 		forecast_ts_list: number[]
 		tide_list: number[]
 		surge_list: number[]
@@ -105,6 +106,7 @@ export default class StationLayoutView extends Vue {
 				res: IHttpResponse<
 					{
 						station_code: string
+						sort: number
 						forecast_ts_list: number[]
 						tide_list: number[]
 						surge_list: number[]
@@ -112,7 +114,11 @@ export default class StationLayoutView extends Vue {
 				>
 			) => {
 				if (res.status == 200) {
-					this.distStationsTotalSurgeList = res.data
+					// TODO:[-] 23-08-28 由于distStationsTotalSurgeList需要传入子组件中，排序放在外侧执行
+					const sortedRes = res.data.sort((a, b) => {
+						return a.sort - b.sort
+					})
+					this.distStationsTotalSurgeList = sortedRes
 				}
 			}
 		)

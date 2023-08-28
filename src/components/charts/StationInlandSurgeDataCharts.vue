@@ -8,7 +8,7 @@
 	>
 		<div class="left-section">
 			<div class="info-card base-info">
-				<h3>{{ getStationCode }} 站</h3>
+				<h3>{{ stationBaseInfo.station_name }} 站</h3>
 				<div>
 					<div class="row">
 						<span>所属国家_en</span><span>{{ stationBaseInfo.country_en }}</span>
@@ -169,8 +169,8 @@ export default class StationInlandSurgeChartView extends Vue {
 		cid: number
 		country_en: string
 	} = {
-		station_code: '',
-		station_name: '',
+		station_code: '-',
+		station_name: '-',
 		lat: 0,
 		lon: 0,
 		rid: 0,
