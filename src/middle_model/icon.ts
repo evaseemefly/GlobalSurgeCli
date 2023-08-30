@@ -359,6 +359,7 @@ class FixedStationSurgeIcon extends AbsIconCirle {
 
 	/**
 	 * @description 重写抽象父类中的实现方法——改为由当前的gmt_realtime 与 比对的时间计算时间差获取对应的状态color
+	 * + 23-08-29 此处统一修改 根据增水等级统一分级
 	 * @author evaseemefly
 	 * @date 2023/03/29
 	 * @protected
@@ -372,22 +373,22 @@ class FixedStationSurgeIcon extends AbsIconCirle {
 
 		switch (true) {
 			// < 1h
-			case surge <= 20:
+			case surge <= 100:
 				colorStr = 'green-icon'
 				break
 			// < 2h
-			case surge <= 50:
+			case surge <= 150:
 				colorStr = 'blue'
 				break
 			// < 6h
-			case surge <= 70:
+			case surge <= 200:
 				colorStr = 'yellow'
 				break
 			// < 24h
-			case surge <= 100:
+			case surge <= 250:
 				colorStr = 'orange'
 				break
-			case surge > 100:
+			case surge > 250:
 				colorStr = 'red'
 				break
 		}

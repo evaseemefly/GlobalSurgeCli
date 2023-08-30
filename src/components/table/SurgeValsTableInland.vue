@@ -42,6 +42,7 @@
 						:key="index"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
+						:style="{ background: toAlertColor(item) }"
 					>
 						{{ item | formatSurgeFixed2Str }}
 					</td>
@@ -80,6 +81,7 @@ import {
 	formatSurgeFixed2Str,
 	filterSurgeColorStr,
 	formatDate2DayHM,
+	filterAlertSurgeColorStr,
 } from '@/util/filter'
 import { DEFAULT_SURGE_TD_STEP } from '@/const/default'
 import { AlertTideEnum } from '@/enum/surge'
@@ -109,7 +111,7 @@ export default class SurgeValsTableInLand extends Vue {
 
 	/** 当前 code 对应的警戒潮位 */
 	@Prop({ type: Array, default: [] })
-	alertLevels: { stationCode: string; tide: number; alert: AlertTideEnum }[]
+	alertLevels: { tide: number; alert: AlertTideEnum }[]
 
 	@Prop({ type: Array, default: [] })
 	forecastDtList: { val: Date }[]
@@ -166,6 +168,19 @@ export default class SurgeValsTableInLand extends Vue {
 
 	toColor(val: number): string {
 		return filterSurgeColorStr(val)
+	}
+
+	/** 获取当前潮值对应的警戒颜色 */
+	toAlertColor(val: number): string {
+		/** 升序排列的 警戒潮位潮值集合 */
+		const alertTides: number[] = this.alertLevels
+			.map((temp) => {
+				return temp.tide
+			})
+			.sort((a, b) => {
+				return a - b
+			})
+		return filterAlertSurgeColorStr(val, alertTides)
 	}
 
 	@Watch('propHoverIndex')

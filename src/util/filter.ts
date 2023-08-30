@@ -265,6 +265,22 @@ const filterSurgeColorStr = (val: number): string => {
 }
 
 /**
+ * @description 根据传入的四色警戒潮位与当前总潮位值获取对应的颜色
+ * @author evaseemefly
+ * @date 2023/08/29
+ * @param {number} val
+ * @param {number[]} alertTides
+ * @returns {*}  {string}
+ */
+const filterAlertSurgeColorStr = (val: number, alertTides: number[]): string => {
+	const scale = chroma
+		.scale(['#4899D9', '#153C83', '#FFFB58', '#F1C712', '#E79325', '#F22015'])
+		.domain([0, ...alertTides])
+	const colorStr = scale(val).hex()
+	return colorStr
+}
+
+/**
  * @description 根据字典获取对应的海洋站中文名
  * @author evaseemefly
  * @date 2022/11/09
@@ -449,4 +465,5 @@ export {
 	filterSurgeColorStr,
 	formatSurgeFixed2NumStr,
 	formatSurgeFiex1NumStr,
+	filterAlertSurgeColorStr,
 }

@@ -206,7 +206,11 @@ export default class StationAlertListView extends Vue {
 								tide: tempAlertTide,
 							})
 						}
-						let stationExtremumMerge = { alerts: alerts, ...tempBaseInfo }
+						let stationExtremumMerge = {
+							alerts: alerts,
+							...tempBaseInfo,
+							stationCode: tempTide.station_code,
+						}
 						stationExtreMergeList.push(stationExtremumMerge)
 					}
 				})

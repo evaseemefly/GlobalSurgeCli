@@ -52,6 +52,7 @@
 					:surgeList="surgeList"
 					:surgeTdStep="getSurgeTdStep"
 					:propHoverIndex="hoverDtIndex"
+					:alertLevels="alertLevels"
 				></SurgeValsTableInLand>
 			</div>
 		</div>
@@ -158,6 +159,9 @@ export default class StationInlandSurgeChartView extends Vue {
 	alertOrange: number = DEFAULT_ALERT_TIDE
 	alertRed: number = DEFAULT_ALERT_TIDE
 
+	/** 警戒潮位及对应值 */
+	alertLevels: { tide: number; alert: AlertTideEnum }[] = []
+
 	stationBaseInfo: {
 		station_code: string
 		station_name: string
@@ -201,8 +205,6 @@ export default class StationInlandSurgeChartView extends Vue {
 	hoverDtIndex = 0
 	/** 表格中的海浪观测数据 */
 	tableWaveValsList: { mwd: number; mwp: number; forecastDt: Date }[] = []
-	/** 警戒潮位集合 */
-	alertLevels: { stationCode: string; tide: number; alert: AlertTideEnum }[] = []
 
 	created() {
 		// EventBus.$on(TO_LOAD_FORECASTDATALIST_COORDS, this.loadWaveForecastDataListbyCoords)
@@ -212,7 +214,8 @@ export default class StationInlandSurgeChartView extends Vue {
 			this.startTs,
 			this.endTs
 		)
-		this.loadStationRegionCountry(this.getStationCode)
+		// this.loadStationRegionCountry(this.getStationCode)
+		this.setStationBaseInfo(this.getStationCode)
 		// console.log(`当前charts窗口大小:${document.getElementById('wave_scalar_chart')}`)
 	}
 
@@ -295,6 +298,7 @@ export default class StationInlandSurgeChartView extends Vue {
 			)
 			.then(async (surgeList) => {
 				// 加载起止时间内的天文潮集合
+				// TODO:[*] 23-08-28 此处需要传入 issue?不需要
 				await loadInLandAstronomictideList(code, start, end).then(
 					(
 						res: IHttpResponse<
@@ -351,40 +355,51 @@ export default class StationInlandSurgeChartView extends Vue {
 						that.totalSurgeList = sumSurgeList
 					}
 				)
-				await loadInLandAlertLevels(code).then(
-					(
-						res: IHttpResponse<
-							{
-								station_code: string
-								tide: number
-								alert: number
-							}[]
-						>
-					) => {
-						that.alertLevels = []
-						if (res.status === 200) {
-							res.data.forEach((val) => {
-								switch (true) {
-									case val.alert === AlertTideEnum.BLUE:
-										this.alertBlue = val.tide
-										break
-									case val.alert === AlertTideEnum.YELLOW:
-										this.alertYellow = val.tide
-										break
-									case val.alert === AlertTideEnum.ORANGE:
-										this.alertOrange = val.tide
-										break
-									case val.alert === AlertTideEnum.RED:
-										this.alertRed = val.tide
-										break
-								}
-							})
+				await loadInLandAlertLevels(code)
+					.then(
+						(
+							res: IHttpResponse<
+								{
+									station_code: string
+									tide: number
+									alert: number
+								}[]
+							>
+						) => {
+							that.alertLevels = []
+							if (res.status === 200) {
+								res.data.forEach((val) => {
+									switch (true) {
+										case val.alert === AlertTideEnum.BLUE:
+											this.alertBlue = val.tide
+											break
+										case val.alert === AlertTideEnum.YELLOW:
+											this.alertYellow = val.tide
+											break
+										case val.alert === AlertTideEnum.ORANGE:
+											this.alertOrange = val.tide
+											break
+										case val.alert === AlertTideEnum.RED:
+											this.alertRed = val.tide
+											break
+									}
+								})
+							}
 						}
-					}
-				)
+					)
+					.then(() => {
+						that.alertLevels = [
+							{ tide: that.alertBlue, alert: AlertTideEnum.BLUE },
+							{ tide: that.alertYellow, alert: AlertTideEnum.YELLOW },
+							{ tide: that.alertOrange, alert: AlertTideEnum.ORANGE },
+							{ tide: that.alertRed, alert: AlertTideEnum.RED },
+						]
+					})
 			})
 			.then(() => {
 				// TODO:[-] 23-07-25 加入了警戒潮位，将init chart 放在最后的 then 中
+				that.yAxisMax = Math.max(that.alertRed, ...that.totalSurgeList)
+				that.yAxisMin = Math.min(that.alertBlue, ...that.totalSurgeList, ...that.surgeList)
 				that.initCharts(
 					that.dtList,
 					[
@@ -825,11 +840,10 @@ export default class StationInlandSurgeChartView extends Vue {
 		this.testMarkLine(val)
 	}
 
-	@Watch('getStationCode')
-	onGetStationCode(code: string): void {
-		this.stationCode = code
+	setStationBaseInfo(stationCode: string): void {
+		this.stationCode = stationCode
 		const stationTemp = this.getStationBaseInfoList.filter((val) => {
-			return val.stationCode === code
+			return val.stationCode === stationCode
 		})
 		if (stationTemp.length > 0) {
 			this.stationBaseInfo.station_code = stationTemp[0].stationCode
@@ -839,6 +853,12 @@ export default class StationInlandSurgeChartView extends Vue {
 			this.stationBaseInfo.lat = stationTemp[0].lat
 			this.stationBaseInfo.lon = stationTemp[0].lon
 		}
+	}
+
+	@Watch('getStationCode')
+	onGetStationCode(code: string): void {
+		this.stationCode = code
+		this.setStationBaseInfo(code)
 	}
 
 	/** 当前预报时间在 forecastDtList 中的所在 index */

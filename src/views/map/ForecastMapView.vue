@@ -457,7 +457,7 @@ export default class ForecastMapView extends Vue {
 		this.clearLayersByIds(this.markersIdList)
 		if (is_recent) {
 			this.surgeStationList = []
-			// step1: 加载大陆的指定发布时间的72小时站点增水极值集合
+			// step1: 加载大陆的指定发布时间的168小时站点增水极值集合
 			loadInlandStationMaxSurge(issueTs)
 				.then(
 					(

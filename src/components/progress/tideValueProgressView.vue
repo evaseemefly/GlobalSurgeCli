@@ -2,7 +2,7 @@
 	<el-tooltip class="item" effect="dark" :content="alertMsg" placement="top-start">
 		<div class="value-process" :style="{ width: lineWidth + 'px' }">
 			<div class="process-line" :class="[alertLevelStr]">
-				{{ realdata }}
+				{{ realdata | formatSurgeFixed2Str }}
 			</div>
 			<div class="process-line-other">
 				<!-- {{ disAlertLevelTitle }}:{{ diffAlertLevelVal | filterStationAlertTideVal }} -->
@@ -13,11 +13,11 @@
 </template>
 <script lang="ts">
 import { AlertTideEnum } from '@/enum/surge'
-import { filterStationAlertTideVal } from '@/util/filter'
+import { filterStationAlertTideVal, formatSurgeFixed2Str } from '@/util/filter'
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 
 /** 总潮位进度条 */
-@Component({ filters: { filterStationAlertTideVal } })
+@Component({ filters: { filterStationAlertTideVal, formatSurgeFixed2Str } })
 export default class TideValuePrgressLineView extends Vue {
 	/** 标题 */
 	@Prop({ type: String, default: '', required: false })

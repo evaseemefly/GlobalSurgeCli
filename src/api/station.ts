@@ -248,7 +248,7 @@ const loadAllStationLastSurge = (pid?: number) => {
 }
 
 /**
- * + 23-07-12 获取issueTs发布时间的未来72小时的高潮位
+ * + 23-07-12 获取issueTs发布时间的未来168小时的高潮位
  * @param issueTs
  * @returns {
         "id": 78,
