@@ -783,6 +783,11 @@ export default class StationSurgeChartView extends Vue {
 		display: flex;
 		// flex: 5;
 		flex-direction: column;
+		div.down-section {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
 	}
 	// 不再使用此种布局
 	.upper-section {
@@ -792,5 +797,10 @@ export default class StationSurgeChartView extends Vue {
 		flex-direction: row;
 		justify-content: center;
 	}
+}
+.down-section {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
 </style>

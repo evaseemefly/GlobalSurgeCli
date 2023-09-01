@@ -49,11 +49,16 @@
 					:endTs="endTs"
 					:tideList="tideList"
 					:forecastDtList="dtList"
-					:surgeList="surgeList"
+					:surgeList="offsetSurgeList"
 					:surgeTdStep="getSurgeTdStep"
 					:propHoverIndex="hoverDtIndex"
 					:alertLevels="alertLevels"
 				></SurgeValsTableInLand>
+				<SubNavOffsetTimeItem
+					:offset="offsetNum"
+					:timeStep="1"
+					@updateOffset="updateOffset"
+				></SubNavOffsetTimeItem>
 			</div>
 		</div>
 	</div>
@@ -70,6 +75,7 @@ import { DEFAULT_ALERT_TIDE, DEFAULT_BOX_LOOP_LATLNG, DEFAULT_SURGE_VAL } from '
 import { IHttpResponse } from '@/interface/common'
 
 import SurgeValsTableInLand from '@/components/table/SurgeValsTableInland.vue'
+import SubNavOffsetTimeItem from '@/components/nav/subItems/SubNavOffsetTimeItem.vue'
 
 // store
 import {
@@ -110,6 +116,7 @@ import { StationBaseInfoMidModel } from '@/middle_model/station'
 	},
 	components: {
 		SurgeValsTableInLand,
+		SubNavOffsetTimeItem,
 	},
 })
 export default class StationInlandSurgeChartView extends Vue {
@@ -134,13 +141,14 @@ export default class StationInlandSurgeChartView extends Vue {
 	forecastDtList: Date[] = []
 	dtList: Date[] = []
 	/** + 23-08-23 surgeList 基于 offseNum 进行的偏移 */
-	mergeDiffSurgeList: number[] = []
+	offsetSurgeList: number[] = []
 	/** 总潮位集合 : 增水 surge + 天文潮 tide */
 	totalSurgeList: number[] = []
 	/** 天文潮 */
 	tideList: number[] = []
-	/** 实况潮位-天文潮=增水 */
+	/** 增水(通过 offsetNum 进行便宜时不修改原始 surgeList) */
 	surgeList: number[] = []
+
 	/** 预报值(天文潮)列表 */
 	forcastValList: number[] = []
 
@@ -222,20 +230,37 @@ export default class StationInlandSurgeChartView extends Vue {
 	/** + 23-08-23 加入的数组偏移 */
 	@Watch('offsetNum')
 	onOffsetNumChanged(val: number) {
-		// step1: 生成新的 surge 数组并填充Nan
-		let newSurgeList = new Array(val)
+		// val有可能为负值
+		/** 偏移量绝对值 */
+		const valAbs: number = Math.abs(val)
+		// step1: 生成新的 surge 数组并填充Nan(长度为传入的偏移量的绝对值确定)
+		let newSurgeList = new Array(valAbs)
 		newSurgeList.fill(NaN)
 		// step2: 将数组进行偏移
-		let sliceSurgeList: number[] = this.surgeList.slice(0, this.surgeList.length - val)
-		let mergeSurgeList = [...newSurgeList, ...sliceSurgeList]
-		this.mergeDiffSurgeList = mergeSurgeList
+		let sliceSurgeList: number[] = []
+		let mergeSurgeList: number[] = []
+
+		if (val >= 0) {
+			sliceSurgeList = this.surgeList.slice(0, this.surgeList.length - valAbs)
+			mergeSurgeList = [...newSurgeList, ...sliceSurgeList]
+		} else {
+			sliceSurgeList = this.surgeList.slice(valAbs, this.surgeList.length)
+			mergeSurgeList = [...sliceSurgeList, ...newSurgeList]
+		}
+
+		this.offsetSurgeList = mergeSurgeList
+		// step3: 重新计算 totalSurgeList
+		this.totalSurgeList = this.offsetSurgeList.map((item, index) => {
+			return item + this.tideList[index]
+		})
+
 		this.initCharts(
 			this.dtList,
 			[
 				{ fieldName: 'obs', yList: this.totalSurgeList },
 				{ fieldName: 'tide', yList: this.tideList },
 			],
-			{ fieldName: 'surge', vals: this.mergeDiffSurgeList },
+			{ fieldName: 'surge', vals: this.offsetSurgeList },
 			'潮位',
 			0
 		)
@@ -285,9 +310,7 @@ export default class StationInlandSurgeChartView extends Vue {
 						surgeList.push(tempSurge)
 					})
 					that.dtList = []
-					that.totalSurgeList = []
 					that.dtList = dtList
-					that.totalSurgeList = surgeList
 					that.yAxisMax = Math.max(...surgeList)
 					const noNanList = surgeList.filter((val) => {
 						return val != null
@@ -338,6 +361,7 @@ export default class StationInlandSurgeChartView extends Vue {
 						}
 						const diffTideList: number[] = []
 						that.surgeList = diffTideList
+						that.offsetSurgeList = diffTideList
 						const noNanSurgeList = surgeList.filter((val) => {
 							return val != null
 						})
@@ -352,6 +376,7 @@ export default class StationInlandSurgeChartView extends Vue {
 						// TODO:[-] 23-07-21 统一更新当前页面的三个潮位集合
 						that.tideList = tideList
 						that.surgeList = surgeList
+						that.offsetSurgeList = surgeList
 						that.totalSurgeList = sumSurgeList
 					}
 				)
@@ -406,7 +431,7 @@ export default class StationInlandSurgeChartView extends Vue {
 						{ fieldName: 'obs', yList: that.totalSurgeList },
 						{ fieldName: 'tide', yList: that.tideList },
 					],
-					{ fieldName: 'surge', vals: that.surgeList },
+					{ fieldName: 'surge', vals: that.offsetSurgeList },
 					'潮位',
 					0
 				)
@@ -822,6 +847,11 @@ export default class StationInlandSurgeChartView extends Vue {
 		}
 	}
 
+	/** + 23-08-30 设置时间偏移量 */
+	updateOffset(val: number): void {
+		this.offsetNum = val
+	}
+
 	/** 23-05-10 修改后的逻辑 forecastDt 为 end date */
 	@Getter(GET_CURRENT_FORECAST_DT, { namespace: 'common' }) getForecastDt: Date
 
@@ -963,6 +993,11 @@ export default class StationInlandSurgeChartView extends Vue {
 		display: flex;
 		// flex: 5;
 		flex-direction: column;
+		div.down-section {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+		}
 	}
 	// 不再使用此种布局
 	.upper-section {
