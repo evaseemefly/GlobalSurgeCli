@@ -1,7 +1,7 @@
 # GlobalSurgeCli
 全球潮位数据展示系统-前端项目  
 采用自研`ocean flow`海洋数据显示框架  
-![oceanflow](./public/static/icons/ocean_flow/of_earth_bold.png)  
++ 23-09-05 最新的功能说明详见 [功能说明](./主要功能介绍.md)  
 
 #### 技术实现
  全球化潮位系统基于爬虫框架`scrapy`及分布式作业框架`schedule`，实现分布式爬虫系统;  
