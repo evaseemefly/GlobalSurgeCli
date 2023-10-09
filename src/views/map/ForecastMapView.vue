@@ -221,8 +221,8 @@ import { getIntegerList } from '@/util/math'
 	mixins: [WMSMixin, MapMixin],
 })
 export default class ForecastMapView extends Vue {
-	zoom = 4
-	center: number[] = [27.45, 130.8833]
+	zoom = 5
+	center: number[] = [29.45, 130.8833]
 	url =
 		'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'
 	// url = 'http://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png'

@@ -3,7 +3,7 @@
 		<div class="layout-top">
 			<div class="layout-right"><ForecastMapView></ForecastMapView></div>
 		</div>
-		<div class="layout-bottom"><SubNavMenuView></SubNavMenuView></div>
+		<div class="layout-bottom"><WdSubNavMenuView></WdSubNavMenuView></div>
 		<!-- <WaveGridForecastDataFormView></WaveGridForecastDataFormView> -->
 		<StationInlandSurgeDataFormView
 			:startTs="issueTs"
@@ -14,7 +14,7 @@
 		<StationLayoutView :startTs="issueTs" :endTs="endTs" :issueTs="issueTs"></StationLayoutView>
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
 		<ThumbListView></ThumbListView>
-		<HeaderLogoView title="风暴潮预报观测系统"></HeaderLogoView>
+		<HeaderLogoView title="温带风暴潮预报系统"></HeaderLogoView>
 		<WdLegendListView></WdLegendListView>
 		<!-- <RegionStatisticsCard></RegionStatisticsCard> -->
 	</div>
@@ -25,7 +25,7 @@ import { Component, Vue, Watch } from 'vue-property-decorator'
 import { Getter, Mutation, State, namespace } from 'vuex-class'
 
 import MainNavMenuView from '@/components/nav/MainNavMenuView.vue'
-import SubNavMenuView from '@/components/nav/SubNavMenuView.vue'
+import WdSubNavMenuView from '@/components/nav/WdSubNavMenuView.vue'
 // import MainMapView from '@/views/map/MapView.vue'
 import ForecastMapView from '@/views/map/ForecastMapView.vue'
 import ThumbListView from '@/components/thumbs/thumbListView.vue'
@@ -58,7 +58,7 @@ import { MS_UNIT } from '@/const/unit'
 @Component({
 	components: {
 		MainNavMenuView,
-		SubNavMenuView,
+		WdSubNavMenuView,
 		// MainMapView,
 		ForecastMapView,
 		ThumbListView,

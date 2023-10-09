@@ -8,7 +8,7 @@ module.exports = defineConfig({
 	chainWebpack: (config) => {
 		config.resolve.alias.set('@', resolve('src'))
 		config.plugin('html').tap((args) => {
-			args[0].title = '全球潮位观测系统'
+			args[0].title = '风暴潮预报观测系统v1.0'
 			return args
 		})
 	},
