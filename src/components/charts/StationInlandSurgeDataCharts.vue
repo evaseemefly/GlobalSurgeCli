@@ -53,6 +53,8 @@
 					:surgeTdStep="getSurgeTdStep"
 					:propHoverIndex="hoverDtIndex"
 					:alertLevels="alertLevels"
+					:wsList="wsList"
+					:wdList="wdList"
 				></SurgeValsTableInLand>
 				<SubNavOffsetTimeItem
 					:offset="offsetNum"
@@ -90,6 +92,7 @@ import {
 import { loadInLandAstronomictideList } from '@/api/surge'
 import { loadTargetStationSurgeForecastList, loadInLandAlertLevels } from '@/api/forecast/surge'
 import { loadStaionRegionCountry, loadStationStaus } from '@/api/station'
+import { loadVectorForecastListByPoint } from '@/api/vector'
 // 工具方法
 // filter
 import {
@@ -148,6 +151,10 @@ export default class StationInlandSurgeChartView extends Vue {
 	tideList: number[] = []
 	/** 增水(通过 offsetNum 进行便宜时不修改原始 surgeList) */
 	surgeList: number[] = []
+
+	wsList: number[] = []
+
+	wdList: number[] = []
 
 	/** 预报值(天文潮)列表 */
 	forcastValList: number[] = []
@@ -915,6 +922,27 @@ export default class StationInlandSurgeChartView extends Vue {
 		}
 	}
 
+	get pointOpts(): {
+		issueTs: number
+		stationBaseInfo: {
+			station_code: string
+			station_name: string
+			lat: number
+			lon: number
+			rid: number
+			val_en: string
+			val_ch: string
+			cid: number
+			country_en: string
+		}
+	} {
+		const { issueTs, stationBaseInfo } = this
+		return {
+			issueTs,
+			stationBaseInfo,
+		}
+	}
+
 	@Watch('chartOpts')
 	onChartOpts(val: {
 		getStationCode: string
@@ -924,6 +952,35 @@ export default class StationInlandSurgeChartView extends Vue {
 	}): void {
 		this.loadTargetStationSurgeDataList(val.getStationCode, val.issueTs, val.startTs, val.endTs)
 		this.loadStationRegionCountry(val.getStationCode)
+	}
+
+	@Watch('pointOpts')
+	onPointOpts(val: {
+		issueTs: number
+		stationBaseInfo: {
+			station_code: string
+			station_name: string
+			lat: number
+			lon: number
+			rid: number
+			val_en: string
+			val_ch: string
+			cid: number
+			country_en: string
+		}
+	}): void {
+		loadVectorForecastListByPoint(
+			val.issueTs,
+			val.stationBaseInfo.lat,
+			val.stationBaseInfo.lon
+		).then((res: IHttpResponse<{ forecast_ts: number; wd: number; ws: number }[]>) => {
+			this.wsList = res.data.map((temp) => {
+				return temp.ws
+			})
+			this.wdList = res.data.map((temp) => {
+				return temp.wd
+			})
+		})
 	}
 
 	/** TODO:[-] 23-07-19 终止时间 */
