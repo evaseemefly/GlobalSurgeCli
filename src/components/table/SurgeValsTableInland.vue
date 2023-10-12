@@ -99,7 +99,9 @@
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
-						{{ item | toRotate }}
+						<div class="row-arrow" :style="{ transform: 'rotate(' + item + 'deg)' }">
+							<i class="fa-solid fa-arrow-up"></i>
+						</div>
 					</td>
 				</tr>
 			</tbody>
