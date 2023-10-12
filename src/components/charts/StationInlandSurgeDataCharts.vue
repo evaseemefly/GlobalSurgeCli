@@ -199,6 +199,11 @@ export default class StationInlandSurgeChartView extends Vue {
 		country_en: '',
 	}
 
+	/** 纬度 */
+	lat = 0
+	/** 经度 */
+	lon = 0
+
 	seriesMap: Map<string, string> = new Map([
 		['tide', '天文潮'],
 		['surge', '增水'],
@@ -461,6 +466,8 @@ export default class StationInlandSurgeChartView extends Vue {
 				}>
 			) => {
 				this.stationBaseInfo = { ...res.data }
+				this.lat = this.stationBaseInfo.lat
+				this.lon = this.stationBaseInfo.lon
 			}
 		)
 	}
@@ -877,6 +884,7 @@ export default class StationInlandSurgeChartView extends Vue {
 		this.testMarkLine(val)
 	}
 
+	/** TODO:[-] 23-10-12 注意修改 stationBaseInfo 是再此方法中实现 */
 	setStationBaseInfo(stationCode: string): void {
 		this.stationCode = stationCode
 		const stationTemp = this.getStationBaseInfoList.filter((val) => {
@@ -890,6 +898,22 @@ export default class StationInlandSurgeChartView extends Vue {
 			this.stationBaseInfo.lat = stationTemp[0].lat
 			this.stationBaseInfo.lon = stationTemp[0].lon
 		}
+	}
+
+	@Watch('stationBaseInfo', { immediate: true, deep: true })
+	onStationBaseInfo(val: {
+		station_code: string
+		station_name: string
+		lat: number
+		lon: number
+		rid: number
+		val_en: string
+		val_ch: string
+		cid: number
+		country_en: string
+	}): void {
+		this.lat = val.lat
+		this.lon = val.lon
 	}
 
 	@Watch('getStationCode')
@@ -924,22 +948,14 @@ export default class StationInlandSurgeChartView extends Vue {
 
 	get pointOpts(): {
 		issueTs: number
-		stationBaseInfo: {
-			station_code: string
-			station_name: string
-			lat: number
-			lon: number
-			rid: number
-			val_en: string
-			val_ch: string
-			cid: number
-			country_en: string
-		}
+		lat: number
+		lon: number
 	} {
-		const { issueTs, stationBaseInfo } = this
+		const { issueTs, lat, lon } = this
 		return {
 			issueTs,
-			stationBaseInfo,
+			lat,
+			lon,
 		}
 	}
 
@@ -955,32 +971,17 @@ export default class StationInlandSurgeChartView extends Vue {
 	}
 
 	@Watch('pointOpts')
-	onPointOpts(val: {
-		issueTs: number
-		stationBaseInfo: {
-			station_code: string
-			station_name: string
-			lat: number
-			lon: number
-			rid: number
-			val_en: string
-			val_ch: string
-			cid: number
-			country_en: string
-		}
-	}): void {
-		loadVectorForecastListByPoint(
-			val.issueTs,
-			val.stationBaseInfo.lat,
-			val.stationBaseInfo.lon
-		).then((res: IHttpResponse<{ forecast_ts: number; wd: number; ws: number }[]>) => {
-			this.wsList = res.data.map((temp) => {
-				return temp.ws
-			})
-			this.wdList = res.data.map((temp) => {
-				return temp.wd
-			})
-		})
+	onPointOpts(val: { issueTs: number; lat: number; lon: number }): void {
+		loadVectorForecastListByPoint(val.issueTs, val.lat, val.lon).then(
+			(res: IHttpResponse<{ forecast_ts: number; wd: number; ws: number }[]>) => {
+				this.wsList = res.data.map((temp) => {
+					return temp.ws
+				})
+				this.wdList = res.data.map((temp) => {
+					return temp.wd
+				})
+			}
+		)
 	}
 
 	/** TODO:[-] 23-07-19 终止时间 */

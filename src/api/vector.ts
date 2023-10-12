@@ -6,7 +6,7 @@ import authHeader from './auth_header'
 // export const host = host
 axios.defaults.withCredentials = true
 
-const area = '/vector'
+const area = '/coverage'
 
 /**
  * + 23-10-10
