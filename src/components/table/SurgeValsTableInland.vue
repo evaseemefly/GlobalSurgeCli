@@ -18,12 +18,8 @@
 					<div class="legend-title">增水</div>
 					<div class="legend-unit">cm</div>
 				</div>
-				<div class="table-legend-row table-legend-title">
-					<div class="legend-title">极值时间</div>
-					<div class="legend-unit">h</div>
-				</div>
 				<div class="table-legend-row table-legend-item">
-					<div class="legend-title">累计风速</div>
+					<div class="legend-title">风速</div>
 					<div class="legend-unit">m/s</div>
 				</div>
 				<div class="table-legend-row table-legend-item">
@@ -37,7 +33,7 @@
 				<tr>
 					<th
 						scope="col"
-						v-for="(item, index) in splitForecastDtList"
+						v-for="(item, index) in forecastDtList"
 						:key="index"
 						@mouseover="toSetHoverIndex(index)"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
@@ -50,7 +46,7 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in splitTotalSurgeList"
+						v-for="(item, index) in totalSurgeList"
 						:key="index"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
@@ -62,7 +58,7 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in splitTideList"
+						v-for="(item, index) in tideList"
 						:key="index"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
@@ -73,7 +69,7 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in splitDiffSurgeList"
+						v-for="(item, index) in surgeList"
 						:key="index"
 						:style="{ background: toColor(item) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
@@ -85,18 +81,7 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in splitWsTsList"
-						:key="index"
-						:class="index === hoverIndex ? 'activate' : 'un-activate'"
-						@mouseover="toSetHoverIndex(index)"
-					>
-						{{ item | formatTs2DayHM }}
-					</td>
-				</tr>
-				<tr>
-					<td
-						scope="col"
-						v-for="(item, index) in splitWsList"
+						v-for="(item, index) in limitWsList"
 						:key="index"
 						:style="{ background: toColor(item) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
@@ -108,9 +93,9 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in splitWdList"
+						v-for="(item, index) in limitWdList"
 						:key="index"
-						:style="{ background: toColor(splitWsList[index]) }"
+						:style="{ background: toColor(limitWsList[index]) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
@@ -330,36 +315,35 @@ export default class SurgeValsTableInLand extends Vue {
 	// 	return surgeList
 	// }
 
-	get totalSurgeList(): number[] {
-		let totalSurgeList: number[] = []
-		for (let index = 0; index < this.tideList.length; index++) {
-			totalSurgeList.push(this.tideList[index] + this.surgeList[index])
-		}
-		return totalSurgeList
-	}
-
 	/** 切分后的总潮位集合 */
-	get splitTotalSurgeList(): number[] {
-		let surgeList: number[] = []
-		this.splitTideList = []
-		this.splitDiffSurgeList = []
-		this.splitForecastDtList = []
+	// get splitTotalSurgeList(): number[] {
+	// 	let surgeList: number[] = []
+	// 	this.splitTideList = []
+	// 	this.splitDiffSurgeList = []
+	// 	this.splitForecastDtList = []
 
-		for (let index = 0; index < this.totalSurgeList.length / this.splitCellStep; index++) {
-			const startIndex = index * this.splitCellStep
-			const endIndex = (index + 1) * this.splitCellStep
-			const sliceList: number[] = this.totalSurgeList.slice(startIndex, endIndex)
-			const tempSplitMax = Math.max(...sliceList)
-			const tempMaxSurgeIndex: number = this.totalSurgeList.findIndex((temp) => {
-				return temp === tempSplitMax
-			})
+	// 	for (let index = 0; index < this.totalSurgeList.length / this.splitCellStep; index++) {
+	// 		const startIndex = index * this.splitCellStep
+	// 		const endIndex = (index + 1) * this.splitCellStep
+	// 		const sliceList: number[] = this.totalSurgeList.slice(startIndex, endIndex)
+	// 		const tempSplitMax = Math.max(...sliceList)
+	// 		const tempMaxSurgeIndex: number = this.totalSurgeList.findIndex((temp) => {
+	// 			return temp === tempSplitMax
+	// 		})
 
-			surgeList.push(tempSplitMax)
-			this.splitTideList.push(this.tideList[tempMaxSurgeIndex])
-			this.splitDiffSurgeList.push(this.surgeList[tempMaxSurgeIndex])
-			this.splitForecastDtList.push(this.forecastDtList[tempMaxSurgeIndex])
-		}
-		return surgeList
+	// 		surgeList.push(tempSplitMax)
+	// 		this.splitTideList.push(this.tideList[tempMaxSurgeIndex])
+	// 		this.splitDiffSurgeList.push(this.surgeList[tempMaxSurgeIndex])
+	// 		this.splitForecastDtList.push(this.forecastDtList[tempMaxSurgeIndex])
+	// 	}
+	// 	return surgeList
+	// }
+
+	get totalSurgeList(): number[] {
+		let total: number[] = this.surgeList.map((val, index) => {
+			return val + this.tideList[index]
+		})
+		return total
 	}
 
 	// splitForecastDt: Date[] = []
@@ -403,12 +387,24 @@ export default class SurgeValsTableInLand extends Vue {
 	// 	}
 	// 	return dtList
 	// }
+
+	get limitWsList(): number[] {
+		return this.wsList.slice(0, this.MAX_WS_COUNT)
+	}
+
+	get limitWdList(): number[] {
+		return this.wdList.slice(0, this.MAX_WS_COUNT)
+	}
+
 	splitForecastDtList: { val: Date }[] = []
 }
 </script>
 <style scoped lang="less">
 #wave_dir_table {
 	display: flex;
+	max-width: 1042px;
+	overflow-x: auto;
+	overflow-y: hidden;
 	section {
 		.wave-table-legend {
 			color: white;

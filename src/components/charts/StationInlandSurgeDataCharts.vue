@@ -494,7 +494,9 @@ export default class StationInlandSurgeChartView extends Vue {
 		return all_layer_type
 	}
 
-	/** 初始化并加载 echarts */
+	/** 初始化并加载 echarts
+	 * + 23-10-16 加入了 风速 与 风向
+	 */
 	initCharts(
 		xList: Date[],
 		yVals: { yList: number[]; fieldName: string }[],
