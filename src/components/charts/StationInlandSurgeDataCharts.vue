@@ -55,6 +55,7 @@
 					:alertLevels="alertLevels"
 					:wsList="wsList"
 					:wdList="wdList"
+					:wsTsList="windTsList"
 				></SurgeValsTableInLand>
 				<SubNavOffsetTimeItem
 					:offset="offsetNum"
@@ -155,6 +156,8 @@ export default class StationInlandSurgeChartView extends Vue {
 	wsList: number[] = []
 
 	wdList: number[] = []
+
+	windTsList: number[] = []
 
 	/** 预报值(天文潮)列表 */
 	forcastValList: number[] = []
@@ -979,6 +982,9 @@ export default class StationInlandSurgeChartView extends Vue {
 				})
 				this.wdList = res.data.map((temp) => {
 					return temp.wd
+				})
+				this.windTsList = res.data.map((temp) => {
+					return temp.forecast_ts
 				})
 			}
 		)

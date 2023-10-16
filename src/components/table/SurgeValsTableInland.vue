@@ -7,7 +7,7 @@
 					<div class="legend-unit">h</div>
 				</div>
 				<div class="table-legend-row table-legend-item">
-					<div class="legend-title">实况</div>
+					<div class="legend-title">总潮位</div>
 					<div class="legend-unit">cm</div>
 				</div>
 				<div class="table-legend-row table-legend-item">
@@ -17,6 +17,10 @@
 				<div class="table-legend-row table-legend-item">
 					<div class="legend-title">增水</div>
 					<div class="legend-unit">cm</div>
+				</div>
+				<div class="table-legend-row table-legend-title">
+					<div class="legend-title">极值时间</div>
+					<div class="legend-unit">h</div>
 				</div>
 				<div class="table-legend-row table-legend-item">
 					<div class="legend-title">累计风速</div>
@@ -33,7 +37,7 @@
 				<tr>
 					<th
 						scope="col"
-						v-for="(item, index) in splitForecastDtListList"
+						v-for="(item, index) in splitForecastDtList"
 						:key="index"
 						@mouseover="toSetHoverIndex(index)"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
@@ -46,7 +50,7 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in splitSurgeList"
+						v-for="(item, index) in splitTotalSurgeList"
 						:key="index"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
@@ -81,6 +85,17 @@
 				<tr>
 					<td
 						scope="col"
+						v-for="(item, index) in splitWsTsList"
+						:key="index"
+						:class="index === hoverIndex ? 'activate' : 'un-activate'"
+						@mouseover="toSetHoverIndex(index)"
+					>
+						{{ item | formatTs2DayHM }}
+					</td>
+				</tr>
+				<tr>
+					<td
+						scope="col"
 						v-for="(item, index) in splitWsList"
 						:key="index"
 						:style="{ background: toColor(item) }"
@@ -95,7 +110,7 @@
 						scope="col"
 						v-for="(item, index) in splitWdList"
 						:key="index"
-						:style="{ background: toColor(item) }"
+						:style="{ background: toColor(splitWsList[index]) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
@@ -115,15 +130,17 @@ import {
 	formatSurgeFixed2Str,
 	filterSurgeColorStr,
 	formatDate2DayHM,
+	formatTs2DayHM,
 	filterAlertSurgeColorStr,
 } from '@/util/filter'
 import { DEFAULT_SURGE_TD_STEP } from '@/const/default'
 import { AlertTideEnum } from '@/enum/surge'
 import { MS_UNIT } from '@/const/unit'
 /** 风暴潮 tab */
-@Component({ filters: { formatDir2Int, formatSurgeFixed2Str, formatDate2DayHM } })
+@Component({ filters: { formatDir2Int, formatSurgeFixed2Str, formatDate2DayHM, formatTs2DayHM } })
 export default class SurgeValsTableInLand extends Vue {
 	MAX_SPLIT_LIST_COUNT = 24
+	MAX_WS_COUNT = 168
 
 	/** 起始时间戳 */
 	@Prop({ type: Number })
@@ -152,14 +169,14 @@ export default class SurgeValsTableInLand extends Vue {
 	/** 风向集合  */
 	@Prop({ type: Array, default: [] })
 	wdList: number[]
-
-	/** 对应的预报时间戳集合 */
 	@Prop({ type: Array, default: [] })
-	forecastTsList: { val: Date }[]
+	wsTsList: number[]
+
 	/** 当前 code 对应的警戒潮位 */
 	@Prop({ type: Array, default: [] })
 	alertLevels: { tide: number; alert: AlertTideEnum }[]
 
+	/** 对应的预报时间戳集合 */
 	@Prop({ type: Array, default: [] })
 	forecastDtList: { val: Date }[]
 
@@ -173,28 +190,43 @@ export default class SurgeValsTableInLand extends Vue {
 	/** 根据 splitWsList 最大风速出现的时间获取的风向 */
 	splitWdList: number[] = []
 
+	/** 根据 splitWsList 最大风速出现的时间集合 */
+	splitWsTsList: number[] = []
+
+	splitWsMaxDateList: Date[] = []
+
 	get splitWsList(): number[] {
 		/**
 		 * 从 wsList 根据 splitCellStep提取对应的极值，并获取对应的index，并提取 splitWdList
 		 */
+		let splittedWsList: number[] = []
+		let splittedWdList: number[] = []
+		let splittedTsList: number[] = []
+		const newWsList: number[] = this.wsList.slice(0, this.MAX_WS_COUNT)
+		const newWdList: number[] = this.wdList.slice(0, this.MAX_WS_COUNT)
+		const newTsList: number[] = this.wsTsList.slice(0, this.MAX_WS_COUNT)
 
 		/** 根据 splitCellStep 切分后的数组的长度 */
 		const splitCellCount: number =
-			Math.floor(this.wsList.length / this.splitCellStep) <= this.MAX_SPLIT_LIST_COUNT
-				? Math.floor(this.wsList.length / this.splitCellStep)
+			Math.floor(newWsList.length / this.splitCellStep) <= this.MAX_SPLIT_LIST_COUNT
+				? Math.floor(newWsList.length / this.splitCellStep)
 				: this.MAX_SPLIT_LIST_COUNT
-		let splittedWsList: number[] = []
-		let splittedWdList: number[] = []
+
 		for (let index = 0; index < splitCellCount; index++) {
 			// 从数组中提取极值
 			/** 当前的累计风速数组 */
 
-			const splitWsList = this.wsList.slice(
+			const splitWsList = newWsList.slice(
 				index * this.splitCellStep,
 				(index + 1) * this.splitCellStep
 			)
 
-			const splitWdList = this.wdList.slice(
+			const splitWdList = newWdList.slice(
+				index * this.splitCellStep,
+				(index + 1) * this.splitCellStep
+			)
+
+			const splitTsList = newTsList.slice(
 				index * this.splitCellStep,
 				(index + 1) * this.splitCellStep
 			)
@@ -204,10 +236,13 @@ export default class SurgeValsTableInLand extends Vue {
 				return temp === tempMaxWs
 			})
 			const tempMaxWd: number = Math.ceil(splitWdList[tempMaxWsIndex])
+			const tempWsMaxTs: number = splitTsList[tempMaxWsIndex]
 			splittedWsList.push(tempMaxWs)
 			splittedWdList.push(tempMaxWd)
+			splittedTsList.push(tempWsMaxTs)
 		}
 		this.splitWdList = splittedWdList
+		this.splitWsTsList = splittedTsList
 		return splittedWsList
 	}
 
@@ -282,7 +317,6 @@ export default class SurgeValsTableInLand extends Vue {
 	// onOffsetNum(val: number): void {
 	// 	this.surgeList = this.surgeList.slice(0 + val, this.surgeList.length)
 	// }
-
 	/** TODO:[-] 23-08-24 修改总潮位为动态计算 */
 	// get splitSurgeList(): number[] {
 	// 	let surgeList: number[] = []
@@ -304,53 +338,72 @@ export default class SurgeValsTableInLand extends Vue {
 		return totalSurgeList
 	}
 
-	get splitSurgeList(): number[] {
+	/** 切分后的总潮位集合 */
+	get splitTotalSurgeList(): number[] {
 		let surgeList: number[] = []
+		this.splitTideList = []
+		this.splitDiffSurgeList = []
+		this.splitForecastDtList = []
 
 		for (let index = 0; index < this.totalSurgeList.length / this.splitCellStep; index++) {
 			const startIndex = index * this.splitCellStep
 			const endIndex = (index + 1) * this.splitCellStep
 			const sliceList: number[] = this.totalSurgeList.slice(startIndex, endIndex)
 			const tempSplitMax = Math.max(...sliceList)
+			const tempMaxSurgeIndex: number = this.totalSurgeList.findIndex((temp) => {
+				return temp === tempSplitMax
+			})
+
 			surgeList.push(tempSplitMax)
+			this.splitTideList.push(this.tideList[tempMaxSurgeIndex])
+			this.splitDiffSurgeList.push(this.surgeList[tempMaxSurgeIndex])
+			this.splitForecastDtList.push(this.forecastDtList[tempMaxSurgeIndex])
 		}
 		return surgeList
 	}
 
-	get splitTideList(): number[] {
-		let surgeList: number[] = []
-		for (let index = 0; index < this.tideList.length / this.splitCellStep; index++) {
-			const startIndex = index * this.splitCellStep
-			const endIndex = (index + 1) * this.splitCellStep
-			const sliceList: number[] = this.tideList.slice(startIndex, endIndex)
-			const tempSplitMax = Math.max(...sliceList)
-			surgeList.push(tempSplitMax)
-		}
-		return surgeList
-	}
+	// splitForecastDt: Date[] = []
 
-	get splitDiffSurgeList(): number[] {
-		let surgeList: number[] = []
-		for (let index = 0; index < this.surgeList.length / this.splitCellStep; index++) {
-			const startIndex = index * this.splitCellStep
-			const endIndex = (index + 1) * this.splitCellStep
-			const sliceList: number[] = this.surgeList.slice(startIndex, endIndex)
-			const tempSplitMax = Math.max(...sliceList)
+	/** 切分后的天文潮集合 */
+	splitTideList: number[] = []
 
-			surgeList.push(tempSplitMax)
-		}
-		return surgeList
-	}
+	// get splitTideList(): number[] {
+	// 	let surgeList: number[] = []
+	// 	for (let index = 0; index < this.tideList.length / this.splitCellStep; index++) {
+	// 		const startIndex = index * this.splitCellStep
+	// 		const endIndex = (index + 1) * this.splitCellStep
+	// 		const sliceList: number[] = this.tideList.slice(startIndex, endIndex)
+	// 		const tempSplitMax = Math.max(...sliceList)
+	// 		surgeList.push(tempSplitMax)
+	// 	}
+	// 	return surgeList
+	// }
 
-	get splitForecastDtListList(): { val: Date }[] {
-		let dtList: { val: Date }[] = []
-		for (let index = 0; index < this.forecastDtList.length / this.splitCellStep; index++) {
-			const tempSplitMax = this.forecastDtList[index * this.splitCellStep]
+	/** 切分后的增水集合 */
+	splitDiffSurgeList: number[] = []
+	// get splitDiffSurgeList(): number[] {
+	// 	let surgeList: number[] = []
+	// 	for (let index = 0; index < this.surgeList.length / this.splitCellStep; index++) {
+	// 		const startIndex = index * this.splitCellStep
+	// 		const endIndex = (index + 1) * this.splitCellStep
+	// 		const sliceList: number[] = this.surgeList.slice(startIndex, endIndex)
+	// 		const tempSplitMax = Math.max(...sliceList)
 
-			dtList.push(tempSplitMax)
-		}
-		return dtList
-	}
+	// 		surgeList.push(tempSplitMax)
+	// 	}
+	// 	return surgeList
+	// }
+
+	// get splitForecastDtList(): { val: Date }[] {
+	// 	let dtList: { val: Date }[] = []
+	// 	for (let index = 0; index < this.forecastDtList.length / this.splitCellStep; index++) {
+	// 		const tempSplitMax = this.forecastDtList[index * this.splitCellStep]
+
+	// 		dtList.push(tempSplitMax)
+	// 	}
+	// 	return dtList
+	// }
+	splitForecastDtList: { val: Date }[] = []
 }
 </script>
 <style scoped lang="less">

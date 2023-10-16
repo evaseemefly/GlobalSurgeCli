@@ -39,6 +39,15 @@ const formatDate2HM = (now: Date): string => {
 const formatDate2DayHM = (now: Date): string => {
 	return moment(now).format('DD HH:mm')
 }
+
+/** 将时间戳(单位:s)转换为 dd HH:mm */
+const formatTs2DayHM = (ts: number): string => {
+	const dt: Date = new Date(ts * 1000)
+	const dtStr: string = moment(dt).format('DD HH:mm')
+	const temp = new Date(1697626800 * 1000)
+	return dtStr
+}
+
 const fortmatDate = (now: Date, formatStr: string) => {
 	if (now === DEFAULT_DATE) {
 		return '-'
@@ -447,6 +456,7 @@ export {
 	formatDate2MD,
 	formatDate2HM,
 	formatDate2DayHM,
+	formatTs2DayHM,
 	formatTyLevel2Str,
 	formatTyLevel2Cls,
 	fortmatData2MDHM,
