@@ -62,6 +62,9 @@ const DEFAULT_SURGE_DIFF = -999999
 /** 潮位不存在的默认值 与后台对应 */
 const DEFAULT_SURGE_VAL = -9999.99
 
+/** 所有观测值的默认值 */
+const DEFAULT_VAL = -9999
+
 // 对应 db: dict_base -> 默认的 code
 const DEFAULT_DICT_KEY = -1
 
@@ -94,4 +97,5 @@ export {
 	DEFAULT_TIME_SPAN_WD,
 	NONE_STATION_NAME,
 	DEFAULT_WD_TIME_SPAN,
+	DEFAULT_VAL,
 }

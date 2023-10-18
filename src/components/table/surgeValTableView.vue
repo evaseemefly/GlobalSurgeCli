@@ -97,7 +97,6 @@ import { AlertTideEnum } from '@/enum/surge'
 /** 风暴潮 tab */
 @Component({ filters: { formatDir2Int, formatSurgeFixed2Str, formatDate2DayHM } })
 export default class SurgeTableView extends Vue {
-	/** 实况潮位 */
 	@Prop({ type: Array, default: [] })
 	surgeList: { val: number }[]
 

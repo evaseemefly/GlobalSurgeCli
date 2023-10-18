@@ -206,6 +206,7 @@ export default class StationSurgeChartView extends Vue {
 	/** + 23-03-30 加载当前 code 的指定时间范围内的 [start,end] 的潮位数据并初始化 charts*/
 	loadTargetStationSurgeDataList(code: string, start: Date, end: Date): void {
 		const that = this
+		this.isLoading = true
 		loadTargetStationSurgeRealdataList(code, start, end)
 			.then(
 				(
@@ -312,6 +313,12 @@ export default class StationSurgeChartView extends Vue {
 						)
 					}
 				)
+			})
+			.then(() => {
+				this.isLoading = false
+			})
+			.finally(() => {
+				this.isLoading = false
 			})
 	}
 

@@ -1,5 +1,11 @@
 <template>
-	<div v-draggable id="station_list_main_layout" v-show="getIsShow">
+	<div
+		v-draggable
+		id="station_list_main_layout"
+		v-show="getIsShow"
+		v-loading="isLoading"
+		element-loading-background="rgba(28, 34, 52, 0.733)"
+	>
 		<StationExtremumListView
 			:stationNameDict="stationNameDict"
 			:distStationsTotalSurgeList="distStationsTotalSurgeList"
@@ -43,6 +49,8 @@ export default class StationLayoutView extends Vue {
 
 	@Prop({ type: Number })
 	issueTs: number
+
+	isLoading = false
 
 	/** 海洋站名称中英文对照字典 */
 	stationNameDict: { name: string; chname: string; sort: number }[] = []
@@ -101,27 +109,32 @@ export default class StationLayoutView extends Vue {
 	 * step 2: 分别获取 surge 集合与 tide集合
 	 */
 	loadDistStationTotalsSurgeList(startTs: number, endTs: number, issueTs: number) {
-		loadInLandDistStationTotalSurgeList(startTs, endTs, issueTs).then(
-			(
-				res: IHttpResponse<
-					{
-						station_code: string
-						sort: number
-						forecast_ts_list: number[]
-						tide_list: number[]
-						surge_list: number[]
-					}[]
-				>
-			) => {
-				if (res.status == 200) {
-					// TODO:[-] 23-08-28 由于distStationsTotalSurgeList需要传入子组件中，排序放在外侧执行
-					const sortedRes = res.data.sort((a, b) => {
-						return a.sort - b.sort
-					})
-					this.distStationsTotalSurgeList = sortedRes
+		this.isLoading = true
+		loadInLandDistStationTotalSurgeList(startTs, endTs, issueTs)
+			.then(
+				(
+					res: IHttpResponse<
+						{
+							station_code: string
+							sort: number
+							forecast_ts_list: number[]
+							tide_list: number[]
+							surge_list: number[]
+						}[]
+					>
+				) => {
+					if (res.status == 200) {
+						// TODO:[-] 23-08-28 由于distStationsTotalSurgeList需要传入子组件中，排序放在外侧执行
+						const sortedRes = res.data.sort((a, b) => {
+							return a.sort - b.sort
+						})
+						this.distStationsTotalSurgeList = sortedRes
+					}
 				}
-			}
-		)
+			)
+			.then(() => {
+				this.isLoading = false
+			})
 	}
 
 	/** store -> 是否显示fom t:显示 */

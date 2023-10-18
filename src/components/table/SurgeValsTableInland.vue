@@ -1,5 +1,9 @@
 <template>
-	<div id="wave_dir_table">
+	<div
+		id="wave_dir_table"
+		v-loading="isLoading"
+		element-loading-background="rgba(28, 34, 52, 0.733)"
+	>
 		<section>
 			<div class="wave-table-legend">
 				<div class="table-legend-row table-legend-title">
@@ -99,9 +103,14 @@
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
-						<div class="row-arrow" :style="{ transform: 'rotate(' + item + 'deg)' }">
+						<div
+							class="row-arrow"
+							v-show="item !== -9999"
+							:style="{ transform: 'rotate(' + item + 'deg)' }"
+						>
 							<i class="fa-solid fa-arrow-up"></i>
 						</div>
+						<span v-show="item == -9999">-</span>
 					</td>
 				</tr>
 			</tbody>
@@ -118,7 +127,7 @@ import {
 	formatTs2DayHM,
 	filterAlertSurgeColorStr,
 } from '@/util/filter'
-import { DEFAULT_SURGE_TD_STEP } from '@/const/default'
+import { DEFAULT_SURGE_TD_STEP, DEFAULT_VAL } from '@/const/default'
 import { AlertTideEnum } from '@/enum/surge'
 import { MS_UNIT } from '@/const/unit'
 /** 风暴潮 tab */
@@ -126,6 +135,8 @@ import { MS_UNIT } from '@/const/unit'
 export default class SurgeValsTableInLand extends Vue {
 	MAX_SPLIT_LIST_COUNT = 24
 	MAX_WS_COUNT = 168
+	@Prop({ type: Boolean, default: false })
+	isLoading: boolean
 
 	/** 起始时间戳 */
 	@Prop({ type: Number })
@@ -196,7 +207,12 @@ export default class SurgeValsTableInLand extends Vue {
 			Math.floor(newWsList.length / this.splitCellStep) <= this.MAX_SPLIT_LIST_COUNT
 				? Math.floor(newWsList.length / this.splitCellStep)
 				: this.MAX_SPLIT_LIST_COUNT
-
+		if (this.wsList.length == 0) {
+			splittedWsList = Array.from({ length: this.MAX_WS_COUNT }).map((_) => {
+				return DEFAULT_VAL
+			})
+			splittedWdList = [...splittedWsList]
+		}
 		for (let index = 0; index < splitCellCount; index++) {
 			// 从数组中提取极值
 			/** 当前的累计风速数组 */
@@ -389,11 +405,27 @@ export default class SurgeValsTableInLand extends Vue {
 	// }
 
 	get limitWsList(): number[] {
-		return this.wsList.slice(0, this.MAX_WS_COUNT)
+		let splittedWsList: number[] = []
+		if (this.wsList.length == 0) {
+			splittedWsList = Array.from({ length: this.MAX_WS_COUNT }).map((_) => {
+				return DEFAULT_VAL
+			})
+		} else {
+			splittedWsList = this.wsList.slice(0, this.MAX_WS_COUNT)
+		}
+		return splittedWsList
 	}
 
 	get limitWdList(): number[] {
-		return this.wdList.slice(0, this.MAX_WS_COUNT)
+		let splittedWdList: number[] = []
+		if (this.wdList.length == 0) {
+			splittedWdList = Array.from({ length: this.MAX_WS_COUNT }).map((_) => {
+				return DEFAULT_VAL
+			})
+		} else {
+			splittedWdList = this.wdList.slice(0, this.MAX_WS_COUNT)
+		}
+		return splittedWdList
 	}
 
 	splitForecastDtList: { val: Date }[] = []

@@ -1,6 +1,11 @@
 import moment from 'moment'
 
-import { DEFAULT_DATE, DEFAULT_PRODUCT_TYPE_NAME, DEFAULT_SURGE_VAL } from '@/const/default'
+import {
+	DEFAULT_DATE,
+	DEFAULT_PRODUCT_TYPE_NAME,
+	DEFAULT_SURGE_VAL,
+	DEFAULT_VAL,
+} from '@/const/default'
 import { TyphoonLevelEnum } from '@/enum/typhoon'
 import { LayerTypeEnum } from '@/enum/map'
 import { getDateDiffMs } from '@/util/dateUtil'
@@ -406,7 +411,12 @@ const formatSurge2Str = (val: number): string => {
  * @returns {*}  {string}
  */
 const formatSurgeFixed2Str = (val: number | null): string => {
-	if (val === null || val === DEFAULT_SURGE_VAL || val === -DEFAULT_SURGE_VAL) {
+	if (
+		val === null ||
+		val === DEFAULT_SURGE_VAL ||
+		val === -DEFAULT_SURGE_VAL ||
+		val === DEFAULT_VAL
+	) {
 		return '-'
 	}
 	const surgeStr = val.toFixed(2)

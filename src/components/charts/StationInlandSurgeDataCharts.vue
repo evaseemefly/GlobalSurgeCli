@@ -56,6 +56,7 @@
 					:wsList="wsList"
 					:wdList="wdList"
 					:wsTsList="windTsList"
+					:isLoading="isLoading"
 				></SurgeValsTableInLand>
 				<SubNavOffsetTimeItem
 					:offset="offsetNum"
@@ -297,6 +298,7 @@ export default class StationInlandSurgeChartView extends Vue {
 		const that = this
 		/** FIELD:读取结果的限制长度 */
 		let limitCount = 24
+		this.isLoading = true
 		// 加载指定发布时间的指定站点的72小时的整点预报集合
 		loadTargetStationSurgeForecastList(code, issue, start, end)
 			.then(
@@ -450,6 +452,9 @@ export default class StationInlandSurgeChartView extends Vue {
 					'潮位',
 					0
 				)
+			})
+			.finally(() => {
+				this.isLoading = false
 			})
 	}
 
