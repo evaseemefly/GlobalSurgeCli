@@ -464,7 +464,8 @@ class SurgeRasterGeoLayer implements ISurgeRasterLayer {
 				},
 				resolution: 256,
 			})
-			pretreatmentCallBackFun({})
+			const forecastDtStr: string = moment(forecastDt).format('MM-DD HH:mm')
+			pretreatmentCallBackFun({ message: `加载${forecastDtStr}预报时刻成功!` })
 			addedLayer = layer.addTo(map)
 			// @ts-ignore
 			layerId = addedLayer._leaflet_id

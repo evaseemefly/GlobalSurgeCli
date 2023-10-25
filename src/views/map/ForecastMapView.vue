@@ -504,7 +504,9 @@ export default class ForecastMapView extends Vue {
 		}
 	}
 
-	/** + 23-08-03 加载wd最大增水场栅格图层至地图 */
+	/** + 23-08-03 加载wd最大增水场栅格图层至地图
+	 * @ issueTs: 当前发布时间戳(s)
+	 *  */
 	initMaxSurgeScalarLayer2Map(scalarLayerType: ScalarShowTypeEnum, issueTs: number): void {
 		// TODO:[-] 23-07-27 测试加载最大增水场栅格图层
 		const scaleList = [
@@ -518,7 +520,7 @@ export default class ForecastMapView extends Vue {
 		]
 		this.clearUniquerRasterLayer()
 		const tempTs = issueTs
-		const tempDt: Date = moment(issueTs).toDate()
+		const tempDt: Date = moment(issueTs * MS_UNIT).toDate()
 		const wdRasterLayerOpts: IWdSurgeLayerOptions = {
 			forecastDt: tempDt,
 			rasterLayerType: RasterLayerEnum.RASTER_LAYER,

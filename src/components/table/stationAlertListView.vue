@@ -78,14 +78,14 @@ export default class StationAlertListView extends Vue {
 	stationCodes: string[]
 
 	/** 总潮位集合 */
-	@Prop({ default: [], type: Object })
+	@Prop({ default: [], type: Array })
 	distStationsTotalSurgeList: {
 		station_code: string
 		sort: number
 		forecast_ts_list: number[]
 		tide_list: number[]
 		surge_list: number[]
-	}[] = []
+	}[]
 
 	stationExtremumList: {
 		stationCode: string

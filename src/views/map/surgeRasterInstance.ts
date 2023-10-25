@@ -3,6 +3,7 @@ import { loadMaxSurgeCoverageInfoByIssue, loadMaxSurgeCoverageTifUlrByIssue } fr
 import { LayerTypeEnum } from '@/enum/map'
 import { TifInfoType } from './types/types'
 import { IHttpResponse } from '@/interface/common'
+import { MS_UNIT } from '@/const/unit'
 
 export interface IRasterTif<T> {
 	getGeoTifUrl(forecastDt: Date): Promise<T>
@@ -38,7 +39,8 @@ class SurgeMaxScalarRasterTifLayer<T> extends AbsSurgeRasterTifLayer<T> {
 			// 此处不使用异步
 			// // eg : {relative_path: '2022/01/01', file_name: 'global_ecmwf_det_wve_2022010112_18.tif', file_size: 8116.333984375}
 			// http://localhost:82/images/WAVE/2022/01/01/
-			const forecastTs: number = forecastDt.getTime()
+			/** 预报时间戳(s) */
+			const forecastTsByS: number = forecastDt.getTime() / MS_UNIT
 			/**
              * {
                 "forecast_ts": 1685620800,
@@ -49,11 +51,13 @@ class SurgeMaxScalarRasterTifLayer<T> extends AbsSurgeRasterTifLayer<T> {
                 "coverage_type": 2102
             }
              */
-			return loadMaxSurgeCoverageTifUlrByIssue(forecastTs).then((res: IHttpResponse<T>) => {
-				if (res.status === 200) {
-					return res.data
+			return loadMaxSurgeCoverageTifUlrByIssue(forecastTsByS).then(
+				(res: IHttpResponse<T>) => {
+					if (res.status === 200) {
+						return res.data
+					}
 				}
-			})
+			)
 			// const tifResp = await loadMaxSurgeCoverageInfoByIssue(forecastTs)
 
 			// tifUrl = tifResp.data.remote_url

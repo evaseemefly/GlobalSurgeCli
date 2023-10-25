@@ -1,6 +1,7 @@
 // TODO:[-] 20-02-07 将所有的共有的常量放在common.ts中
 // home 5820
 export const host = 'http://128.5.9.79:8095'
+// export const host = 'http://128.5.9.79:8086'
 // export const host = 'http://localhost:8080'
 // export const host = 'http://192.168.0.104:8080'
 

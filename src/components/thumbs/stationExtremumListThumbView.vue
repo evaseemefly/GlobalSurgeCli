@@ -9,7 +9,7 @@ import { IExpandEnum } from '@/enum/common'
 /** 台风搜索缩略框 */
 @Component({})
 export default class StationExtremumListThumbView extends BaseThumbView {
-	title = '潮位站极值'
+	// title = '潮位站极值'
 
 	public showForm(): void {
 		this.setShowStationExtremum(IExpandEnum.EXPANDED)

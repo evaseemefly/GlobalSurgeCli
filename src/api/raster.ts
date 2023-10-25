@@ -31,11 +31,16 @@ const loadMaxSurgeCoverageInfoByIssue = (issueTs: number) => {
 	})
 }
 
-const loadMaxSurgeCoverageTifUlrByIssue = (issueTs: number) => {
+/**
+ * 通过发布时间戳获取最大增水场tif路径
+ * @param issueTs 发布时间戳(单位s)
+ * @returns
+ */
+const loadMaxSurgeCoverageTifUlrByIssue = (issueTsbyS: number) => {
 	const url = `${host}${area}/one/url/ts`
 	return axios.get(url, {
 		headers: authHeader(),
-		params: { issue_ts: issueTs },
+		params: { issue_ts: issueTsbyS },
 	})
 }
 

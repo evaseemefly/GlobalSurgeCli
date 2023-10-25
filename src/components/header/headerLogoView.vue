@@ -60,8 +60,8 @@
 import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 @Component({})
 export default class HeaderLogoView extends Vue {
-	@Prop(String)
-	title = '风暴潮'
+	@Prop({ default: '风暴潮', type: String })
+	title
 }
 </script>
 <style scoped lang="less">

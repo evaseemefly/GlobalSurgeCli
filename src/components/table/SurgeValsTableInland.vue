@@ -165,6 +165,8 @@ export default class SurgeValsTableInLand extends Vue {
 	/** 风向集合  */
 	@Prop({ type: Array, default: [] })
 	wdList: number[]
+
+	/** 风速时间戳集合 */
 	@Prop({ type: Array, default: [] })
 	wsTsList: number[]
 
@@ -183,14 +185,24 @@ export default class SurgeValsTableInLand extends Vue {
 	@Prop({ type: Number, default: 0 })
 	propHoverIndex: number
 
-	/** 根据 splitWsList 最大风速出现的时间获取的风向 */
+	/** 根据 splitWsList 最大风速出现的时间获取的风向
+	 * * 不再使用
+	 */
 	splitWdList: number[] = []
 
-	/** 根据 splitWsList 最大风速出现的时间集合 */
+	/** 根据 splitWsList 最大风速出现的时间集合
+	 * * 不再使用
+	 */
 	splitWsTsList: number[] = []
 
+	/** 风速极值出现的时间集合
+	 * * 不再使用
+	 */
 	splitWsMaxDateList: Date[] = []
 
+	/** 切分后的风速集合
+	 * *不再使用
+	 * */
 	get splitWsList(): number[] {
 		/**
 		 * 从 wsList 根据 splitCellStep提取对应的极值，并获取对应的index，并提取 splitWdList
@@ -404,6 +416,7 @@ export default class SurgeValsTableInLand extends Vue {
 	// 	return dtList
 	// }
 
+	/** 限制长度后及对空数组填充'-'的限制风速集合 */
 	get limitWsList(): number[] {
 		let splittedWsList: number[] = []
 		if (this.wsList.length == 0) {
@@ -416,6 +429,7 @@ export default class SurgeValsTableInLand extends Vue {
 		return splittedWsList
 	}
 
+	/** 限制长度后及对空数组填充'-'的限制风向集合 */
 	get limitWdList(): number[] {
 		let splittedWdList: number[] = []
 		if (this.wdList.length == 0) {
@@ -428,6 +442,7 @@ export default class SurgeValsTableInLand extends Vue {
 		return splittedWdList
 	}
 
+	/** 不再使用 */
 	splitForecastDtList: { val: Date }[] = []
 }
 </script>

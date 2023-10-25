@@ -24,10 +24,9 @@
 						<span>位置</span
 						><span>{{ stationBaseInfo.lat }} | {{ stationBaseInfo.lon }}</span>
 					</div>
-					<!-- <div class="row">
-						<span>最后更新时间</span
-						><span>{{ getWaveIssueDt | fortmatData2YMDHM }}</span>
-					</div> -->
+					<div class="row">
+						<span>发布时间</span><span>{{ issueTs | formatTs2DayHM }}</span>
+					</div>
 				</div>
 			</div>
 			<!-- <div class="info-card forecast-info">
@@ -99,6 +98,7 @@ import { loadVectorForecastListByPoint } from '@/api/vector'
 // filter
 import {
 	fortmatData2YMDHM,
+	formatTs2DayHM,
 	filterProductTypeName,
 	filterLatlng2Str,
 	formatSurge2Str,
@@ -118,6 +118,7 @@ import { StationBaseInfoMidModel } from '@/middle_model/station'
 		fortmatData2YMDHM,
 		formatSurge2Str,
 		formatSurgeFixed2Str,
+		formatTs2DayHM,
 	},
 	components: {
 		SurgeValsTableInLand,
@@ -154,10 +155,13 @@ export default class StationInlandSurgeChartView extends Vue {
 	/** 增水(通过 offsetNum 进行便宜时不修改原始 surgeList) */
 	surgeList: number[] = []
 
+	/** 风速集合 */
 	wsList: number[] = []
 
+	/** 风向集合 */
 	wdList: number[] = []
 
+	/** 风场的时间戳集合 */
 	windTsList: number[] = []
 
 	/** 预报值(天文潮)列表 */
@@ -181,6 +185,9 @@ export default class StationInlandSurgeChartView extends Vue {
 	/** 警戒潮位及对应值 */
 	alertLevels: { tide: number; alert: AlertTideEnum }[] = []
 
+	/** 用来绑定当前组件中需要显示的站点基础信息
+	 *
+	 */
 	stationBaseInfo: {
 		station_code: string
 		station_name: string
@@ -203,9 +210,9 @@ export default class StationInlandSurgeChartView extends Vue {
 		country_en: '',
 	}
 
-	/** 纬度 */
+	/** 当前站点的经纬度 纬度 */
 	lat = 0
-	/** 经度 */
+	/** 当前站点的经纬度 经度 */
 	lon = 0
 
 	seriesMap: Map<string, string> = new Map([
@@ -910,6 +917,7 @@ export default class StationInlandSurgeChartView extends Vue {
 		}
 	}
 
+	/** 监听到 stationBaseInfo 发生变化提取 lat,lon 赋值给 当前 lat,lon 变量 */
 	@Watch('stationBaseInfo', { immediate: true, deep: true })
 	onStationBaseInfo(val: {
 		station_code: string
@@ -956,6 +964,7 @@ export default class StationInlandSurgeChartView extends Vue {
 		}
 	}
 
+	/** 待监听的 当前站位 lat,lon,issueTs  */
 	get pointOpts(): {
 		issueTs: number
 		lat: number
@@ -980,6 +989,7 @@ export default class StationInlandSurgeChartView extends Vue {
 		this.loadStationRegionCountry(val.getStationCode)
 	}
 
+	/** 监听 issueTs | lat | lon 发生变化时加载对应位置的风场时序数据 */
 	@Watch('pointOpts')
 	onPointOpts(val: { issueTs: number; lat: number; lon: number }): void {
 		loadVectorForecastListByPoint(val.issueTs, val.lat, val.lon).then(
