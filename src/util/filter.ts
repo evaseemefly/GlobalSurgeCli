@@ -279,6 +279,21 @@ const filterSurgeColorStr = (val: number): string => {
 }
 
 /**
+ * @description color list 获取风速
+ * @author evaseemefly
+ * @date 2023/11/09
+ * @param {number} val
+ * @returns {*}  {string}
+ */
+const filterWindColorStr = (val: number): string => {
+	const scale = chroma
+		.scale(['#153C83', '#4899D9', '#FFFB58', '#F1C712', '#E79325', '#F22015', '#C40E0F'])
+		.domain([3, 5, 8, 10, 13, 15])
+	const colorStr = scale(val).hex()
+	return colorStr
+}
+
+/**
  * @description 根据传入的四色警戒潮位与当前总潮位值获取对应的颜色
  * @author evaseemefly
  * @date 2023/08/29
@@ -483,6 +498,7 @@ export {
 	filterWaveColor,
 	filterSpiderStationStatusCls,
 	filterSurgeColorStr,
+	filterWindColorStr,
 	formatSurgeFixed2NumStr,
 	formatSurgeFiex1NumStr,
 	filterAlertSurgeColorStr,

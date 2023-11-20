@@ -3,6 +3,7 @@
 		<div class="layout-top">
 			<div class="layout-right"><ForecastMapView></ForecastMapView></div>
 		</div>
+		<!-- 温带预报系统底部的主要操作按钮栏 -->
 		<div class="layout-bottom"><WdSubNavMenuView></WdSubNavMenuView></div>
 		<!-- <WaveGridForecastDataFormView></WaveGridForecastDataFormView> -->
 		<StationInlandSurgeDataFormView

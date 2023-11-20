@@ -2,7 +2,7 @@
 // home 5820
 export const host = 'http://128.5.9.79:8095'
 // export const host = 'http://128.5.9.79:8086'
-// export const host = 'http://localhost:8080'
+// export const host = 'http://localhost:8096'
 // export const host = 'http://192.168.0.104:8080'
 
 /** @type {*} 21-03-05 + 新添加的用来加载 geoserver的host */

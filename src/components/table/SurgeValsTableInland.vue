@@ -75,7 +75,7 @@
 						scope="col"
 						v-for="(item, index) in surgeList"
 						:key="index"
-						:style="{ background: toColor(item) }"
+						:style="{ background: surge2Color(item) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
@@ -87,7 +87,7 @@
 						scope="col"
 						v-for="(item, index) in limitWsList"
 						:key="index"
-						:style="{ background: toColor(item) }"
+						:style="{ background: wind2Color(item) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
@@ -99,7 +99,7 @@
 						scope="col"
 						v-for="(item, index) in limitWdList"
 						:key="index"
-						:style="{ background: toColor(limitWsList[index]) }"
+						:style="{ background: wind2Color(limitWsList[index]) }"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
 					>
@@ -123,6 +123,7 @@ import {
 	formatDir2Int,
 	formatSurgeFixed2Str,
 	filterSurgeColorStr,
+	filterWindColorStr,
 	formatDate2DayHM,
 	formatTs2DayHM,
 	filterAlertSurgeColorStr,
@@ -303,8 +304,14 @@ export default class SurgeValsTableInLand extends Vue {
 		this.hoverIndex = index
 	}
 
-	toColor(val: number): string {
+	/** 根据增水获取对应的线性色标中对应的颜色 */
+	surge2Color(val: number): string {
 		return filterSurgeColorStr(val)
+	}
+
+	/** 根据风速获取对应的线性色标中对应的颜色 */
+	wind2Color(val: number): string {
+		return filterWindColorStr(val)
 	}
 
 	/** 获取当前潮值对应的警戒颜色 */

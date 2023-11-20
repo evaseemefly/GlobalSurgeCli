@@ -74,6 +74,7 @@ export default class StationLayoutView extends Vue {
 	mounted() {
 		const self = this
 		self.stationNameDict = []
+		// TODO:[*] 23-11-20 加载首页时会多次触发的加载国内站点集合
 		//1- 页面首次加载加载站点对应字典
 		loadInlandStationList().then(
 			(res: IHttpResponse<{ code: string; name: string; sort: number }[]>) => {

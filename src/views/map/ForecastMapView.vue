@@ -151,7 +151,7 @@ import {
 import { convertTyRealDataMongo2TyCMAPathLine } from '@/middle_model/util'
 import moment from 'moment'
 import { ITyPath } from '@/interface/typhoon'
-import { Collapse } from 'element-ui'
+import { Collapse, Loading } from 'element-ui'
 import station from '@/store/modules/station'
 // 第三方插件
 // 当前布局会导致此热图插件出错，暂时无法解决
@@ -299,11 +299,14 @@ export default class ForecastMapView extends Vue {
 
 	mounted() {
 		const issueTs = this.getIssueTs
-		this.initMaxSurge(issueTs, ScalarShowTypeEnum.ISOSURFACE)
+		// TODO:[-] 23-11-20 取消在页面初始化时执行 initMaxSurge 的操作，放在 getMaxSurgeOpt 中
+		// this.initMaxSurge(issueTs, ScalarShowTypeEnum.ISOSURFACE)
 	}
 
 	initMaxSurge(issueTs: number, scalarLayerType: ScalarShowTypeEnum): void {
+		console.log('执行initMaxSurge')
 		const that = this
+		// TODO:[*] 23-11-20 加载首页时会多次触发的加载国内站点集合
 		this.loadBaseStationList()
 		this.loadInlandStationMaxSurgeList(issueTs)
 		// this.loadSurgeStationList()
@@ -458,6 +461,13 @@ export default class ForecastMapView extends Vue {
 		if (is_recent) {
 			this.surgeStationList = []
 			// step1: 加载大陆的指定发布时间的168小时站点增水极值集合
+			// TODO:[-] 23-11-09 由于加载168小时站点增水耗时较长，加入了全局loading
+			const loadInstance = Loading.service({
+				lock: true,
+				fullscreen: true,
+				text: '加载中……',
+				background: 'rgba(28, 34, 52, 0.733)',
+			})
 			loadInlandStationMaxSurge(issueTs)
 				.then(
 					(
@@ -501,6 +511,9 @@ export default class ForecastMapView extends Vue {
 					)
 					that.zoom2Country()
 				})
+				.finally(() => {
+					loadInstance.close()
+				})
 		}
 	}
 
@@ -520,6 +533,7 @@ export default class ForecastMapView extends Vue {
 		]
 		this.clearUniquerRasterLayer()
 		const tempTs = issueTs
+		/** 发布时间Date(ts*1000) */
 		const tempDt: Date = moment(issueTs * MS_UNIT).toDate()
 		const wdRasterLayerOpts: IWdSurgeLayerOptions = {
 			forecastDt: tempDt,
@@ -530,6 +544,7 @@ export default class ForecastMapView extends Vue {
 			scaleList: scaleList,
 			tyCode: '',
 		}
+
 		/** + 23-07-31 加载的栅格图层的样式 栅格|等值面 */
 
 		const surgeRasterLayer = new SurgeRasterGeoLayer({
@@ -602,10 +617,10 @@ export default class ForecastMapView extends Vue {
 			// this.clearUniquerRasterLayer()
 			this.clearSosurfaceLayer()
 			this.clearGridTitlesLayer()
-			const loadInstance = loading('等待加载等值面', {
-				fullscreen: true,
-				background: 'rgba(49, 59, 89, 0.733)',
-			})
+			// const loadInstance = loading('等待加载等值面', {
+			// 	fullscreen: true,
+			// 	background: 'rgba(49, 59, 89, 0.733)',
+			// })
 
 			/** 是否加载等 raster layer */
 			const isLoadingRasterLayer =
@@ -679,7 +694,7 @@ export default class ForecastMapView extends Vue {
 					}
 				})
 				.then((_) => {
-					loadInstance.close()
+					// loadInstance.close()
 				})
 				.catch((err) => {
 					that.$message({
@@ -687,11 +702,11 @@ export default class ForecastMapView extends Vue {
 						center: true,
 						type: 'warning',
 					})
-					loadInstance.close()
+					// loadInstance.close()
 				})
 				// @ts-ignore
 				.finally((_) => {
-					loadInstance.close()
+					// loadInstance.close()
 				})
 		} else {
 			this.clearUniquerRasterLayer()
@@ -773,6 +788,7 @@ export default class ForecastMapView extends Vue {
 
 	@Watch('getMaxSurgeOpt')
 	onMaxSurgeOpt(val: { getIssueTs: number; getScalarType: ScalarShowTypeEnum }) {
+		console.log('监听到getMaxSurgeOpt发生变化')
 		this.initMaxSurge(val.getIssueTs, val.getScalarType)
 	}
 
