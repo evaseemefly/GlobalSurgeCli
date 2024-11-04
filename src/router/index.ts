@@ -2,6 +2,7 @@ import Vue from 'vue'
 import VueRouter, { RouteConfig } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
 import ForecastHomeView from '../views/ForecastHomeView.vue'
+import GlobalForecastHomeView from '../views/GlobalForecastHomeView.vue'
 
 Vue.use(VueRouter)
 
@@ -15,6 +16,11 @@ const routes: Array<RouteConfig> = [
 		path: '/forecast',
 		name: 'home',
 		component: ForecastHomeView,
+	},
+	{
+		path: '/global/surge',
+		name: 'home',
+		component: GlobalForecastHomeView,
 	},
 	// {
 	// 	path: '/about',

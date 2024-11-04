@@ -1,19 +1,19 @@
 <template>
 	<div class="nav_item_timebar">
-		<el-tooltip class="item" effect="dark" content="产品发布时间" placement="top">
+		<el-tooltip class="item" effect="dark" content="预报区域" placement="top">
 			<div class="timebar_child">
 				<!-- <div class="nav_item_icon nav_icon_operator">-</div> -->
 				<div id="issue_selecter_nav" class="nav_item_icon nav_icon_operator">
 					<el-select
-						v-model="issueTS"
+						v-model="selectedArea"
 						placeholder="请选择"
 						:popper-append-to-body="false"
 					>
 						<el-option
-							v-for="item in issueTsList"
-							:key="item.ts"
-							:label="fortmatData2MDHM(item.ts)"
-							:value="item.ts"
+							v-for="item in areasOptions"
+							:key="item.key"
+							:label="item.val"
+							:value="item.key"
 						>
 						</el-option>
 					</el-select>
@@ -31,78 +31,44 @@ import { fortmatData2YMDHM } from '@/util/filter'
 import { Getter, Mutation } from 'vuex-class'
 import {
 	GET_WAVE_PRODUCT_ISSUE_DATETIME,
-	SET_GLOBAL_SURGE_ISSUE_TS,
 	SET_ISSUE_TS,
+	SET_SURGE_FORECAST_AREA,
 	SET_TIMESPAN,
 } from '@/store/types'
 import { loadDistCoverageIssueTs } from '@/api/raster'
 import { IHttpResponse } from '@/interface/common'
 import { fortmatData2MDHM } from '@/util/filter'
 import moment from 'moment'
+import { ForecastAreaEnum } from '@/enum/map'
 /** 发布时间组件 */
 @Component({
 	filters: {
 		fortmatData2YMDHM,
 	},
 })
-export default class SubNavIssueTimeItem extends Vue {
-	/** 发布时间 */
-	issueDatetime: Date = DEFAULT_DATE
-	/** 发布时间戳 */
-	issueTS = 0
+export default class SubNavForecastAreaItem extends Vue {
+	/** 选择的预报区域 */
+	selectedArea: ForecastAreaEnum = ForecastAreaEnum.INDIA_OCEAN
 
-	/** 1s=1000ms */
-	MS = 1000
-
-	@Prop({ type: Array, default: [] })
-	issueTsList
-
-	// issueTimeList: { ts: number; dt: Date }[] = []
+	/** 预报区域选项 */
+	areasOptions: { key: ForecastAreaEnum; val: string }[] = [
+		{ key: ForecastAreaEnum.AMERICA, val: '美国' },
+		{ key: ForecastAreaEnum.INDIA_OCEAN, val: '印度洋' },
+		{ key: ForecastAreaEnum.OCEANIA, val: '大洋洲' },
+		{ key: ForecastAreaEnum.WNP, val: '西北太' },
+	]
 
 	mounted() {
-		// loadDistCoverageIssueTs()
-		// 	.then((res: IHttpResponse<number[]>) => {
-		// 		let issueTimeList: { ts: number; dt: Date }[] = []
-		// 		if (res.status == 200) {
-		// 			res.data.forEach((element) => {
-		// 				issueTimeList.push({ ts: element, dt: moment(element * this.MS).toDate() })
-		// 			})
-		// 		}
-		// 		return issueTimeList
-		// 	})
-		// 	.then((issueList: { ts: number; dt: Date }[]) => {
-		// 		this.issueTS = issueList[0].ts
-		// 		this.issueTimeList = issueList
-		// 	})
+		this.setForecastArea(this.selectedArea)
 	}
 
-	fortmatData2MDHM(ts: number) {
-		return fortmatData2MDHM(ts)
-	}
+	/** 设置当前选择的预报区域 */
+	@Mutation(SET_SURGE_FORECAST_AREA, { namespace: 'surge' })
+	setForecastArea: (val: ForecastAreaEnum) => void
 
-	optionVal = ''
-
-	/** 获取当前产品的发布时间 */
-	@Getter(GET_WAVE_PRODUCT_ISSUE_DATETIME, { namespace: 'wave' })
-	getWaveProductIssueDt: Date
-
-	@Watch('issueTsList')
-	onIssueTsList(val: number[]): void {
-		this.issueTS = val[0]
-	}
-
-	/** 设置当前的发布时间 */
-	@Mutation(SET_GLOBAL_SURGE_ISSUE_TS, { namespace: 'surge' })
-	setIssueTimeSpan: (val: number) => void
-
-	@Watch('getWaveProductIssueDt')
-	onGetWaveProductIssueDt(val: Date): void {
-		this.issueDatetime = val
-	}
-
-	@Watch('issueTS')
-	onIssueTs(val: number): void {
-		this.setIssueTimeSpan(val)
+	@Watch('selectedArea')
+	onSelectedArea(val: ForecastAreaEnum): void {
+		this.setForecastArea(val)
 	}
 }
 </script>

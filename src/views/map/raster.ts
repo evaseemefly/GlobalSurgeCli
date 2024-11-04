@@ -322,9 +322,13 @@ class SurgeRasterGeoLayer implements ISurgeRasterLayer {
 		}>(issueTimestamp, layerType)
 
 		const awaitUrl = await surgeTif.getGeoTifUrl(forecastDt)
+		// TODO:[*] 24-09-20 动态获取全球风暴增水场tif url
+		// const awaitUrl =
+		// 	'http://128.5.9.79:82/images/GLOBAL/TEST/nmefc_surge_latlon0p05_IndiaOcean_001_lzw.tif'
 		// const store_url = `http://${awaitUrl.host}:${awaitUrl.port}/images/${awaitUrl.area}/${awaitUrl.relative_path}/${awaitUrl.file_name}`
 		const storeUrl: string = awaitUrl.remote_url
-
+		// const storeUrl =
+		// 	'http://localhost:82/images/global_surge/field_2024-09-29_12_00_00.f0_Oceania_standard_deflate.tif'
 		return storeUrl
 	}
 

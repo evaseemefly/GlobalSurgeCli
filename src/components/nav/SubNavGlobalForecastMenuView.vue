@@ -7,49 +7,15 @@
 		<nav class="nav_item nav_item_icons">
 			<div class="nav_item_icon fa-solid fa-house"></div>
 		</nav>
-		<nav class="nav_item nav_item_icons un_padding">
-			<el-tooltip
-				class="item"
-				effect="dark"
-				content="按位置圈选经过的台风"
-				placement="top-start"
-			>
-				<div class="nav_item_icon">
-					<!-- <div
-					:class="[
-						checkedSelectLoop ? 'activate' : 'un_activate',
-						'nav_item_icon',
-						'fa-solid fa-anchor-circle-check',
-					]"
-				></div> -->
-					<div
-						:class="[checkedSelectLoop ? 'activate' : 'un_activate', , 'nav_item_icon']"
-						@click="checkedSelectLoop = !checkedSelectLoop"
-					>
-						<i class="fa-solid fa-location-crosshairs"></i>
-						<!-- <i class="fa-solid fa-anchor-circle-check"></i> -->
-					</div>
-					<!-- <div
-					class="nav_item_icon fa-solid fa-anchor-circle-check"
-					:class="{ checkedSelectLoop: activate }"
-				></div> -->
-					<!-- <i class="nav_item_icon fa-solid fa-anchor-circle-check"></i> -->
-				</div>
-			</el-tooltip>
-			<el-tooltip class="item" effect="dark" content="清除" placement="top">
-				<div class="nav_item_icon alarm" @click="deepClear()">
-					<div class="nav_item_icon fa-solid fa-eraser"></div>
-				</div>
-			</el-tooltip>
-
-			<el-tooltip class="item" effect="dark" content="提交查询" placement="top">
-				<div class="nav_item_icon" @click="submit()">
-					<div class="fa-solid fa-magnifying-glass-location"></div>
-				</div>
-			</el-tooltip>
-		</nav>
+		<!-- 预报区域item -->
 		<SubNavForecastAreaItem></SubNavForecastAreaItem>
-		<SubNavIssueTimeItem></SubNavIssueTimeItem>
+		<!-- 预报发布时间item -->
+		<SubNavIssueTimeItem :issueTsList="issueTsList"></SubNavIssueTimeItem>
+		<!-- 预报时间item -->
+		<SubNavForecastTimeItem
+			:forecastTsList="forecastTsList"
+			@updateForecastTs="updateForecastTs"
+		></SubNavForecastTimeItem>
 		<SubNavTimeItem
 			:forecastDt="forecastDt"
 			:step="6"
@@ -69,6 +35,7 @@ import { Component, Prop, Vue, Watch } from 'vue-property-decorator'
 import { Mutation, Getter } from 'vuex-class'
 
 import SubNavTimeItem from '@/components/nav/subItems/SubNavTimeItem.vue'
+import SubNavForecastTimeItem from '@/components/nav/subItems/SubNavForecastTimeItem.vue'
 import TyphoonListView from '@/components/table/tyListView.vue'
 import SubNavIssueTimeItem from '@/components/nav/subItems/SubNavIssueTimeItem.vue'
 import SubNavTimespanItem from '@/components/nav/subItems/SubNavTimespanItem.vue'
@@ -94,6 +61,9 @@ import {
 	SET_SCALAR_SHOW_TYPE,
 	SET_SURGE_TD_STEP,
 	SET_TIMESPAN,
+	GET_SURGE_FORECAST_AREA,
+	GET_GLOBAL_SURGE_ISSUE_TS,
+	GET_GLOBAL_SURGE_FORECAST_TS,
 } from '@/store/types'
 // 默认常量
 import {
@@ -126,15 +96,17 @@ import {
 } from '@/bus/types'
 //
 import { sortFilterTyList } from '@/util/sortUtil'
-import { LayerTypeEnum } from '@/enum/map'
+import { ForecastAreaEnum, LayerTypeEnum } from '@/enum/map'
 import moment from 'moment'
 import wave from '@/store/modules/wave'
 import { IExpandEnum, ScalarShowTypeEnum } from '@/enum/common'
+import { loadForecastTsList, loadLastIssueTsList } from '@/api/raster'
 
 /** + 22-10-14 副导航栏(布局:底部) */
 @Component({
 	components: {
 		SubNavTimeItem,
+		SubNavForecastTimeItem,
 		TyphoonListView,
 		SubNavIssueTimeItem,
 		SubNavTimespanItem,
@@ -142,7 +114,7 @@ import { IExpandEnum, ScalarShowTypeEnum } from '@/enum/common'
 		SubNavForecastAreaItem,
 	},
 })
-export default class SubNavMenuView extends Vue {
+export default class SubNavGlobalForecastMenuView extends Vue {
 	/** 是否圈选 */
 	checkedSelectLoop = false
 
@@ -197,14 +169,18 @@ export default class SubNavMenuView extends Vue {
 	/** 增加的时间步长(1d) */
 	timeStep: number = 60 * 60 * 24
 
+	/** 1s=1000ms */
+	MS = 1000
+
 	// tdStep = 0
 
 	tempTitle = '数据间隔'
 
-	@Watch('checkedSelectLoop')
-	onCheckedSelectLoop(val: boolean): void {
-		this.setIsSelectLoop(val)
-	}
+	/** 发布时间戳集合 */
+	issueTsList: number[] = []
+
+	/** 预报时间戳集合 */
+	forecastTsList: number[] = []
 
 	/** + 23-01-05: 通过事件总线执行 按照经纬度加载预报时序数据 */
 	busToLoadForecastDataListByCoords(queryParams: {
@@ -216,25 +192,10 @@ export default class SubNavMenuView extends Vue {
 	}
 
 	submit(): void {
-		const data: { boxLoopLatlng: L.LatLng } = {
-			boxLoopLatlng: this.getBoxLoopLatlng,
-		}
 		const self = this
 		this.isLoadingTyList = true
 		// 按照当前获取的选中经纬度加载该经纬度对应的海浪时序数据
 		const waveOpts = this.waveOpts
-		this.setShowTySearchForm(IExpandEnum.EXPANDED)
-		this.busToLoadForecastDataListByCoords({
-			latlng: this.getBoxLoopLatlng,
-			layerType: waveOpts.getWaveProductLayerType,
-			issueTimestamp: waveOpts.getWaveProductIssueTimestamp,
-		})
-	}
-
-	/** 清理当前的圈选范围以及当前选中的台风 */
-	deepClear(): void {
-		// this.setCurrentTy(null)
-		this.busToClearAllLayers()
 	}
 
 	/** 通过事件总线清除全部图层 */
@@ -249,6 +210,11 @@ export default class SubNavMenuView extends Vue {
 		this.setForecastDt(val)
 	}
 
+	/** TODO:[*] 24-10-31 设置预报时间戳 */
+	updateForecastTs(val: number): void {
+		console.log(`监听到菜单栏更新了当前预报时间:${val}`)
+	}
+
 	/** 子组件调用——更新时间间隔 */
 	updateTimespan(val: number): void {
 		if (val <= this.timeSpanMax) {
@@ -256,18 +222,9 @@ export default class SubNavMenuView extends Vue {
 		}
 	}
 
-	/** 获取当前选中的经纬度 */
-	@Getter(GET_BOX_LOOP_LATLNG, { namespace: 'map' }) getBoxLoopLatlng: L.LatLng
-
 	@Getter(GET_CURRENT_TY_FORECAST_DT, { namespace: 'typhoon' }) getTyForecastDt
 
 	@Getter(GET_DATE_STEP, { namespace: 'common' }) getDateStep
-
-	/** 设置是否进行圈选操作 */
-	@Mutation(SET_IS_SELECT_LOOP, { namespace: 'map' }) setIsSelectLoop
-
-	/** 设置圈选的半径 */
-	@Mutation(SET_BOX_LOOP_RADIUS, { namespace: 'map' }) setBoxLoopRadius
 
 	/** 设置 遮罩 timebar */
 	@Mutation(SET_SHADE_NAV_TIME, { namespace: 'common' }) setShadeTimebar
@@ -279,10 +236,6 @@ export default class SubNavMenuView extends Vue {
 	@Mutation(SET_SCALAR_SHOW_TYPE, { namespace: 'common' }) setScalarShowType: {
 		(val: ScalarShowTypeEnum): void
 	}
-
-	/** 显示台风搜索form(格点时序数据form) */
-	@Mutation(SET_SHOW_TY_SEARCH_FORM, { namespace: 'common' })
-	setShowTySearchForm: { (val: IExpandEnum): void }
 
 	/** 潮位 table 中的 td 之间的时间间隔(h) */
 	@Mutation(SET_SURGE_TD_STEP, { namespace: 'common' })
@@ -296,6 +249,18 @@ export default class SubNavMenuView extends Vue {
 	@Getter(GET_WAVE_PRODUCT_ISSUE_DATETIME, { namespace: 'wave' })
 	getWaveProductIssueDt: Date
 
+	/** 获取当前预报区域 */
+	@Getter(GET_SURGE_FORECAST_AREA, { namespace: 'surge' })
+	getForecastArea: ForecastAreaEnum
+
+	/** 获取当前发布时间 */
+	@Getter(GET_GLOBAL_SURGE_ISSUE_TS, { namespace: 'surge' })
+	geGlobalIssueTs: number
+
+	/** 获取当前发布时间的预报时次 */
+	@Getter(GET_GLOBAL_SURGE_FORECAST_TS, { namespace: 'surge' })
+	geGlobalForecastTs: number
+
 	@Getter(GET_WAVE_PRODUCT_ISSUE_TIMESTAMP, { namespace: 'wave' })
 	getWaveProductIssueTimestamp: number
 
@@ -303,29 +268,50 @@ export default class SubNavMenuView extends Vue {
 	@Getter(GET_WAVE_PRODUCT_LAYER_TYPE, { namespace: 'wave' })
 	getWaveProductLayerType: LayerTypeEnum
 
+	/** 监听预报区域 -> issue list */
+	@Watch('getForecastArea')
+	onForecastArea(val: ForecastAreaEnum) {
+		console.log(`监听到预报区域发生变化:${val}`)
+		loadLastIssueTsList(val, 5).then((result) => {
+			if (result.status == 200) {
+				this.issueTsList = result.data.map((n) => n * this.MS)
+			}
+		})
+	}
+
+	/** 监听发布时间 -> forecast ts list */
+	@Watch('geGlobalIssueTs')
+	onGlobalIssueTs(val: number) {
+		const area = this.getForecastArea
+		loadForecastTsList(area, val).then((result) => {
+			if (result.status == 200) {
+				this.forecastTsList = result.data.map((n) => n * this.MS)
+			}
+		})
+	}
+
+	get AreaAndIssueTsOpts(): { getForecastArea: ForecastAreaEnum; geGlobalIssueTs: number } {
+		const { getForecastArea, geGlobalIssueTs } = this
+		return { getForecastArea, geGlobalIssueTs }
+	}
+
+	@Watch('AreaAndIssueTsOpts')
+	onAreaAndIssueTsOpts(getForecastArea: ForecastAreaEnum, getGlobalIssueTs: number): void {
+		if (getGlobalIssueTs !== DEFAULT_TIMESTAMP) {
+			console.log(`监听到预报区域和发布时间发生变化:${getForecastArea},${getGlobalIssueTs}`)
+		}
+	}
+
+	/** 监听预报时间 -> */
+	@Watch('geGlobalForecastTs')
+	onGlobalForecastTs(val: number) {}
+
 	get waveOpts(): {
 		getWaveProductIssueTimestamp: number
 		getWaveProductLayerType: LayerTypeEnum
 	} {
 		const { getWaveProductIssueTimestamp, getWaveProductLayerType } = this
 		return { getWaveProductIssueTimestamp, getWaveProductLayerType }
-	}
-
-	@Watch('getWaveProductIssueDt')
-	onGetWaveProductIssueDt(val: Date): void {
-		// 此处若为 vuex 中对应的变量赋相同的时间，仍会触发此监听
-		console.log(val)
-	}
-
-	@Watch('getWaveProductLayerType')
-	onGetWaveProductType(val: LayerTypeEnum): void {
-		console.log(val)
-	}
-
-	@Watch('getWaveProductIssueTimestamp')
-	onGetWaveProductIssueTimestamp(val: number): void {
-		// 若在 vuex 中为对应的变量赋相同的时间戳(int),不会再次触发此监听
-		console.log(val)
 	}
 
 	@Watch('waveOpts')

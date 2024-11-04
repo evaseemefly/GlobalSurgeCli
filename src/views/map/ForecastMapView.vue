@@ -224,7 +224,7 @@ export default class ForecastMapView extends Vue {
 	zoom = 5
 	center: number[] = [29.45, 130.8833]
 	url =
-		'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'
+		'https://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
 	// url = 'http://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png'
 	// TODO:[-] 20-11-09 新加入的 map 相关的一些基础静态配置
 	mapOptions: { preferCanvas: boolean; minZoom: number; maxZoom: number; render: any } = {
@@ -301,6 +301,11 @@ export default class ForecastMapView extends Vue {
 		const issueTs = this.getIssueTs
 		// TODO:[-] 23-11-20 取消在页面初始化时执行 initMaxSurge 的操作，放在 getMaxSurgeOpt 中
 		// this.initMaxSurge(issueTs, ScalarShowTypeEnum.ISOSURFACE)
+		// this.initMaxSurgeTest(issueTs, ScalarShowTypeEnum.RASTER)
+	}
+
+	initMaxSurgeTest(issueTs: number, scalarLayerType: ScalarShowTypeEnum): void {
+		this.initMaxSurgeScalarLayer2Map(scalarLayerType, issueTs)
 	}
 
 	initMaxSurge(issueTs: number, scalarLayerType: ScalarShowTypeEnum): void {
@@ -309,7 +314,6 @@ export default class ForecastMapView extends Vue {
 		// TODO:[*] 23-11-20 加载首页时会多次触发的加载国内站点集合
 		this.loadBaseStationList()
 		this.loadInlandStationMaxSurgeList(issueTs)
-		// this.loadSurgeStationList()
 		// TODO:[*] + 23-04-04 加入点击地图不再显示 form
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		// 点击地图隐藏 station surge form
@@ -806,7 +810,7 @@ export default class ForecastMapView extends Vue {
 			case val === MapLayerEnum.SIMPLE_MAP:
 				// 使用 geoq 的底图
 				this.url =
-					'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'
+					'https://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
 				break
 		}
 	}

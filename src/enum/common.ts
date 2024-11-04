@@ -59,6 +59,12 @@ export enum ScalarShowTypeEnum {
 	ISOSURFACE,
 }
 
+/** 栅格文件类型枚举 */
+export enum RasterFileEnum {
+	NETCDF = 6102,
+	GEOTIFF = 6103,
+}
+
 const getEnumVal = <T>(tempEnum: T, index: number): string => {
 	const areaStr = tempEnum[index]
 	return areaStr

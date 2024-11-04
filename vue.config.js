@@ -12,15 +12,17 @@ module.exports = defineConfig({
 			return args
 		})
 	},
-	// configureWebpack: (config) => {
-	//     // webpack配置，值位对象时会合并配置，为方法时会改写配置
-	//     if (debug) {
-	//         // 开发环境配置
-	//         config.devtool = 'cheap-module-eval-source-map'
-	//     } else {
-	//         // 生产环境配置
-	//     }
-	// },
+	// TODO:[-] 24-10-31 此处加入可供client调试选项
+	configureWebpack: {
+		// webpack配置，值位对象时会合并配置，为方法时会改写配置
+		// config.devtool = 'cheap-module-eval-source-map'
+		devtool: 'cheap-module-source-map',
+		// if (debug) {
+		// 	// 开发环境配置
+		// } else {
+		// 	// 生产环境配置
+		// }
+	},
 	devServer: {
 		// 由之前的 'localhost'改为如下，端口默认8080
 		host: '0.0.0.0',

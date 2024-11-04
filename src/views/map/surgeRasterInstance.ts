@@ -22,7 +22,7 @@ abstract class AbsSurgeRasterTifLayer<T> implements IRasterTif<T> {
 }
 
 /**
- * + 23-01-04 海浪标量场 tif 图层
+ * + 24-11-04 风暴潮增水场标量场 tif 图层
  */
 class SurgeMaxScalarRasterTifLayer<T> extends AbsSurgeRasterTifLayer<T> {
 	/**

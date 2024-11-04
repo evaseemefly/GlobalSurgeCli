@@ -45,9 +45,9 @@ class WMSMixin extends Vue {
 		new WMSOptionsMidModel('nmefc_common:surge_area_south_polygon')
 	)
 	url =
-		'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'
+		'https://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
 	// leaflet 右下角的文字显示
 	attribution =
-		'powered by Ocean Flow © 2023 authors: <a href="https://github.com/evaseemefly">evaseemefly</a> | v2.0:23-11-20 单独提取站点服务为微服务架构,修复了页面加载逻辑 | nmefc '
+		'powered by Ocean Flow © 2024 authors: <a href="https://github.com/evaseemefly">evaseemefly</a> | v3.0:24-10-25 加入加载并切换全球风暴潮区域预报产品功能 | nmefc '
 }
 export { WMSMixin }

@@ -17,21 +17,21 @@
 				:transparent="ninelineWMS.options.transparent"
 			></l-wms-tile-layer>
 			<!-- 南海岛礁 -->
-			<!-- <l-wms-tile-layer
+			<l-wms-tile-layer
 				:baseUrl="southlandWMS.url"
 				:layers="southlandWMS.options.layer"
 				:format="southlandWMS.options.format"
 				:transparent="southlandWMS.options.transparent"
-			></l-wms-tile-layer> -->
+			></l-wms-tile-layer>
 
 			<!-- TODO:[-] 20-08-26 新加入的世界国境线 -->
-			<!-- <l-wms-tile-layer
+			<l-wms-tile-layer
 				:baseUrl="worldLineWMS.url"
 				:layers="worldLineWMS.options.layer"
 				:format="worldLineWMS.options.format"
 				:transparent="worldLineWMS.options.transparent"
 				:zIndex="worldLineWMS.options.zindex"
-			></l-wms-tile-layer> -->
+			></l-wms-tile-layer>
 
 			<LCircle
 				:lat-lng="currentLatlng"
@@ -44,7 +44,7 @@
 			></LCircle>
 		</l-map>
 		<!-- 不适用图层切换菜单 -->
-		<!-- <LayersNavMenuView></LayersNavMenuView> -->
+		<LayersNavMenuView></LayersNavMenuView>
 	</div>
 </template>
 <script lang="ts">
@@ -101,13 +101,16 @@ import {
 	GET_REGION_PID,
 	GET_STATION_CODE,
 	GET_NOW,
+	GET_ISSUE_TS,
 	SET_ISOSURGE_COLOR_SCALE_STR_LIST,
 	SET_ISOSURGE_COLOR_SCALE_VAL_RANGE,
 	SET_IS_SHOW_RASTER_LEGEND,
 	SET_SCALAR_SHOW_TYPE,
 	SET_RASTER_COLOR_SCALE_RANGE,
 	SET_STATIONS_BASEINFO_LIST,
-	GET_ISSUE_TS,
+	GET_SURGE_FORECAST_AREA,
+	GET_GLOBAL_SURGE_ISSUE_TS,
+	GET_GLOBAL_SURGE_FORECAST_TS,
 } from '@/store/types'
 // 默认常量
 import {
@@ -126,13 +129,22 @@ import {
 	DEFAULT_TIMESTAMP,
 } from '@/const/default'
 // enum
-import { IconTypeEnum, ScalarShowTypeEnum, StationIconShowTypeEnum } from '@/enum/common'
+import {
+	IconTypeEnum,
+	RasterFileEnum,
+	ScalarShowTypeEnum,
+	StationIconShowTypeEnum,
+} from '@/enum/common'
 import { MenuType, TyScatterMenuType } from '@/enum/menu'
-import { LayerTypeEnum, MapLayerEnum, RasterLayerEnum } from '@/enum/map'
+import { ForecastAreaEnum, LayerTypeEnum, MapLayerEnum, RasterLayerEnum } from '@/enum/map'
 
 // api
 import { loadTyRealDataList, loadStationTideDataList } from '@/api/typhoon'
-import { loadStationDetailDataList, loadStationNameDict } from '@/api/station'
+import {
+	loadStationDetailDataList,
+	loadStationNameDict,
+	loadInlandStationMaxSurge,
+} from '@/api/station'
 // 各类插件
 import { TyMiniMarker } from '@/plugins/customerMarker'
 import {
@@ -147,8 +159,7 @@ import {
 import { convertTyRealDataMongo2TyCMAPathLine } from '@/middle_model/util'
 import moment from 'moment'
 import { ITyPath } from '@/interface/typhoon'
-import { IWdSurgeLayerOptions } from './types/types'
-import { Collapse } from 'element-ui'
+import { Collapse, Loading } from 'element-ui'
 import station from '@/store/modules/station'
 // 第三方插件
 // 当前布局会导致此热图插件出错，暂时无法解决
@@ -169,23 +180,23 @@ import {
 } from '@/bus/types'
 import { FilterType4ScattersEnum, FilterTypeEnum } from '@/enum/filter'
 import { MS_UNIT } from '@/const/unit'
+import { ISurgeRasterLayer, SurgeRasterGeoLayer } from './raster'
 import { Sosurface } from './isosurface'
 import { DEFAULT_COLOR_SCALE } from '@/const/colorBar'
-
-import { ISurgeRasterLayer, SurgeRasterGeoLayer } from './raster'
 import wave from '@/store/modules/wave'
 import { WaveArrow } from './arrow'
 import { StationBaseInfo } from './station'
 import { WaveBarOptType } from '@/middle_model/geo'
-
-import { IScale } from '@/const/colorBar'
+import { loading } from '@/common/common'
 
 // - 23-03-27 api
 import { loadSurgeListByRecently } from '@/api/surge' // 获取所有潮位站距离当前最近的潮值
-import { loadAllStationStatusJoinGeoInfo } from '@/api/station'
+import { loadAllStationStatusJoinGeoInfo, loadAllStationLastSurge } from '@/api/station'
 import { StationBaseInfoMidModel } from '@/middle_model/station'
-
+import { IWdSurgeLayerOptions } from './types/types'
+import { IScale } from '@/const/colorBar'
 import { getIntegerList } from '@/util/math'
+import { loadGlobalHourlyCoverageTif } from '@/api/raster'
 
 /**
  * - 23-03-27 继承之前海浪可视化系统的 cli
@@ -218,9 +229,10 @@ import { getIntegerList } from '@/util/math'
 	},
 	mixins: [WMSMixin, MapMixin],
 })
-export default class MainMapView extends Vue {
-	zoom = 4
-	center: number[] = [27.45, 130.8833]
+export default class GlobalForecastMapView extends Vue {
+	zoom = 5
+	center: number[] = [29.45, 130.8833]
+	rasterURL: string = null
 	url =
 		'https://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
 	// url = 'http://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png'
@@ -290,19 +302,28 @@ export default class MainMapView extends Vue {
 
 	@Getter(GET_CURRENT_TY, { namespace: 'typhoon' }) getCurrentTy
 
-	/** 当前发布时间戳 */
-	@Getter(GET_ISSUE_TS, { namespace: 'common' })
-	getIssueTs: number
+	/** 获取栅格图层的显示类型 */
+	@Getter(GET_SCALAR_SHOW_TYPE, { namespace: 'common' }) getScalarType: ScalarShowTypeEnum
 
 	created() {}
 
 	mounted() {
-		const that = this
-
-		this.loadBaseStationList()
-		this.loadSurgeStationList()
 		const issueTs = this.getIssueTs
-		this.initMaxSurgeTest(issueTs, ScalarShowTypeEnum.RASTER)
+		// TODO:[-] 23-11-20 取消在页面初始化时执行 initMaxSurge 的操作，放在 getMaxSurgeOpt 中
+		// this.initMaxSurge(issueTs, ScalarShowTypeEnum.ISOSURFACE)
+		// this.initMaxSurgeTest(issueTs, ScalarShowTypeEnum.RASTER)
+	}
+
+	initMaxSurgeTest(issueTs: number, scalarLayerType: ScalarShowTypeEnum): void {
+		this.initMaxSurgeScalarLayer2Map(scalarLayerType, issueTs)
+	}
+
+	initMaxSurge(issueTs: number, scalarLayerType: ScalarShowTypeEnum): void {
+		console.log('执行initMaxSurge')
+		const that = this
+		// TODO:[*] 23-11-20 加载首页时会多次触发的加载国内站点集合
+		this.loadBaseStationList()
+		this.loadInlandStationMaxSurgeList(issueTs)
 		// TODO:[*] + 23-04-04 加入点击地图不再显示 form
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		// 点击地图隐藏 station surge form
@@ -310,6 +331,52 @@ export default class MainMapView extends Vue {
 			console.log(el)
 			that.setShowStationSurgeForm(false)
 		})
+		this.initMaxSurgeScalarLayer2Map(scalarLayerType, issueTs)
+	}
+
+	/** TODO:[*] 24-11-01 加载逐时增水场layer */
+	initHourlySurgeLayer(area: ForecastAreaEnum, issueTs: number, forecastTs: number): void {
+		loadGlobalHourlyCoverageTif(area, issueTs, forecastTs, RasterFileEnum.GEOTIFF).then(
+			(res) => {
+				if (res.status == 200) {
+					this.rasterURL = res.data
+					console.log(`加载逐时增水场url:${res.data}`)
+				}
+			}
+		)
+	}
+
+	/** 获取当前预报区域 */
+	@Getter(GET_SURGE_FORECAST_AREA, { namespace: 'surge' })
+	getForecastArea: ForecastAreaEnum
+
+	/** 获取当前发布时间 */
+	@Getter(GET_GLOBAL_SURGE_ISSUE_TS, { namespace: 'surge' })
+	geGlobalIssueTs: number
+
+	/** 获取当前发布时间的预报时次 */
+	@Getter(GET_GLOBAL_SURGE_FORECAST_TS, { namespace: 'surge' })
+	geGlobalForecastTs: number
+
+	get forecastSurgeOpts(): {
+		getForecastArea: ForecastAreaEnum
+		geGlobalIssueTs: number
+		geGlobalForecastTs: number
+	} {
+		const { getForecastArea, geGlobalIssueTs, geGlobalForecastTs } = this
+		return { getForecastArea, geGlobalIssueTs, geGlobalForecastTs }
+	}
+
+	@Watch('forecastSurgeOpts')
+	onForecastSurgeOpts(val: {
+		getForecastArea: ForecastAreaEnum
+		geGlobalIssueTs: number
+		geGlobalForecastTs: number
+	}): void {
+		console.log(
+			`监听到surge相关配置项发生变化:area${val.getForecastArea},issuets:${val.geGlobalIssueTs},forecastTs:${val.geGlobalForecastTs}`
+		)
+		this.initHourlySurgeLayer(val.getForecastArea, val.geGlobalIssueTs, val.geGlobalForecastTs)
 	}
 
 	/** 清除当前选定的圈选位置的中心点 */
@@ -349,15 +416,6 @@ export default class MainMapView extends Vue {
 		}
 	}
 
-	/** 清除当前的 海浪箭头 canvas 图层 */
-	private clearWaveArrowCanvasLayer(): void {
-		if (this.waveArrowCanvasLayer === null || this.waveArrowCanvasLayer === undefined) {
-			return
-		} else {
-			this.waveArrowCanvasLayer.clearLayers()
-		}
-	}
-
 	private loadStationAndShow(code: string): void {
 		this.setStationCode(code)
 		this.setShowStationSurgeForm(true)
@@ -368,7 +426,6 @@ export default class MainMapView extends Vue {
 		this.clearScalarLayer()
 		this.clearSosurfaceLayer()
 		this.clearGridTitlesLayer()
-		this.clearWaveArrowCanvasLayer()
 	}
 	/** 设置台风的时间间隔步长 */
 	@Mutation(SET_DATE_STEP, { namespace: 'common' }) setDateStep
@@ -378,39 +435,6 @@ export default class MainMapView extends Vue {
 
 	/** 设置 显示|隐藏 station surge form */
 	@Mutation(SET_SHOW_STATION_SURGE_FORM, { namespace: 'station' }) setShowStationSurgeForm
-
-	/** 获取当前地图key */
-	@Getter(GET_BASE_MAP_KEY, { namespace: 'map' }) getBaseMapKey
-
-	/** 获取当前产品的发布时间 */
-	@Getter(GET_WAVE_PRODUCT_ISSUE_DATETIME, { namespace: 'wave' })
-	getWaveProductIssueDt: Date
-
-	/** 获取当前产品的发布时间戳 */
-	@Getter(GET_WAVE_PRODUCT_ISSUE_TIMESTAMP, { namespace: 'wave' })
-	getWaveProductIssueTimestamp: number
-
-	/** 获取当前的预报时间(不再监听此变量，改为监听forecastTimestamp. ts=Date.getTime() ) */
-	@Getter(GET_CURRENT_FORECAST_DT, { namespace: 'common' })
-	getForecastDt: Date
-
-	@Getter(GET_REGION_PID, { namespace: 'station' })
-	getRegionPid: number
-
-	@Watch('getForecastDt')
-	onForecastDt(val: Date) {
-		this.forecastTimestamp = val.getTime()
-	}
-
-	/** 标量场的显示类型 栅格图层|等值面 */
-	@Getter(GET_SCALAR_SHOW_TYPE, { namespace: 'common' })
-	getScalarShowType: ScalarShowTypeEnum
-
-	@Getter(GET_STATION_CODE, { namespace: 'station' })
-	getStationCode: string
-
-	/** 设置当前圈选中心位置 */
-	@Mutation(SET_BOX_LOOP_LATLNG, { namespace: 'map' }) setBoxLoopLatlng: (val: L.LatLng) => void
 
 	/** 设置栅格图层色标范围 {
 	range?: number[]
@@ -436,23 +460,63 @@ export default class MainMapView extends Vue {
 	@Mutation(SET_SCALAR_SHOW_TYPE, { namespace: 'common' })
 	setScalarShowType
 
-	/** + 23-03-27 加载 指定时间|当前时间 的全部潮位站 */
-	loadSurgeStationList(is_recent = true, now: Date = new Date(), pid?: number): void {
+	/** 获取当前地图key */
+	@Getter(GET_BASE_MAP_KEY, { namespace: 'map' }) getBaseMapKey
+
+	/** 获取当前的预报时间(不再监听此变量，改为监听forecastTimestamp. ts=Date.getTime() ) */
+	@Getter(GET_CURRENT_FORECAST_DT, { namespace: 'common' })
+	getForecastDt: Date
+
+	@Getter(GET_REGION_PID, { namespace: 'station' })
+	getRegionPid: number
+
+	@Watch('getForecastDt')
+	onForecastDt(val: Date) {
+		this.forecastTimestamp = val.getTime()
+	}
+
+	/** 标量场的显示类型 栅格图层|等值面 */
+	@Getter(GET_SCALAR_SHOW_TYPE, { namespace: 'common' })
+	getScalarShowType: ScalarShowTypeEnum
+
+	@Getter(GET_STATION_CODE, { namespace: 'station' })
+	getStationCode: string
+
+	/** 设置当前圈选中心位置 */
+	@Mutation(SET_BOX_LOOP_LATLNG, { namespace: 'map' }) setBoxLoopLatlng: (val: L.LatLng) => void
+
+	/** 设置字典基础信息集合 */
+	@Mutation(SET_STATIONS_BASEINFO_LIST, { namespace: 'station' }) setStationsBaseInfo: (
+		val: StationBaseInfoMidModel[]
+	) => void
+
+	/** 当前发布时间戳 */
+	@Getter(GET_ISSUE_TS, { namespace: 'common' })
+	getIssueTs: number
+
+	/**  加载国内wd各个站位的最大增水 */
+	loadInlandStationMaxSurgeList(issueTs: number, is_recent = true): void {
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		const that = this
 		this.clearLayersByIds(this.markersIdList)
 		if (is_recent) {
 			this.surgeStationList = []
-			loadAllStationStatusJoinGeoInfo(pid)
+			// step1: 加载大陆的指定发布时间的168小时站点增水极值集合
+			// TODO:[-] 23-11-09 由于加载168小时站点增水耗时较长，加入了全局loading
+			const loadInstance = Loading.service({
+				lock: true,
+				fullscreen: true,
+				text: '加载中……',
+				background: 'rgba(28, 34, 52, 0.733)',
+			})
+			loadInlandStationMaxSurge(issueTs)
 				.then(
 					(
 						res: IHttpResponse<
 							{
-								station_code: string
-								gmt_realtime: string
-								status: number
+								code: string
 								surge: number
-								tid: number
+								name: string
 								lat: number
 								lon: number
 							}[]
@@ -461,8 +525,9 @@ export default class MainMapView extends Vue {
 						let tempStationList: IStationInfo[] = []
 						res.data.forEach((temp) => {
 							tempStationList.push({
-								station_code: temp.station_code,
-								gmt_realtime: new Date(temp.gmt_realtime), // 注意此处为str->date
+								station_code: temp.code,
+								name: temp.name,
+								gmt_realtime: new Date(issueTs), // 注意此处为str->date
 								lat: temp.lat,
 								lon: temp.lon,
 								surge: temp.surge,
@@ -481,79 +546,16 @@ export default class MainMapView extends Vue {
 							console.log(`当前点击了code:${msg.code},name:${msg.name}`)
 							that.loadStationAndShow(msg.code)
 						},
-						IconTypeEnum.FIXED_CIRCLE_ICON,
+						IconTypeEnum.FIXED_STATION_SURGE_ICON,
 						StationIconShowTypeEnum.SHOW_STATION_STATUS,
 						that.now
 					)
 					that.zoom2Country()
 				})
+				.finally(() => {
+					loadInstance.close()
+				})
 		}
-	}
-
-	/** 将地图缩放至当前 surgeStationList  */
-	zoom2Country(): void {
-		if (this.surgeStationList.length > 0) {
-			const tempStation = this.surgeStationList[0]
-
-			const tempPostion = new L.LatLng(tempStation.lat, tempStation.lon)
-			const mymap: L.Map = this.$refs.basemap['mapObject']
-			mymap.setView(tempPostion)
-		}
-	}
-
-	/** + 23-03-27 加载 潮位站基础信息集合 -> 生成一个集合 */
-	async loadBaseStationList(): Promise<void> {
-		this.stationBaseInfoList = []
-		const stationBaseInfo = new StationBaseInfo()
-		await stationBaseInfo.getAllStationInfo()
-		this.stationBaseInfoList = stationBaseInfo.allStationBaseInfoList
-	}
-
-	@Watch('getSelectLoop')
-	onSelectLoop(val: boolean): void {
-		// TODO:[-] 23-02-03 此处修改为加载地图完毕后只要点击地图就记录当前点击所在位置,以下暂时注释掉
-		// this.isSelectLoop = val
-		// const mymap: L.Map = this.$refs.basemap['mapObject']
-		// const self = this
-		// if (val) {
-		// 	mymap.on('click', (e: L.LeafletMouseEvent) => {
-		// 		// @ts-ignore
-		// 		self.currentLatlng = e.latlng
-		// 		this.setBoxLoopLatlng(e.latlng)
-		// 	})
-		// } else {
-		// 	mymap.off('mousedown')
-		// }
-	}
-
-	@Watch('getStationCode')
-	onStationCode(val: string): void {
-		this.loadStationAndShow(val)
-	}
-
-	/**
-	 * + 24-09-15 加载全球风暴潮预报栅格图层2 map
-	 */
-	initLoadGlobalSurgeScalarLayer2Map() {}
-
-	initMaxSurgeTest(issueTs: number, scalarLayerType: ScalarShowTypeEnum): void {
-		this.initMaxSurgeScalarLayer2Map(scalarLayerType, issueTs)
-	}
-
-	initMaxSurge(issueTs: number, scalarLayerType: ScalarShowTypeEnum): void {
-		console.log('执行initMaxSurge')
-		const that = this
-		// TODO:[*] 23-11-20 加载首页时会多次触发的加载国内站点集合
-		// this.loadBaseStationList()
-		// this.loadInlandStationMaxSurgeList(issueTs)
-		// TODO:[*] + 23-04-04 加入点击地图不再显示 form
-		const mymap: L.Map = this.$refs.basemap['mapObject']
-		// 点击地图隐藏 station surge form
-		mymap.on('click', (el) => {
-			console.log(el)
-			that.setShowStationSurgeForm(false)
-		})
-		this.initMaxSurgeScalarLayer2Map(scalarLayerType, issueTs)
 	}
 
 	/** + 23-08-03 加载wd最大增水场栅格图层至地图
@@ -611,6 +613,36 @@ export default class MainMapView extends Vue {
 		}
 	}
 
+	/**  清除唯一的栅格图层——以后将所有清除 raster 均调用此方法 */
+	clearUniquerRasterLayer(): void {
+		if (this.uniqueRasterLayerId !== DEFAULT_LAYER_ID) {
+			// this.setIsShowRasterLayerLegend(false)
+			// @ts-ignore
+			this.clearLayerById(this.uniqueRasterLayerId)
+			this.uniqueRasterLayerId = DEFAULT_LAYER_ID
+		}
+	}
+
+	/** 将地图缩放至当前 surgeStationList  */
+	zoom2Country(): void {
+		if (this.surgeStationList.length > 0) {
+			const tempStation = this.surgeStationList[0]
+
+			const tempPostion = new L.LatLng(tempStation.lat, tempStation.lon)
+			const mymap: L.Map = this.$refs.basemap['mapObject']
+			mymap.setView(tempPostion)
+		}
+	}
+
+	/** + 23-03-27 加载 潮位站基础信息集合 -> 生成一个集合 */
+	async loadBaseStationList(): Promise<void> {
+		this.stationBaseInfoList = []
+		const stationBaseInfo = new StationBaseInfo()
+		await stationBaseInfo.getAllInlandStationInfo()
+		this.stationBaseInfoList = stationBaseInfo.allStationBaseInfoList
+		this.setStationsBaseInfo(stationBaseInfo.allStationBaseInfoList)
+	}
+
 	/** +23 -07-07-26 加载潮位栅格图层至地图
 	 * step1: * 加载指定的栅格tiff图层
 	 */
@@ -636,7 +668,6 @@ export default class MainMapView extends Vue {
 				val.rasterLayerType == RasterLayerEnum.RASTER_LAYER ? true : false
 
 			// this.setIsShowRasterLayerLegend(true)
-			// TODO:[*] 24-09-23 此处修改为同时加载多个区域的场预报结果
 			surgeRasterInstance
 				.add2map(mymap, that.$message, isLoadingRasterLayer, val.forecastDt, val.layerType)
 				.then((layerId) => {
@@ -769,14 +800,20 @@ export default class MainMapView extends Vue {
 		this.gridTitlesLayerId = maxSosurface.getPointsTitleLayerId()
 	}
 
-	/**  清除唯一的栅格图层——以后将所有清除 raster 均调用此方法 */
-	clearUniquerRasterLayer(): void {
-		if (this.uniqueRasterLayerId !== DEFAULT_LAYER_ID) {
-			// this.setIsShowRasterLayerLegend(false)
-			// @ts-ignore
-			this.clearLayerById(this.uniqueRasterLayerId)
-			this.uniqueRasterLayerId = DEFAULT_LAYER_ID
-		}
+	@Watch('getStationCode')
+	onStationCode(val: string): void {
+		this.loadStationAndShow(val)
+	}
+
+	get getMaxSurgeOpt(): { getIssueTs: number; getScalarType: ScalarShowTypeEnum } {
+		const { getIssueTs, getScalarType } = this
+		return { getIssueTs, getScalarType }
+	}
+
+	@Watch('getMaxSurgeOpt')
+	onMaxSurgeOpt(val: { getIssueTs: number; getScalarType: ScalarShowTypeEnum }) {
+		console.log('监听到getMaxSurgeOpt发生变化')
+		this.initMaxSurge(val.getIssueTs, val.getScalarType)
 	}
 
 	@Watch('getBaseMapKey')
@@ -793,14 +830,9 @@ export default class MainMapView extends Vue {
 			case val === MapLayerEnum.SIMPLE_MAP:
 				// 使用 geoq 的底图
 				this.url =
-					'https://map.geoq.cn/arcgis/rest/services/ChinaOnlineStreetPurplishBlue/MapServer/tile/{z}/{y}/{x}'
+					'https://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
 				break
 		}
-	}
-
-	@Watch('getRegionPid')
-	onPid(val: number): void {
-		this.loadSurgeStationList(true, new Date(), val)
 	}
 
 	toHideStationSurgeForm(): void {}

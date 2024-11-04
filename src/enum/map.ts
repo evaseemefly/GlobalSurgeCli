@@ -91,6 +91,19 @@ export enum RasterLayerEnum {
 	 */
 	ISOSURFACE_LAYER = 4004,
 }
+
+export enum ForecastAreaEnum {
+	NONE = -1,
+	/** 美国 */
+	AMERICA = 5002,
+	/** 印度洋 */
+	INDIA_OCEAN = 5003,
+	/** 大洋洲 */
+	OCEANIA = 5004,
+	/** 西北太 */
+	WNP = 5005,
+}
+
 export const LayerTypeEnum = {
 	...SurgeProLayerEnum,
 	...BaseLayerTypeEnum,

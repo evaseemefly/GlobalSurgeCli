@@ -327,3 +327,23 @@ export const SET_STATIONS_BASEINFO_LIST = 'SET_STATIONS_BASEINFO_LIST'
 	lon: number}
  */
 export const GET_STATIONS_BASEINFO_LIST = 'GET_STATIONS_BASEINFO_LIST'
+
+//----------------------------------------------------------------
+// surge
+/** 设置surge预报区域 */
+export const SET_SURGE_FORECAST_AREA = 'SET_SURGE_FORECAST_AREA'
+
+/** 获取surge预报区域 */
+export const GET_SURGE_FORECAST_AREA = 'GET_SURGE_FORECAST_AREA'
+
+/** 设置 全球风暴潮预报的时间戳 */
+export const SET_GLOBAL_SURGE_FORECAST_TS = 'SET_GLOBAL_SURGE_FORECAST_TS'
+
+/** 获取 全球风暴潮预报的时间戳 */
+export const GET_GLOBAL_SURGE_FORECAST_TS = 'GET_GLOBAL_SURGE_FORECAST_TS'
+
+/** 设置 全球风暴潮预报的发布时间戳 */
+export const SET_GLOBAL_SURGE_ISSUE_TS = 'SET_GLOBAL_SURGE_ISSUE_TS'
+
+/** 获取 全球风暴潮预报的发布时间戳 */
+export const GET_GLOBAL_SURGE_ISSUE_TS = 'GET_GLOBAL_SURGE_ISSUE_TS'
