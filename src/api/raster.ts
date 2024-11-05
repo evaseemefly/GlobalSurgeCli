@@ -112,7 +112,7 @@ const loadGlobalHourlyCoverageTif = (
 	issueTs: number,
 	forecastTs: number,
 	rasterType: RasterFileEnum
-): Promise<AxiosResponse<string>> => {
+) => {
 	const url = `${host}${AREA}/target/url?`
 	return axios.get(url, {
 		params: {

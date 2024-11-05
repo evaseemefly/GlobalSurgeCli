@@ -274,7 +274,8 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 		console.log(`监听到预报区域发生变化:${val}`)
 		loadLastIssueTsList(val, 5).then((result) => {
 			if (result.status == 200) {
-				this.issueTsList = result.data.map((n) => n * this.MS)
+				// this.issueTsList = result.data.map((n) => n * this.MS)
+				this.issueTsList = result.data
 			}
 		})
 	}
@@ -285,7 +286,8 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 		const area = this.getForecastArea
 		loadForecastTsList(area, val).then((result) => {
 			if (result.status == 200) {
-				this.forecastTsList = result.data.map((n) => n * this.MS)
+				// this.forecastTsList = result.data.map((n) => n * this.MS)
+				this.forecastTsList = result.data
 			}
 		})
 	}

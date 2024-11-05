@@ -26,9 +26,9 @@ import * as plotty from 'plotty'
 import { ElMessage } from 'element-ui/types/message'
 
 import { WaveScalarRasterTifLayer } from './waveRasterInstance'
-import { SurgeMaxScalarRasterTifLayer } from './surgeRasterInstance'
+import { SurgeHourlyScalarRasterLayer, SurgeMaxScalarRasterTifLayer } from './surgeRasterInstance'
 
-import { LayerTypeEnum } from '@/enum/map'
+import { ForecastAreaEnum, LayerTypeEnum } from '@/enum/map'
 // COMMON
 import { DEFAULT_COLOR_SCALE, DEFAULT_COLOR_KEY, IScale } from '@/const/colorBar'
 import {
@@ -109,12 +109,6 @@ export interface ISurgeRasterLayer {
 	desc: string
 
 	loadTifUrl(forecastDt: Date, coverageType?: LayerTypeEnum): Promise<string>
-}
-
-class RasterBase {
-	/**
-	 * name
-	 */
 }
 
 /**
@@ -384,6 +378,7 @@ class SurgeRasterGeoLayer implements ISurgeRasterLayer {
 				'Access-Control-Allow-Origin': '*',
 				'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8,',
 			})
+			console.log(`使用fetch加载tif图层ing!`)
 			const response = await fetch(urlGeoTifUrl, {
 				method: 'GET',
 				// headers: fetchHeader,
@@ -499,4 +494,279 @@ class SurgeRasterGeoLayer implements ISurgeRasterLayer {
 	}
 }
 
-export { SurgeRasterGeoLayer }
+/**
+ * @description 基于 SurgeRasterGeoLayer 的修改，适用于全球预报的增水场
+ * @author evaseemefly
+ * @date 2024/11/04
+ * @class SurgeRasterLayer
+ * @implements {ISurgeRasterLayer}
+ */
+class SurgeRasterLayer implements ISurgeRasterLayer {
+	options: {
+		rasterLayer: L.Layer
+
+		/**
+		 * 产品发布时间戳
+		 */
+		issueTs: number
+
+		/** 预报时间戳 */
+		forecastTs: number
+
+		/** chroma.scale 色标变量，在构造函数中给与赋值 */
+		scaleList: string[] | string
+		customMin?: number
+		customMax?: number
+		customCoefficient?: number
+		customCoeffMax?: number
+		desc?: string
+
+		/**
+		 * 图层类型
+		 */
+		layerType?: LayerTypeEnum
+
+		/** 预报区域 */
+		area: ForecastAreaEnum
+	} = {
+		rasterLayer: new L.Layer(),
+
+		issueTs: DEFAULT_TIMESTAMP,
+
+		/** 预报的时间 */
+		forecastTs: DEFAULT_TIMESTAMP,
+
+		/** chroma.scale 色标变量，在构造函数中给与赋值 */
+		scaleList: DEFAULT_COLOR_SCALE.scaleColorList,
+
+		layerType: LayerTypeEnum.UN_LAYER,
+
+		area: ForecastAreaEnum.NONE,
+	}
+
+	get rasterLayer(): L.Layer {
+		return this.options.rasterLayer
+	}
+
+	set rasterLayer(layer: L.Layer) {
+		this.options.rasterLayer = layer
+	}
+
+	/**
+	 * @description 产品发布时间
+	 * @author evaseemefly
+	 * @date 2023/01/04
+	 * @readonly
+	 * @type {number}
+	 * @memberof RasterGeoLayer
+	 */
+	get issueTs(): number {
+		return this.options.issueTs
+	}
+
+	/**
+	 * @description 获取当前图层种类
+	 * @author evaseemefly
+	 * @date 2023/01/04
+	 * @readonly
+	 * @type {LayerTypeEnum}
+	 * @memberof RasterGeoLayer
+	 */
+	get layerType(): LayerTypeEnum {
+		return this.options.layerType
+	}
+	/**
+	 * 预报的时间
+	 *
+	 * @type {Date}
+	 * @memberof RasterGeoLayer
+	 */
+	// forecastDt = this.options.forecastDt
+	get forecastDt(): number {
+		return this.options.forecastTs
+	}
+
+	get desc(): string {
+		return this.options.desc !== undefined ? this.options.desc : '色标'
+	}
+
+	/**
+	 * + 21-08-19 新加入的 chroma.scale 色标变量，在构造函数中给与赋值
+	 *
+	 * @type {*}
+	 * @memberof RasterGeoLayer
+	 */
+	// scale = this.options.scale
+	get scaleList(): string[] | string {
+		return this.options.scaleList
+	}
+
+	protected _tiffUrl: string = null
+
+	get tiffUrl(): string {
+		return this._tiffUrl
+	}
+
+	/**
+	 * raster的实际最大值
+	 *
+	 * @memberof RasterGeoLayer
+	 */
+	rasterMax = 0
+	/**
+	 * raster的实际最小值
+	 *
+	 * @memberof RasterGeoLayer
+	 */
+	rasterMin = 0
+
+	constructor(options?: {
+		issueTs: number
+		forecastTs: number
+		scaleList: string[] | string
+		customMin?: number
+		customMax?: number
+		customCoefficient?: number
+		customCoeffMax?: number
+		desc?: string
+		layerType?: LayerTypeEnum
+		area: ForecastAreaEnum
+	}) {
+		this.options = { ...this.options, ...options }
+	}
+	scaleRange: number[]
+	public async loadTifUrl(forecastDt: Date, coverageType?: LayerTypeEnum): Promise<string> {
+		let urlGeoTifUrl = ''
+		/** 时间戳转换(ms) */
+		const forecastTs: number = forecastDt.getTime()
+		urlGeoTifUrl = await this.getGeoTiff(forecastTs)
+		return urlGeoTifUrl
+	}
+
+	public async getGeoTiff(forecastTs: number): Promise<string> {
+		const issueTsStr: string = this.options.issueTs.toString()
+		const forecastDt: Date = new Date(forecastTs)
+		const layerType = this.options.layerType
+		const area = this.options.area
+		const surgeTif = new SurgeHourlyScalarRasterLayer<string>(issueTsStr, layerType, area)
+
+		const awaitUrl = await surgeTif.getGeoTifUrl(forecastDt)
+		// TODO:[*] 24-09-20 动态获取全球风暴增水场tif url
+		const storeUrl: string = awaitUrl
+		return storeUrl
+	}
+
+	public async add2map(
+		map: L.Map,
+		pretreatmentCallBackFun: (ElMessage) => void,
+		isShowRasterLayer = true,
+		forecastDt: Date,
+		coverageType?: LayerTypeEnum
+	): Promise<number> {
+		let layerId: number = DEFAULT_LAYER_ID
+
+		let addedLayer: L.Layer = null
+		const that = this
+		// TODO:[-] 20-11-04 暂时注释掉，调取远程的文件会出现错误
+		// const urlGeoTifUrl = tifResp.data
+		const urlGeoTifUrl = await this.loadTifUrl(forecastDt)
+		if (urlGeoTifUrl === '') {
+			throw new Error('不存在指定geotiff路径')
+		}
+		if (this._tiffUrl == null) {
+			this._tiffUrl = urlGeoTifUrl
+		}
+		if (isShowRasterLayer && urlGeoTifUrl != undefined) {
+			// 大体思路 获取 geotiff file 的路径，二进制方式读取 -> 使用 georaster 插件实现转换 -> 获取色标，
+			// TODO:[-] 20-11-02 将之前的逻辑方式修改为 await 的方式
+			// TODO:[-] 20-11-05 在 fetch 请求头中加入跨域的部分
+			const fetchHeader = new Headers({
+				'Access-Control-Allow-Origin': '*',
+				'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8,',
+			})
+			const response = await fetch(urlGeoTifUrl, {
+				method: 'GET',
+				// headers: fetchHeader,
+				mode: 'cors',
+			})
+			const arrayBuffer = await response.arrayBuffer()
+			// 使用 import 'georaster' 的方式引入会出现没有智能提示的问题
+			// @ts-ignore
+			const georasterResponse: any = await parseGeoraster(arrayBuffer)
+			// TODO:[-] 22-04-14 加入 栅格的范围是否由 options.custom 定义
+			const min: number = this.options.customMin
+				? this.options.customMin
+				: georasterResponse.mins[0]
+			// TODO:[-] 22-04-15 若增水大于1m，则整个场*0.8，所以对于max*0.8
+			const rasterMax = georasterResponse.maxs[0]
+			this.rasterMax = rasterMax
+			this.rasterMin = min
+			const max = rasterMax
+
+			// TODO:[-] 22-04-15 此处修改为 range 为色标要求的范围
+			// const range = georasterResponse.ranges[0]
+			const range: number = max - min
+			// const scale = chroma.scale('Viridis')
+			// TODO:[*] 21-08-19 error: chroma 错误
+			// chroma.js?6149:180 Uncaught (in promise) Error: unknown format: #ee4620,#ee462f,#ed4633,#ef6b6d,#f3a4a5,#f9dcdd,#dcdcfe
+			// TODO:[-] 22-04-15 手动设置色标
+			// TODO:[*] 22-04-20 注意此处需要对scaleList 进行修改加入最后一个色标
+			const scaleList = [...this.options.scaleList]
+			if (
+				that.options.customCoeffMax &&
+				that.options.customCoefficient &&
+				rasterMax > that.options.customCoeffMax
+			) {
+				scaleList.push(scaleList[scaleList.length - 1])
+			}
+			const scale = chroma.scale(scaleList)
+			this.scaleRange = [min, max * this.options.customCoefficient]
+			// scale.domain(this.scaleRange)
+
+			// TODO:[*] 21-02-10 此处当加载全球风场的geotiff时，y不在实际范围内，需要手动处理
+
+			// @ts-ignore
+			const layer = new GeoRasterLayer({
+				georaster: georasterResponse,
+				opacity: 0.6,
+				pixelValuesToColorFn: function (pixelValues) {
+					const pixelValue = pixelValues[0] // there's just one band in this raster
+					// TODO:[-] 22-04-15 此处加入对于极值大于1.0米的增水将像素值乘以一个系数0.8
+					// if (that.options.customCoeffMax && rasterMax > this.options.customCoeffMax) {
+					//     pixelValue = pixelValue * this.options.customCoefficient
+					// }
+
+					// if there's zero wind, don't return a color
+					// TODO:[-] 22-01-20 由于最大增水场可能会出现 pixelValue 为 0 的情况，所以需要剔除掉===0的判断
+					// if (pixelValue === 0 || Number.isNaN(pixelValue)) return null
+					// 注意此处有出现 该值超过1的情况
+					const scaledPixelValue = (pixelValue - min) / range
+
+					if (Number.isNaN(pixelValue)) return null
+					let color = ''
+					if (
+						that.options.customCoeffMax &&
+						that.options.customCoefficient &&
+						rasterMax > that.options.customCoeffMax
+					) {
+						color = scale(scaledPixelValue * (1 / that.options.customCoefficient)).hex()
+						// color = scale(scaledPixelValue).hex()
+					} else {
+						color = scale(scaledPixelValue).hex()
+					}
+
+					return color
+				},
+				resolution: 256,
+			})
+			const forecastDtStr: string = moment(forecastDt).format('MM-DD HH:mm')
+			pretreatmentCallBackFun({ message: `加载${forecastDtStr}预报时刻成功!` })
+			addedLayer = layer.addTo(map)
+			// @ts-ignore
+			layerId = addedLayer._leaflet_id
+		}
+		return layerId
+	}
+}
+
+export { SurgeRasterGeoLayer, SurgeRasterLayer }
