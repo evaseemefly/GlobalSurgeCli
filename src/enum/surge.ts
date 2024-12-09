@@ -14,6 +14,20 @@ export enum AlertTideEnum {
 	RED = 5004,
 }
 
+/**
+ * @description 预报产品种类枚举
+ * @author evaseemefly
+ * @date 2024/11/29
+ * @export
+ * @enum {number}
+ */
+export enum ForecastProductTypeEnum {
+	/** 最大增水 */
+	SURGE_MAX = 5101,
+	/** 逐时增水 */
+	SURGE_HOURLY = 5102,
+}
+
 export enum SurgeForecastAreaEnum {}
 
 const getStatueVal = (x: AlertTideEnum, index: number): string => {

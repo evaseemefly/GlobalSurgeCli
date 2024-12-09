@@ -2,9 +2,9 @@
 	<div class="nav_item_timebar">
 		<el-tooltip class="item" effect="dark" content="产品发布时间" placement="top">
 			<div class="timebar_child">
-				<!-- <div class="nav_item_icon nav_icon_operator">-</div> -->
 				<div id="issue_selecter_nav" class="nav_item_icon nav_icon_operator">
-					<el-select
+					<!-- TODO:[-] 24-11-06 使用时间选择器 -->
+					<!-- <el-select
 						v-model="issueTS"
 						placeholder="请选择"
 						:popper-append-to-body="false"
@@ -16,9 +16,16 @@
 							:value="item.ts"
 						>
 						</el-option>
-					</el-select>
+					</el-select> -->
+					<el-date-picker
+						v-model="issueDatetime"
+						:readonly="true"
+						:value-format="'yyyy-MM-dd HH'"
+						type="date"
+						placeholder="选择日期"
+					>
+					</el-date-picker>
 				</div>
-				<!-- <div class="nav_item_icon nav_icon_operator">+</div> -->
 			</div>
 		</el-tooltip>
 	</div>
@@ -82,13 +89,10 @@ export default class SubNavIssueTimeItem extends Vue {
 
 	optionVal = ''
 
-	/** 获取当前产品的发布时间 */
-	@Getter(GET_WAVE_PRODUCT_ISSUE_DATETIME, { namespace: 'wave' })
-	getWaveProductIssueDt: Date
-
 	@Watch('issueTsList')
 	onIssueTsList(val: number[]): void {
 		this.issueTS = val[0]
+		this.issueDatetime = new Date(this.issueTS)
 	}
 
 	/** 设置当前的发布时间 */

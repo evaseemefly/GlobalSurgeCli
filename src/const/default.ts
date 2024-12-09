@@ -10,6 +10,9 @@ const DEFAULT_BOX_LOOP_LATLNG = new L.LatLng(30, 150)
 // 默认的 leaflet layer id
 const DEFAULT_LAYER_ID = -1
 
+/** 默认坐标 */
+const DEFAULT_LATLNG = new L.LatLng(0, 0)
+
 /**
  * 默认台风编号
  */
@@ -24,6 +27,8 @@ const DEFAULT_PRODUCT_TYPE_NAME = '未选择'
 const DEFAULT_TY_NAME = 'un-select'
 
 const DEFAULT_TY_NUM = '0000'
+
+const DEFAULT_URL = 'DEFAULT_URL'
 
 const DEFAULT_DATE = new Date(1970, 1, 1)
 
@@ -98,4 +103,6 @@ export {
 	NONE_STATION_NAME,
 	DEFAULT_WD_TIME_SPAN,
 	DEFAULT_VAL,
+	DEFAULT_URL,
+	DEFAULT_LATLNG,
 }

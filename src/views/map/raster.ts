@@ -26,7 +26,12 @@ import * as plotty from 'plotty'
 import { ElMessage } from 'element-ui/types/message'
 
 import { WaveScalarRasterTifLayer } from './waveRasterInstance'
-import { SurgeHourlyScalarRasterLayer, SurgeMaxScalarRasterTifLayer } from './surgeRasterInstance'
+import {
+	AbsSurgeRasterTifLayer,
+	SurgeHourlyScalarRasterLayer,
+	SurgeMaxScalarRasterLayer,
+	SurgeMaxScalarRasterTifLayer,
+} from './surgeRasterInstance'
 
 import { ForecastAreaEnum, LayerTypeEnum } from '@/enum/map'
 // COMMON
@@ -36,6 +41,7 @@ import {
 	DEFAULT_LAYER_ID,
 	DEFAULT_TIMESTAMP,
 	DEFAULT_TIMESTAMP_STR,
+	DEFAULT_URL,
 } from '@/const/default'
 
 export interface IRaster {
@@ -517,7 +523,8 @@ class SurgeRasterLayer implements ISurgeRasterLayer {
 		scaleList: string[] | string
 		customMin?: number
 		customMax?: number
-		customCoefficient?: number
+		/** 色标上限 乘以的系数 不可缺省 */
+		customCoefficient: number
 		customCoeffMax?: number
 		desc?: string
 
@@ -542,6 +549,7 @@ class SurgeRasterLayer implements ISurgeRasterLayer {
 		layerType: LayerTypeEnum.UN_LAYER,
 
 		area: ForecastAreaEnum.NONE,
+		customCoefficient: 1,
 	}
 
 	get rasterLayer(): L.Layer {
@@ -639,20 +647,31 @@ class SurgeRasterLayer implements ISurgeRasterLayer {
 		let urlGeoTifUrl = ''
 		/** 时间戳转换(ms) */
 		const forecastTs: number = forecastDt.getTime()
-		urlGeoTifUrl = await this.getGeoTiff(forecastTs)
+		urlGeoTifUrl = await this.getGeoTiff(forecastTs, coverageType)
 		return urlGeoTifUrl
 	}
 
-	public async getGeoTiff(forecastTs: number): Promise<string> {
+	public async getGeoTiff(forecastTs: number, coverageType?: LayerTypeEnum): Promise<string> {
 		const issueTsStr: string = this.options.issueTs.toString()
 		const forecastDt: Date = new Date(forecastTs)
 		const layerType = this.options.layerType
 		const area = this.options.area
-		const surgeTif = new SurgeHourlyScalarRasterLayer<string>(issueTsStr, layerType, area)
+		let storeUrl: string = DEFAULT_URL
+		let surgeTif: AbsSurgeRasterTifLayer<string> = null
+		switch (coverageType) {
+			case LayerTypeEnum.RASTER_LAYER_HOURLY_SURGE:
+				surgeTif = new SurgeHourlyScalarRasterLayer<string>(issueTsStr, layerType, area)
+				break
+			case LayerTypeEnum.RASTER_LAYER_MAX_SURGE:
+				surgeTif = new SurgeMaxScalarRasterLayer<string>(issueTsStr, layerType, area)
+				break
+		}
+		if (!surgeTif !== null) {
+			const awaitUrl = await surgeTif.getGeoTifUrl(forecastDt)
+			// TODO:[*] 24-09-20 动态获取全球风暴增水场tif url
+			storeUrl = awaitUrl
+		}
 
-		const awaitUrl = await surgeTif.getGeoTifUrl(forecastDt)
-		// TODO:[*] 24-09-20 动态获取全球风暴增水场tif url
-		const storeUrl: string = awaitUrl
 		return storeUrl
 	}
 
@@ -669,7 +688,7 @@ class SurgeRasterLayer implements ISurgeRasterLayer {
 		const that = this
 		// TODO:[-] 20-11-04 暂时注释掉，调取远程的文件会出现错误
 		// const urlGeoTifUrl = tifResp.data
-		const urlGeoTifUrl = await this.loadTifUrl(forecastDt)
+		const urlGeoTifUrl = await this.loadTifUrl(forecastDt, coverageType)
 		if (urlGeoTifUrl === '') {
 			throw new Error('不存在指定geotiff路径')
 		}
@@ -678,6 +697,7 @@ class SurgeRasterLayer implements ISurgeRasterLayer {
 		}
 		if (isShowRasterLayer && urlGeoTifUrl != undefined) {
 			// 大体思路 获取 geotiff file 的路径，二进制方式读取 -> 使用 georaster 插件实现转换 -> 获取色标，
+			// TODO:[*] 24-11-05 此部分应封装为方法
 			// TODO:[-] 20-11-02 将之前的逻辑方式修改为 await 的方式
 			// TODO:[-] 20-11-05 在 fetch 请求头中加入跨域的部分
 			const fetchHeader = new Headers({
@@ -694,6 +714,7 @@ class SurgeRasterLayer implements ISurgeRasterLayer {
 			// @ts-ignore
 			const georasterResponse: any = await parseGeoraster(arrayBuffer)
 			// TODO:[-] 22-04-14 加入 栅格的范围是否由 options.custom 定义
+			// TODO:[*] 24-11-05 此处若options 中定义了 customMin 则显示，若未配置则显示实际的最小值
 			const min: number = this.options.customMin
 				? this.options.customMin
 				: georasterResponse.mins[0]

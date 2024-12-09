@@ -67,6 +67,9 @@ class Sosurface implements ISosurface {
 		 * @type {number[]}
 		 */
 		valScale: number[]
+
+		filterMin?: number
+		filterMax?: number
 	} = {
 		colorScale: [
 			'#00429d',
@@ -80,7 +83,9 @@ class Sosurface implements ISosurface {
 			'#93003a',
 		],
 
-		valScale: [0, 0.6, 0.8, 1.0, 1.4, 1.8, 2.0, 3],
+		valScale: [0.4, 0.6, 0.8, 1.0, 1.4, 1.8, 2.0, 3],
+		filterMin: 0.2,
+
 		// valScale: [0.6, 0.8, 1.0, 1.4, 1.8, 2.0, 2.4, 2.8],
 	}
 
@@ -125,6 +130,8 @@ class Sosurface implements ISosurface {
 		options: {
 			colorScale?: string[]
 			valScale?: number[]
+			filterMax?: number
+			filterMin?: number
 		} = {
 			colorScale: [
 				'#153C83',
@@ -136,6 +143,8 @@ class Sosurface implements ISosurface {
 				'#C40E0F',
 			],
 			valScale: [0, 0.5, 1, 1.5, 2, 2.5, 3, 5],
+			filterMax: 2,
+			filterMin: 0.2,
 		}
 	) {
 		this.url = url
@@ -241,11 +250,18 @@ class Sosurface implements ISosurface {
 							parseRes.maxs.length > 0 ? parseFloat(parseRes.maxs[0].toFixed(2)) : 0,
 						valMin: parseRes.mins.length > 0 ? parseRes.mins[0] : 0,
 					}
+
+					const max = this.geoOptions.valMax
+					const min =
+						this.options['filterMin'] == undefined
+							? this.geoOptions.valMin
+							: this.options['filterMin']
 					const scale: { fill: string }[] = []
 					// TODO:[-] 23-08-03 根据max生成动态的色标
 					const scaleNums: number[] = getIntegerList(
-						this.geoOptions.valMax,
-						this.options.colorScale.length
+						max,
+						this.options.colorScale.length,
+						min
 					)
 					this.options.valScale = scaleNums
 					this.options.colorScale.forEach((temp) =>

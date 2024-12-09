@@ -1,6 +1,7 @@
 import moment from 'moment'
 import {
 	loadGlobalHourlyCoverageTif,
+	loadGlobalSurgeMaxCoverageTif,
 	loadMaxSurgeCoverageInfoByIssue,
 	loadMaxSurgeCoverageTifUlrByIssue,
 } from '@/api/raster'
@@ -126,4 +127,40 @@ class SurgeHourlyScalarRasterLayer<T> extends AbsSurgeRasterTifLayer<T> {
 	}
 }
 
-export { AbsSurgeRasterTifLayer, SurgeMaxScalarRasterTifLayer, SurgeHourlyScalarRasterLayer }
+class SurgeMaxScalarRasterLayer<T> extends AbsSurgeRasterTifLayer<T> {
+	/**
+	 * @description 逐时风暴增水场 raster layer
+	 * @author evaseemefly
+	 * @date 2024/11/04
+	 * @param {Date} forecastDt- 不使用
+	 * @returns {*}  {Promise<T>}
+	 * @memberof SurgeHourlyScalarRasterLayer
+	 */
+	getGeoTifUrl(forecastDt: Date): Promise<T> {
+		// const tifUrl = null
+		try {
+			/** 预报时间戳(s) */
+			const forecastTsByS: number = forecastDt.getTime()
+			const issueTs: number = parseInt(this.issueTimestamp)
+			const area: ForecastAreaEnum = this.area
+
+			return loadGlobalSurgeMaxCoverageTif(area, issueTs, RasterFileEnum.GEOTIFF).then(
+				(res) => {
+					if (res.status == 200) {
+						console.log(`加载geotiff文件:${res.data}成功!`)
+						return res.data
+					}
+				}
+			)
+		} catch (error) {
+			console.log(error)
+		}
+	}
+}
+
+export {
+	AbsSurgeRasterTifLayer,
+	SurgeMaxScalarRasterTifLayer,
+	SurgeHourlyScalarRasterLayer,
+	SurgeMaxScalarRasterLayer,
+}

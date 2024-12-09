@@ -13,7 +13,7 @@
 		<!-- <StationLayoutView :tyNum="tyNum"></StationLayoutView> -->
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
 		<!-- <ThumbListView></ThumbListView> -->
-		<HeaderLogoView title="全球风暴潮观测预报系统"></HeaderLogoView>
+		<HeaderLogoView title="全球风暴潮监测预报系统"></HeaderLogoView>
 		<LegendListView></LegendListView>
 		<RegionStatisticsCard></RegionStatisticsCard>
 	</div>

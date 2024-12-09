@@ -49,6 +49,12 @@ export enum SurgeLayerEnum {
 	 *	最大增水场 72 h
 	 */
 	RASTER_LAYER_MAX_SURGE_72 = 3010,
+
+	/** 逐时增水场 */
+	RASTER_LAYER_HOURLY_SURGE = 3011,
+
+	/** 最大增水场 */
+	RASTER_LAYER_MAX_SURGE = 3012,
 }
 
 export enum SurgeProLayerEnum {
@@ -106,11 +112,13 @@ export enum ForecastAreaEnum {
 
 export const LayerTypeEnum = {
 	...SurgeProLayerEnum,
+	...SurgeLayerEnum,
 	...BaseLayerTypeEnum,
 	...StationIconLayerEnum,
 	...ConstLayerTypeEnum,
 }
 export type LayerTypeEnum =
+	| SurgeLayerEnum
 	| BaseLayerTypeEnum
 	| SurgeProLayerEnum
 	| ConstLayerTypeEnum

@@ -7,8 +7,48 @@
 		<nav class="nav_item nav_item_icons">
 			<div class="nav_item_icon fa-solid fa-house"></div>
 		</nav>
+		<el-tooltip class="item" effect="dark" content="标量场渲染方式" placement="top">
+			<nav class="nav_item nav_item_icons">
+				<div
+					:class="[
+						isShowRasterSwitchMenu ? 'activate' : 'un_activate',
+						,
+						'nav_item_icon',
+					]"
+					@click="isShowRasterSwitchMenu = !isShowRasterSwitchMenu"
+				>
+					<i class="fa-solid fa-tornado"></i>
+				</div>
+				<div class="hidden_box_switch" v-show="isShowRasterSwitchMenu">
+					<el-switch v-model="isRasterShow" active-text="栅格" inactive-text="等值线">
+					</el-switch>
+				</div>
+				<!-- <div class="nav_item_icon fa-solid fa-tornado"></div> -->
+			</nav>
+		</el-tooltip>
+		<!-- 预报产品类型 -->
+		<el-tooltip class="item" effect="dark" content="预报产品" placement="top">
+			<nav class="nav_item nav_item_icons">
+				<div
+					:class="[isSurgeMax ? 'activate' : 'un_activate', , 'nav_item_icon']"
+					@click="isShowForecastProductSwitchMenu = !isShowForecastProductSwitchMenu"
+				>
+					<i class="fa-solid fa-grip"></i>
+				</div>
+				<div class="hidden_box_switch" v-show="isShowForecastProductSwitchMenu">
+					<el-switch
+						v-model="isSurgeMax"
+						active-text="最大增水场"
+						inactive-text="逐时增水场"
+					>
+					</el-switch>
+				</div>
+			</nav>
+		</el-tooltip>
+		<!-- <SubNavProductTypeSwitch></SubNavProductTypeSwitch> -->
 		<!-- 预报区域item -->
 		<SubNavForecastAreaItem></SubNavForecastAreaItem>
+
 		<!-- 预报发布时间item -->
 		<SubNavIssueTimeItem :issueTsList="issueTsList"></SubNavIssueTimeItem>
 		<!-- 预报时间item -->
@@ -37,6 +77,7 @@ import { Mutation, Getter } from 'vuex-class'
 import SubNavTimeItem from '@/components/nav/subItems/SubNavTimeItem.vue'
 import SubNavForecastTimeItem from '@/components/nav/subItems/SubNavForecastTimeItem.vue'
 import TyphoonListView from '@/components/table/tyListView.vue'
+import SubNavProductTypeSwitch from '@/components/nav/subItems/SubNavProductTypeSwitch.vue'
 import SubNavIssueTimeItem from '@/components/nav/subItems/SubNavIssueTimeItem.vue'
 import SubNavTimespanItem from '@/components/nav/subItems/SubNavTimespanItem.vue'
 import SubNavForecastAreaItem from '@/components/nav/subItems/SubNavForecastAreaItem.vue'
@@ -64,6 +105,7 @@ import {
 	GET_SURGE_FORECAST_AREA,
 	GET_GLOBAL_SURGE_ISSUE_TS,
 	GET_GLOBAL_SURGE_FORECAST_TS,
+	SET_GLOBAL_SURGE_FORECAST_PRODUCT,
 } from '@/store/types'
 // 默认常量
 import {
@@ -101,6 +143,7 @@ import moment from 'moment'
 import wave from '@/store/modules/wave'
 import { IExpandEnum, ScalarShowTypeEnum } from '@/enum/common'
 import { loadForecastTsList, loadLastIssueTsList } from '@/api/raster'
+import { ForecastProductTypeEnum } from '@/enum/surge'
 
 /** + 22-10-14 副导航栏(布局:底部) */
 @Component({
@@ -112,6 +155,7 @@ import { loadForecastTsList, loadLastIssueTsList } from '@/api/raster'
 		SubNavTimespanItem,
 		SubNavTemp,
 		SubNavForecastAreaItem,
+		SubNavProductTypeSwitch,
 	},
 })
 export default class SubNavGlobalForecastMenuView extends Vue {
@@ -123,6 +167,16 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 	filterTyCount = 0
 	/** 是否在加载筛选后的台风集合 */
 	isLoadingTyList = false
+
+	productType: ForecastProductTypeEnum = ForecastProductTypeEnum.SURGE_MAX
+	/** 是否为最大增水场 */
+	isSurgeMax = true
+	@Watch('isSurgeMax')
+	onIsSurgeMax(val: boolean) {
+		this.productType = val
+			? ForecastProductTypeEnum.SURGE_MAX
+			: ForecastProductTypeEnum.SURGE_HOURLY
+	}
 
 	get selectLoopCls(): string {
 		return this.checkedSelectLoop ? 'activate' : 'un_activate'
@@ -136,6 +190,8 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 
 	/** 是否展开显示 标量场选项 */
 	isShowRasterSwitchMenu = false
+
+	isShowForecastProductSwitchMenu = false
 	isRasterShow = true
 
 	/** 标量场展示形式 */
@@ -226,6 +282,9 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 
 	@Getter(GET_DATE_STEP, { namespace: 'common' }) getDateStep
 
+	/** 设置 增水场预报产品类型 逐时|最大增水 */
+	@Mutation(SET_GLOBAL_SURGE_FORECAST_PRODUCT, { namespace: 'surge' }) setForecastProduct
+
 	/** 设置 遮罩 timebar */
 	@Mutation(SET_SHADE_NAV_TIME, { namespace: 'common' }) setShadeTimebar
 
@@ -307,6 +366,11 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 	/** 监听预报时间 -> */
 	@Watch('geGlobalForecastTs')
 	onGlobalForecastTs(val: number) {}
+
+	@Watch('productType')
+	onProductType(val: ForecastProductTypeEnum): void {
+		this.setForecastProduct(val)
+	}
 
 	get waveOpts(): {
 		getWaveProductIssueTimestamp: number

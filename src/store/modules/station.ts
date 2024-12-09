@@ -1,3 +1,4 @@
+import * as L from 'leaflet'
 import { StationBaseInfoMidModel } from '@/middle_model/station'
 import {
 	SET_STATION_CODE,
@@ -8,18 +9,22 @@ import {
 	GET_REGION_PID,
 	SET_STATIONS_BASEINFO_LIST,
 	GET_STATIONS_BASEINFO_LIST,
+	GET_TARGET_POSITION_LATLNG,
+	SET_TARGET_POSITION_LATLNG,
 } from '../types'
-import { DEFAULT_STATION_CODE } from '@/const/default'
+import { DEFAULT_LATLNG, DEFAULT_STATION_CODE } from '@/const/default'
 interface IStation {
 	stationCode: string
 	isShowStationSurgeForm: boolean
 	regionPid: number
+	stationLatlng: L.LatLng
 	/** 海洋站基础信息集合 */
 	stationBaseInfoList: StationBaseInfoMidModel[]
 }
 
 const state: IStation = {
 	stationCode: DEFAULT_STATION_CODE,
+	stationLatlng: DEFAULT_LATLNG,
 	isShowStationSurgeForm: false,
 	regionPid: -1,
 	/** 海洋站基础信息集合 */
@@ -38,6 +43,10 @@ const getters = {
 	[GET_STATIONS_BASEINFO_LIST](state: IStation): StationBaseInfoMidModel[] {
 		return state.stationBaseInfoList
 	},
+
+	[GET_TARGET_POSITION_LATLNG](state: IStation): L.LatLng {
+		return state.stationLatlng
+	},
 }
 // 使用dispatch调用
 const actions = {}
@@ -54,6 +63,9 @@ const mutations = {
 	},
 	[SET_STATIONS_BASEINFO_LIST](state: IStation, val: StationBaseInfoMidModel[]): void {
 		state.stationBaseInfoList = val
+	},
+	[SET_TARGET_POSITION_LATLNG](state: IStation, val: L.LatLng): void {
+		state.stationLatlng = val
 	},
 }
 

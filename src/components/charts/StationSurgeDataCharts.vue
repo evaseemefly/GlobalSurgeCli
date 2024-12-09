@@ -80,14 +80,18 @@ import SurgeTableView from '@/components/table/surgeValTableView.vue'
 // store
 import {
 	GET_CURRENT_FORECAST_DT,
+	GET_GLOBAL_SURGE_ISSUE_TS,
+	GET_ISSUE_TS,
 	GET_STATION_CODE,
 	GET_SURGE_TD_STEP,
+	GET_TARGET_POSITION_LATLNG,
 	GET_TIMESPAN,
 	GET_WAVE_PRODUCT_ISSUE_DATETIME,
 } from '@/store/types'
 //
 // api
 import { loadTargetStationSurgeRealdataList, loadTargetStationTideRealdataList } from '@/api/surge'
+import { loadTargetPositionSurgeForecastdataList } from '@/api/coverage'
 import { loadStaionRegionCountry, loadStationStaus } from '@/api/station'
 // 工具方法
 // filter
@@ -140,7 +144,9 @@ export default class StationSurgeChartView extends Vue {
 	/** 实况潮位-天文潮 */
 	diffSurgeList: number[] = []
 	/** 预报值(天文潮)列表 */
-	forcastValList: number[] = []
+	forecastValList: number[] = []
+	/** 预报时间戳集合 */
+	forecastTsList: number[] = []
 
 	yAxisMin = 0
 	yAxisMax = 0
@@ -199,6 +205,11 @@ export default class StationSurgeChartView extends Vue {
 	created() {
 		// EventBus.$on(TO_LOAD_FORECASTDATALIST_COORDS, this.loadWaveForecastDataListbyCoords)
 		this.loadTargetStationSurgeDataList(this.getStationCode, this.startDt, this.endDt)
+		this.loadTargetPositionSurgeForecastdataList(
+			this.getPositionLatlng.lat,
+			this.getPositionLatlng.lng,
+			this.getGlobalIssueTs
+		)
 		this.loadStationRegionCountry(this.getStationCode)
 		// console.log(`当前charts窗口大小:${document.getElementById('wave_scalar_chart')}`)
 	}
@@ -320,6 +331,25 @@ export default class StationSurgeChartView extends Vue {
 			.finally(() => {
 				this.isLoading = false
 			})
+	}
+
+	/** TODO:[-] 24-12-06 加载指定位置的预报数据集 */
+	loadTargetPositionSurgeForecastdataList(lat: number, lon: number, issueTs: number) {
+		return loadTargetPositionSurgeForecastdataList(new L.LatLng(lat, lon), issueTs).then(
+			(
+				res: IHttpResponse<{
+					vals: number[]
+					timestamp_list: number[]
+				}>
+			) => {
+				if (res.status === 200) {
+					this.forecastTsList = []
+					this.forecastValList = []
+					this.forecastTsList = [...res.data.timestamp_list]
+					this.forecastValList = [...res.data.vals]
+				}
+			}
+		)
 	}
 
 	/** + 23-04-03 获取当前 code 的站点状态 */
@@ -673,10 +703,10 @@ export default class StationSurgeChartView extends Vue {
 
 	@Getter(GET_TIMESPAN, { namespace: 'common' }) getTimespan: number
 
-	// @Watch('getForecastDt')
-	// onGetForecastDt(now: Date): void {
-	// 	this.selecetdDt = now
-	// }
+	@Getter(GET_GLOBAL_SURGE_ISSUE_TS, { namespace: 'surge' }) getGlobalIssueTs: number
+
+	/** 获取当前 station position latlng */
+	@Getter(GET_TARGET_POSITION_LATLNG, { namespace: 'station' }) getPositionLatlng: L.LatLng
 
 	@Watch('currentForecastDtIndex')
 	onCurrentForecastDtIndex(val: number): void {
@@ -708,18 +738,35 @@ export default class StationSurgeChartView extends Vue {
 	}
 
 	/** 需要监听的 chart 配置项 */
-	get chartOpts(): { getStationCode: string; startDt: Date; endDt: Date } {
-		const { getStationCode, startDt, endDt } = this
+	get chartOpts(): {
+		getStationCode: string
+		getGlobalIssueTs: number
+		startDt: Date
+		endDt: Date
+	} {
+		const { getStationCode, startDt, endDt, getGlobalIssueTs } = this
 		return {
 			getStationCode,
+			getGlobalIssueTs,
 			startDt,
 			endDt,
 		}
 	}
 
 	@Watch('chartOpts')
-	onChartOpts(val: { getStationCode: string; startDt: Date; endDt: Date }): void {
+	onChartOpts(val: {
+		getStationCode: string
+		getGlobalIssueTs: number
+		startDt: Date
+		endDt: Date
+	}): void {
 		this.loadTargetStationSurgeDataList(val.getStationCode, val.startDt, val.endDt)
+		this.loadTargetPositionSurgeForecastdataList(
+			this.getPositionLatlng.lat,
+			this.getPositionLatlng.lng,
+			val.getGlobalIssueTs
+		)
+
 		this.loadStationRegionCountry(val.getStationCode)
 	}
 

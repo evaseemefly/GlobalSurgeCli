@@ -125,6 +125,22 @@ const loadGlobalHourlyCoverageTif = (
 	})
 }
 
+const loadGlobalSurgeMaxCoverageTif = (
+	area: ForecastAreaEnum,
+	issueTs: number,
+	rasterType: RasterFileEnum
+) => {
+	const url = `${host}${AREA}/target/max/url?`
+	return axios.get(url, {
+		params: {
+			area: area,
+			issue_ts: issueTs,
+			raster_type_val: rasterType,
+		},
+		headers: authHeader(),
+	})
+}
+
 export {
 	loadMaxSurgeCoverageInfoByIssue,
 	loadMaxSurgeCoverageTifUlrByIssue,
@@ -132,4 +148,5 @@ export {
 	loadLastIssueTsList,
 	loadForecastTsList,
 	loadGlobalHourlyCoverageTif,
+	loadGlobalSurgeMaxCoverageTif,
 }

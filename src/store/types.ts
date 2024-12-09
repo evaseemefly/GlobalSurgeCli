@@ -347,3 +347,15 @@ export const SET_GLOBAL_SURGE_ISSUE_TS = 'SET_GLOBAL_SURGE_ISSUE_TS'
 
 /** 获取 全球风暴潮预报的发布时间戳 */
 export const GET_GLOBAL_SURGE_ISSUE_TS = 'GET_GLOBAL_SURGE_ISSUE_TS'
+
+/** 获取全球风暴潮预报产品类型 整点|最大增水 */
+export const GET_GLOBAL_SURGE_FORECAST_PRODUCT = 'GET_GLOBAL_SURGE_FORECAST_PRODUCT'
+
+/** 设置全球风暴潮预报产品类型 整点|最大增水 */
+export const SET_GLOBAL_SURGE_FORECAST_PRODUCT = 'SET_GLOBAL_SURGE_FORECAST_PRODUCT'
+
+/** 设置目标位置的坐标 */
+export const SET_TARGET_POSITION_LATLNG = 'SET_TARGET_POSITION_LATLNG'
+
+/** 获取目标位置的坐标 */
+export const GET_TARGET_POSITION_LATLNG = 'GET_TARGET_POSITION_LATLNG'
