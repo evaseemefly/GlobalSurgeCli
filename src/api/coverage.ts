@@ -16,7 +16,12 @@ const area = '/coverage'
  * 后台判断提供经纬度所在预报区域
  *
  */
-const loadTargetPositionSurgeForecastdataList = (position: L.LatLng, issueTs: number) => {
+const loadTargetPositionSurgeForecastdataList = (
+	position: L.LatLng,
+	issueTs: number,
+	startTs: number,
+	endTs: number
+) => {
 	const url = `${host}${area}/position/forecast/surge/list`
 	return axios.get(url, {
 		headers: authHeader(),
@@ -24,6 +29,8 @@ const loadTargetPositionSurgeForecastdataList = (position: L.LatLng, issueTs: nu
 			lat: position.lat,
 			lon: position.lng,
 			issue_ts: issueTs,
+			start_ts: startTs,
+			end_ts: endTs,
 		},
 	})
 }

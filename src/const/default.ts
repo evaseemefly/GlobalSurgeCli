@@ -53,8 +53,10 @@ const DEFAULT_SURGE_TD_STEP = 1
 /** 查询的起止时间间隔(单位:s) */
 const DEFAULT_TIME_SPAN = 60 * 60 * 24
 
-/** 温带预报系统的起止时间间隔(单位:s) */
-const DEFAULT_WD_TIME_SPAN = 60 * 60 * 24 * 7
+/** 温带预报系统的起止时间间隔(单位:s)
+ *  TODO:[*] 24-12-12 全球风暴潮模式修改为 4天-对应的为 [-4d,0]
+ */
+const DEFAULT_WD_TIME_SPAN = 60 * 60 * 24 * 4
 
 /** 温带起止时间间隔(单位:s)——温带预报为七天 */
 const DEFAULT_TIME_SPAN_WD = 60 * 60 * 7
@@ -69,6 +71,20 @@ const DEFAULT_SURGE_VAL = -9999.99
 
 /** 所有观测值的默认值 */
 const DEFAULT_VAL = -9999
+
+/** + 24-04-12 默认值集合 */
+const DEFAULT_VAL_LIST = [
+	DEFAULT_ALERT_TIDE,
+	DEFAULT_SURGE_DIFF,
+	DEFAULT_SURGE_VAL,
+	DEFAULT_VAL,
+	9999,
+	9998,
+	9999.0,
+	9998.0,
+	-9999.99,
+	null,
+]
 
 // 对应 db: dict_base -> 默认的 code
 const DEFAULT_DICT_KEY = -1
@@ -105,4 +121,5 @@ export {
 	DEFAULT_VAL,
 	DEFAULT_URL,
 	DEFAULT_LATLNG,
+	DEFAULT_VAL_LIST,
 }

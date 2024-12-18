@@ -349,10 +349,12 @@ export default class GlobalForecastMapView extends Vue {
 			case ScalarShowTypeEnum.ISOSURFACE:
 				// TODO:[*] 24-11-05 需要加入最小值的过滤条件
 				const isosurfaceOpts = { filterMin: 0.2 }
+				// ReferenceError: Cannot access 'surgeRasterLayer' before initialization
 				this.addSurgeIsosurfaceLayer2Map(
 					issueTs,
 					forecastTs,
 					surgeRasterLayer,
+					LayerTypeEnum.RASTER_LAYER_HOURLY_SURGE,
 					isosurfaceOpts
 				)
 				break
@@ -378,6 +380,13 @@ export default class GlobalForecastMapView extends Vue {
 
 		switch (scalarLayerType) {
 			case ScalarShowTypeEnum.RASTER:
+				// const surgeRasterLayer = new SurgeRasterLayer({
+				// 	issueTs: issueTs,
+				// 	forecastTs: forecastTs,
+				// 	scaleList: scalarList,
+				// 	area: area,
+				// 	layerType: LayerTypeEnum.RASTER_LAYER_MAX_SURGE,
+				// })
 				this.addSurgeRasterLayer2Map(
 					issueTs,
 					forecastTs,
@@ -390,11 +399,13 @@ export default class GlobalForecastMapView extends Vue {
 
 			case ScalarShowTypeEnum.ISOSURFACE:
 				// TODO:[*] 24-11-05 需要加入最小值的过滤条件
+				// TODO:[*] 24-12-17 surgeRasterLayer 为栅格实现类，应改为等值面实现类
 				const isosurfaceOpts = { filterMin: 0.2 }
 				this.addSurgeIsosurfaceLayer2Map(
 					issueTs,
 					forecastTs,
 					surgeRasterLayer,
+					LayerTypeEnum.RASTER_LAYER_MAX_SURGE,
 					isosurfaceOpts
 				)
 				break
@@ -833,6 +844,7 @@ export default class GlobalForecastMapView extends Vue {
 		issueTs: number,
 		forecastTs: number,
 		surgeRasterInstance: ISurgeRasterLayer,
+		rasterLayerType: LayerTypeEnum,
 		isosurfaceOpts: {
 			colorScale?: string[]
 			valScale?: number[]
@@ -841,13 +853,13 @@ export default class GlobalForecastMapView extends Vue {
 		} = {}
 	) {
 		const that = this
-		const forecastDt: Date = new Date(forecastTs)
+		const issueDt: Date = new Date(issueTs)
 		this.clearUniquerRasterLayer()
 		this.clearSosurfaceLayer()
 		this.clearGridTitlesLayer()
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		// 获取tif路径
-		const tifUlr: string = await surgeRasterInstance.loadTifUrl(forecastDt)
+		const tifUlr: string = await surgeRasterInstance.loadTifUrl(issueDt, rasterLayerType)
 
 		// TODO:[*] 22-06-02 添加等值面
 		const maxSosurface = new Sosurface(

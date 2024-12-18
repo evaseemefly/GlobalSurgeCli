@@ -44,7 +44,7 @@
 			<div id="surge_scalar_chart"></div>
 			<div class="down-section">
 				<ObsDataTableView
-					:forecastDtList="forecastDtList"
+					:forecastDtList="dtList"
 					:surgeList="diffSurgeList"
 					:tideList="tideList"
 					:forecastValList="forecastValList"
@@ -134,7 +134,7 @@ const MARGIN_BOTTOM = 20
 })
 export default class StationSurgeChartView extends Vue {
 	/** 预报的结束时间与 getForecastDt 的时间差(单位:s) */
-	END_TIME_INTERVAL: number = 3 * 24 * 60 * 60
+	END_TIME_INTERVAL: number = 4 * 24 * 60 * 60
 
 	isLoading = false
 
@@ -188,10 +188,9 @@ export default class StationSurgeChartView extends Vue {
 	}
 
 	seriesMap: Map<string, string> = new Map([
-		['总潮位', '总潮位'],
-		['实况增水值', '实况增水值'],
-		['天文潮', '天文潮'],
-		['预报增水值', '预报增水值'],
+		['tide', '天文潮'],
+		['surge', '增水'],
+		['obs', '实况潮位'],
 	])
 
 	stationCode = 'kusm'
@@ -248,7 +247,7 @@ export default class StationSurgeChartView extends Vue {
 		end: Date,
 		issueTs: number
 	) {
-		const realRes = await this.loadTargetStationSurgeRealDataList(code, start, current, end) //
+		const realRes = await this.loadTargetStationSurgeRealDataList(code, start, current) //
 
 		const startTs = current.getTime()
 		const endTs = end.getTime()
@@ -267,19 +266,13 @@ export default class StationSurgeChartView extends Vue {
 
 		/** 数据对其 */
 		const unifyData: {
-			/** 合并后的时间戳数组 */
 			mergedTimestamps: number[]
-			/** 合并后的总潮位数组(只包含实况) */
 			alignedSurgeList: number[]
-			/** 合并后的天文潮数组(含预报时段) */
 			alignedTideList: number[]
-			/** 合并后的增水数组(只包含实况增水) */
 			alignedDiffSurgeList: number[]
-			/** 合并后的预报增水数组(只包含预报) */
 			alignedForecastSurgeList: number[]
 		} = this.unifyData(
 			realRes.dtList,
-			realRes.tideDtList,
 			realRes.surgeList,
 			realRes.tideList,
 			realRes.diffSurgeList,
@@ -294,7 +287,6 @@ export default class StationSurgeChartView extends Vue {
 			...[
 				...unifyData.alignedSurgeList,
 				...unifyData.alignedForecastSurgeList,
-				...unifyData.alignedTideList,
 				...unifyData.alignedDiffSurgeList,
 			]
 		)
@@ -302,7 +294,6 @@ export default class StationSurgeChartView extends Vue {
 			...[
 				...unifyData.alignedSurgeList,
 				...unifyData.alignedForecastSurgeList,
-				...unifyData.alignedTideList,
 				...unifyData.alignedDiffSurgeList,
 			]
 		)
@@ -319,7 +310,7 @@ export default class StationSurgeChartView extends Vue {
 				{ fieldName: '天文潮', yList: unifyData.alignedTideList },
 				{ fieldName: '预报增水值', yList: unifyData.alignedForecastSurgeList },
 			],
-			{ fieldName: '实况增水值', vals: unifyData.alignedDiffSurgeList },
+			{ fieldName: 'surge', vals: unifyData.alignedDiffSurgeList },
 			'实况增水',
 			0
 		)
@@ -328,11 +319,9 @@ export default class StationSurgeChartView extends Vue {
 
 	/** TODO:[-] 24-12-09
 	 * 将 预报 与 实况数据按照时间进行合并并返回
-	 * TODO:[*] 24-12-12 传入的 tideList 为 169 转换后返回为 96有值，后面无值
 	 */
 	unifyData(
 		dtList: Date[],
-		tideDtList: Date[],
 		surgeList: number[],
 		tideList: number[],
 		diffSurgeList: number[],
@@ -342,12 +331,10 @@ export default class StationSurgeChartView extends Vue {
 		// 1. 将 dtList 转换为时间戳数组
 		const dtTimestamps = dtList.map((date) => date.getTime())
 
-		const tideDtTimestamps = tideDtList.map((date) => date.getTime())
-
 		// 2. 合并时间戳数组并去重排序
-		const mergedTimestamps = Array.from(
-			new Set([...dtTimestamps, ...tideDtTimestamps, ...forecastTs])
-		).sort((a, b) => a - b)
+		const mergedTimestamps = Array.from(new Set([...dtTimestamps, ...forecastTs])).sort(
+			(a, b) => a - b
+		)
 
 		// 3. 创建对齐后的实况数据和预报数据数组
 		const alignedSurgeList = mergedTimestamps.map((timestamp) =>
@@ -355,9 +342,7 @@ export default class StationSurgeChartView extends Vue {
 		)
 
 		const alignedTideList = mergedTimestamps.map((timestamp) =>
-			tideDtTimestamps.includes(timestamp)
-				? tideList[tideDtTimestamps.indexOf(timestamp)]
-				: null
+			dtTimestamps.includes(timestamp) ? tideList[dtTimestamps.indexOf(timestamp)] : null
 		)
 
 		const alignedDiffSurgeList = mergedTimestamps.map((timestamp) =>
@@ -382,14 +367,12 @@ export default class StationSurgeChartView extends Vue {
 	async loadTargetStationSurgeRealDataList(
 		code: string,
 		start: Date,
-		current: Date,
 		end: Date
 	): Promise<{
 		surgeList: number[]
 		tideList: number[]
 		diffSurgeList: number[]
 		dtList: Date[]
-		tideDtList: Date[]
 	}> {
 		const that = this
 		this.isLoading = true
@@ -399,12 +382,7 @@ export default class StationSurgeChartView extends Vue {
 		let surgeRealDataList: Array<number | null> = []
 		/** 不同的实况-天文潮=增水集合 */
 		let diffSurgeRealDataList: Array<number | null> = []
-		// 实况时间范围为 [start,current]
-		const surgeDelayedData = await loadTargetStationSurgeRealdataList(
-			code,
-			start,
-			current
-		).then(
+		const surgeDelayedData = await loadTargetStationSurgeRealdataList(code, start, end).then(
 			(
 				res: IHttpResponse<
 					{
@@ -439,9 +417,6 @@ export default class StationSurgeChartView extends Vue {
 				return surgeList
 			}
 		)
-		/** 天文潮集合对应的时间集合 */
-		let tideDtList: Date[] = []
-		// TODO:[-] 24-12-12 天文潮时间为 [start,end]
 		const tideDelayedData = await loadTargetStationTideRealdataList(code, start, end).then(
 			(
 				res: IHttpResponse<
@@ -460,7 +435,6 @@ export default class StationSurgeChartView extends Vue {
 					if (!new Set(DEFAULT_VAL_LIST).has(element.surge)) {
 						tempTide = Number(element.surge.toFixed(2))
 					}
-					tideDtList.push(new Date(element.gmt_realtime))
 					tideList.push(tempTide)
 				})
 				return tideList
@@ -575,13 +549,10 @@ export default class StationSurgeChartView extends Vue {
 			tideList: tideDelayedData,
 			diffSurgeList: diffSurgeRealDataList,
 			dtList: dtList,
-			tideDtList: tideDtList,
 		}
 	}
 
-	/** TODO:[-] 24-12-06 加载指定位置的预报数据集
-	 * TODO:[*] 24-12-12 返回的 forecastTsList 长度为 7d
-	 */
+	/** TODO:[-] 24-12-06 加载指定位置的预报数据集 */
 	async loadTargetPositionSurgeForecastDataList(
 		lat: number,
 		lon: number,
@@ -708,7 +679,7 @@ export default class StationSurgeChartView extends Vue {
 				'#cf3759',
 				'#93003a',
 			])
-			/** 曲线相关设置，根据:yVals 读取；并根据 scale 进行线性颜色取值 */
+			/** 传入的不同变量的总数 */
 			let fieldsCount: number = yVals.length + 1
 			for (let index = 0; index < yVals.length; index++) {
 				const element = yVals[index]
@@ -775,7 +746,7 @@ export default class StationSurgeChartView extends Vue {
 				}
 				series.push(tempSeries)
 			}
-			/** area填色相关设置, 根据 areaVals 读取;为固定颜色 */
+			// TODO:[-] 23-04-11 加入 area series
 			const element = areaVals
 			const tempLegend: {
 				name: string
@@ -856,15 +827,13 @@ export default class StationSurgeChartView extends Vue {
 					},
 					formatter: function (params, ticket, callback) {
 						/** 
-						 * html
-						  '2024-12-18 06:00<br />undefined:-<br />undefined:2.92<br />undefined:0.04<br />增水						  :-<br />'
-						  params[1].seriesName
-						  '天文潮'
-						  params[2].seriesName
-						  '预报增水值'
-						  params[3].seriesName
-						  'surge'
-						  						 */
+						 * params[0].name
+							'Thu Mar 02 2023 15:00:00 GMT+0800 (中国标准时间)'
+							params[1].seriesName
+							'tide'
+							params[1].value
+							2.36
+						 */
 						//x轴名称
 						const dt = params[0].name
 						const dtStr: string = fortmatData2YMDHM(dt)
@@ -1106,8 +1075,7 @@ export default class StationSurgeChartView extends Vue {
 	// height: 100%;
 	height: 250px;
 	// TODO:[*] 24-12-10 此处测试后需要改为 100%
-	width: 1024px;
-	// width: 100%;
+	width: 800px;
 }
 #station_scalar_form {
 	// @form-base-background();

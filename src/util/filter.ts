@@ -265,15 +265,19 @@ const filterWaveColor = (val: number): string => {
  * @description 根据增水值显示对应的颜色
  * 与 filterSurgeAlarmColor 遵循风暴潮强度等级分级
  * @author evaseemefly
- * @date 2023/07/25
+ * @date 2024/12/17
  * @param {number} val
+ * @param {number[]} [scaleRange=[50, 100, 150, 200, 250]] scale 的线性过渡区间(注意若单位为m需要手动修改)
  * @returns {*}  {string}
  */
-const filterSurgeColorStr = (val: number): string => {
+const filterSurgeColorStr = (
+	val: number,
+	scaleRange: number[] = [50, 100, 150, 200, 250]
+): string => {
 	// chroma.scale(['yellow', 'lightgreen', '008ae5']).domain([0, 0.25, 1])
 	const scale = chroma
 		.scale(['#153C83', '#4899D9', '#FFFB58', '#F1C712', '#E79325', '#F22015', '#C40E0F'])
-		.domain([50, 100, 150, 200, 250])
+		.domain([...scaleRange])
 	const colorStr = scale(val).hex()
 	return colorStr
 }
@@ -438,6 +442,10 @@ const formatSurgeFixed2Str = (val: number | null): string => {
 	return surgeStr
 }
 
+const formatSurgeFiexIntStr = (val: number | null): string => {
+	return formatSurgeFixed2NumStr(0, val)
+}
+
 const formatSurgeFiex1NumStr = (val: number | null): string => {
 	return formatSurgeFixed2NumStr(1, val)
 }
@@ -502,4 +510,5 @@ export {
 	formatSurgeFixed2NumStr,
 	formatSurgeFiex1NumStr,
 	filterAlertSurgeColorStr,
+	formatSurgeFiexIntStr,
 }
