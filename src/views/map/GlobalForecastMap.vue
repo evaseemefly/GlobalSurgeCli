@@ -112,6 +112,7 @@ import {
 	GET_GLOBAL_SURGE_ISSUE_TS,
 	GET_GLOBAL_SURGE_FORECAST_TS,
 	SET_TARGET_POSITION_LATLNG,
+	GET_GLOBAL_SURGE_FORECAST_PRODUCT,
 } from '@/store/types'
 // 默认常量
 import {
@@ -199,6 +200,7 @@ import { IWdSurgeLayerOptions } from './types/types'
 import { IScale } from '@/const/colorBar'
 import { getIntegerList } from '@/util/math'
 import { loadGlobalHourlyCoverageTif } from '@/api/raster'
+import { ForecastProductTypeEnum } from '@/enum/surge'
 
 /** 判断本组件内的surge配置是否符合 */
 const checkSurgeOpts = (area: ForecastAreaEnum, issueTs: number, forecastTs: number): boolean => {
@@ -426,14 +428,33 @@ export default class GlobalForecastMapView extends Vue {
 	@Getter(GET_GLOBAL_SURGE_FORECAST_TS, { namespace: 'surge' })
 	geGlobalForecastTs: number
 
+	/**
+	 * TODO:[-] 24-12-19
+	 * 全球预报产品类型(SURGE_MAX|SURGE_HOURLY) */
+	@Getter(GET_GLOBAL_SURGE_FORECAST_PRODUCT, { namespace: 'surge' })
+	getGlobalForcastProduct: ForecastProductTypeEnum
+
 	get forecastSurgeOpts(): {
 		getScalarType: ScalarShowTypeEnum
 		getForecastArea: ForecastAreaEnum
 		geGlobalIssueTs: number
 		geGlobalForecastTs: number
+		getGlobalForcastProduct: ForecastProductTypeEnum
 	} {
-		const { getScalarType, getForecastArea, geGlobalIssueTs, geGlobalForecastTs } = this
-		return { getScalarType, getForecastArea, geGlobalIssueTs, geGlobalForecastTs }
+		const {
+			getScalarType,
+			getForecastArea,
+			geGlobalIssueTs,
+			geGlobalForecastTs,
+			getGlobalForcastProduct,
+		} = this
+		return {
+			getScalarType,
+			getForecastArea,
+			geGlobalIssueTs,
+			geGlobalForecastTs,
+			getGlobalForcastProduct,
+		}
 	}
 
 	@Watch('forecastSurgeOpts')
@@ -442,24 +463,33 @@ export default class GlobalForecastMapView extends Vue {
 		getForecastArea: ForecastAreaEnum
 		geGlobalIssueTs: number
 		geGlobalForecastTs: number
+		getGlobalForcastProduct: ForecastProductTypeEnum
 	}): void {
 		if (checkSurgeOpts(val.getForecastArea, val.geGlobalIssueTs, val.geGlobalForecastTs)) {
-			console.log(
-				`监听到surge相关配置项发生变化:scalarType:${val.getScalarType}area${val.getForecastArea},issuets:${val.geGlobalIssueTs},forecastTs:${val.geGlobalForecastTs}`
-			)
-
-			// this.initHourlySurgeLayer(
-			// 	val.getScalarType,
-			// 	val.getForecastArea,
-			// 	val.geGlobalIssueTs,
-			// 	val.geGlobalForecastTs
+			// console.log(
+			// 	`监听到surge相关配置项发生变化:scalarType:${val.getScalarType}area${val.getForecastArea},issuets:${val.geGlobalIssueTs},forecastTs:${val.geGlobalForecastTs}`
 			// )
-			this.initMaxSurgeLayer(
-				val.getScalarType,
-				val.getForecastArea,
-				val.geGlobalIssueTs,
-				val.geGlobalForecastTs
-			)
+			// TODO:[-] 24-12-19 加入switch执行 整点|最大增水场
+			switch (val.getGlobalForcastProduct) {
+				case ForecastProductTypeEnum.SURGE_HOURLY:
+					this.initHourlySurgeLayer(
+						val.getScalarType,
+						val.getForecastArea,
+						val.geGlobalIssueTs,
+						val.geGlobalForecastTs
+					)
+					break
+				case ForecastProductTypeEnum.SURGE_MAX:
+					this.initMaxSurgeLayer(
+						val.getScalarType,
+						val.getForecastArea,
+						val.geGlobalIssueTs,
+						val.geGlobalForecastTs
+					)
+					break
+				default:
+					break
+			}
 		}
 	}
 
