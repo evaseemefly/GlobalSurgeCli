@@ -27,7 +27,7 @@
 			</nav>
 		</el-tooltip>
 		<!-- 发布时间戳列表 -->
-		<SubNavIssueTimeItem></SubNavIssueTimeItem>
+		<WdSubNavIssueTimeItem></WdSubNavIssueTimeItem>
 		<!-- - 23-09-12 温带系统不需要切换时间 -->
 		<!-- <SubNavTimeItem
 			:forecastDt="forecastDt"
@@ -49,7 +49,7 @@ import { Mutation, Getter } from 'vuex-class'
 
 import SubNavTimeItem from '@/components/nav/subItems/SubNavTimeItem.vue'
 import TyphoonListView from '@/components/table/tyListView.vue'
-import SubNavIssueTimeItem from '@/components/nav/subItems/SubNavIssueTimeItem.vue'
+import WdSubNavIssueTimeItem from '@/components/nav/subItems/WdSubNavIssueTimeItem.vue'
 import SubNavTimespanItem from '@/components/nav/subItems/SubNavTimespanItem.vue'
 import SubNavTemp from '@/components/nav/subItems/SubNavTemp.vue'
 //
@@ -114,7 +114,7 @@ import { IExpandEnum, ScalarShowTypeEnum } from '@/enum/common'
 	components: {
 		SubNavTimeItem,
 		TyphoonListView,
-		SubNavIssueTimeItem,
+		WdSubNavIssueTimeItem,
 		SubNavTimespanItem,
 		SubNavTemp,
 	},
