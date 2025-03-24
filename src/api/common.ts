@@ -3,11 +3,12 @@
 // 温带系统
 // export const host = 'http://128.5.9.79:8095'
 // 迁移后 温带系统
-export const host = 'http://172.16.30.156:8095'
+// export const host = 'http://172.16.30.156:8095'
 // 全球潮位
 // export const host = 'http://128.5.9.79:8086'
 // 全球预报监测
 // export const host = 'http://localhost:92'
+export const host = 'http://192.168.0.109:92'
 // export const host = 'http://192.168.0.104:8080'
 
 /** @type {*} 21-03-05 + 新添加的用来加载 geoserver的host */

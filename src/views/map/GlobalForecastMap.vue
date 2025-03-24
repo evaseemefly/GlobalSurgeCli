@@ -371,6 +371,8 @@ export default class GlobalForecastMapView extends Vue {
 		issueTs: number,
 		forecastTs: number
 	): void {
+		this.$log.info('执行initMaxSurgeLayer')
+
 		const scalarList = DEFAULT_COLOR_SCALE.scaleColorList
 		const surgeRasterLayer = new SurgeRasterLayer({
 			issueTs: issueTs,
