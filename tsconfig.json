@@ -17,7 +17,7 @@
 		"allowSyntheticDefaultImports": true,
 		"forceConsistentCasingInFileNames": true,
 		"useDefineForClassFields": true,
-		"suppressImplicitAnyIndexErrors": true,
+		// "suppressImplicitAnyIndexErrors": true,
 		"noImplicitAny": false,
 		"strictPropertyInitialization": false,
 		// 对函数参数进行严格逆变比较

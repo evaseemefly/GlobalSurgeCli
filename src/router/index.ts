@@ -13,11 +13,13 @@ const routes: Array<RouteConfig> = [
 		component: HomeView,
 	},
 	{
+		// 温带风暴潮系统
 		path: '/forecast',
 		name: 'home',
 		component: ForecastHomeView,
 	},
 	{
+		// 全球模式
 		path: '/global/surge',
 		name: 'home',
 		component: GlobalForecastHomeView,

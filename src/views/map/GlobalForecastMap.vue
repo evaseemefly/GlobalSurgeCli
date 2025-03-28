@@ -160,7 +160,7 @@ import {
 } from '@/plugins/scatter'
 // 工具类
 import { convertTyRealDataMongo2TyCMAPathLine } from '@/middle_model/util'
-import moment from 'moment'
+import moment, { relativeTimeRounding } from 'moment'
 import { ITyPath } from '@/interface/typhoon'
 import { Collapse, Loading } from 'element-ui'
 import station from '@/store/modules/station'
@@ -328,6 +328,9 @@ export default class GlobalForecastMapView extends Vue {
 		forecastTs: number
 	): void {
 		const scalarList = DEFAULT_COLOR_SCALE.scaleColorList
+		this.$log.info(
+			`执行initHourlySurgeLayer:${scalarLayerType},${area},${issueTs},${forecastTs}`
+		)
 		const surgeRasterLayer = new SurgeRasterLayer({
 			issueTs: issueTs,
 			forecastTs: forecastTs,
@@ -365,12 +368,26 @@ export default class GlobalForecastMapView extends Vue {
 		}
 	}
 
+	/**
+	 * 25-03-25
+	 * 加载最大增水场实际不需要预报时间戳
+	 * TODO:[*] 25-03-26
+	 * 1. 加入判断，若为最大增水场，则不需要预报时间戳——若新旧 val 的发布时间戳一致则不需要多次加载
+	 * eg: 执行initMaxSurgeLayer:0,5003,1742472000000,1742644800000
+	 * 	   执行initMaxSurgeLayer:0,5003,1742472000000,1742472000000
+	 *  若以上参数，由于 issueTs 一致，则不需要多次加载
+	 * */
 	initMaxSurgeLayer(
 		scalarLayerType: ScalarShowTypeEnum,
 		area: ForecastAreaEnum,
 		issueTs: number,
 		forecastTs: number
 	): void {
+		// this.$log.info('执行initMaxSurgeLayer')
+		this.$log.warn(
+			`执行initMaxSurgeLayer:scalarLayerType:${scalarLayerType}|area:${area}|issueTs:${issueTs}|forecastTs:${forecastTs}`
+		)
+
 		const scalarList = DEFAULT_COLOR_SCALE.scaleColorList
 		const surgeRasterLayer = new SurgeRasterLayer({
 			issueTs: issueTs,
@@ -458,35 +475,65 @@ export default class GlobalForecastMapView extends Vue {
 	}
 
 	@Watch('forecastSurgeOpts')
-	onForecastSurgeOpts(val: {
-		getScalarType: ScalarShowTypeEnum
-		getForecastArea: ForecastAreaEnum
-		geGlobalIssueTs: number
-		geGlobalForecastTs: number
-		getGlobalForcastProduct: ForecastProductTypeEnum
-	}): void {
-		if (checkSurgeOpts(val.getForecastArea, val.geGlobalIssueTs, val.geGlobalForecastTs)) {
-			// console.log(
-			// 	`监听到surge相关配置项发生变化:scalarType:${val.getScalarType}area${val.getForecastArea},issuets:${val.geGlobalIssueTs},forecastTs:${val.geGlobalForecastTs}`
-			// )
+	onForecastSurgeOpts(
+		newVal: {
+			getScalarType: ScalarShowTypeEnum
+			getForecastArea: ForecastAreaEnum
+			geGlobalIssueTs: number
+			geGlobalForecastTs: number
+			getGlobalForcastProduct: ForecastProductTypeEnum
+		},
+		oldVal: {
+			getScalarType: ScalarShowTypeEnum
+			getForecastArea: ForecastAreaEnum
+			geGlobalIssueTs: number
+			geGlobalForecastTs: number
+			getGlobalForcastProduct: ForecastProductTypeEnum
+		}
+	): void {
+		if (
+			checkSurgeOpts(
+				newVal.getForecastArea,
+				newVal.geGlobalIssueTs,
+				newVal.geGlobalForecastTs
+			)
+		) {
+			this.$log.info(
+				`监听到surge相关配置项发生变化:scalarType:${newVal.getScalarType}|area:${newVal.getForecastArea}|issuets:${newVal.geGlobalIssueTs}|forecastTs:${newVal.geGlobalForecastTs}`
+			)
+			if (oldVal !== null) {
+				this.$log.info(
+					`旧值:issuets:${oldVal.geGlobalIssueTs}|forecastTs:${oldVal.geGlobalForecastTs}||新值:issuets:${newVal.geGlobalIssueTs}|forecastTs:${newVal.geGlobalForecastTs}`
+				)
+			}
+
 			// TODO:[-] 24-12-19 加入switch执行 整点|最大增水场
-			switch (val.getGlobalForcastProduct) {
+			switch (newVal.getGlobalForcastProduct) {
 				case ForecastProductTypeEnum.SURGE_HOURLY:
 					this.initHourlySurgeLayer(
-						val.getScalarType,
-						val.getForecastArea,
-						val.geGlobalIssueTs,
-						val.geGlobalForecastTs
+						newVal.getScalarType,
+						newVal.getForecastArea,
+						newVal.geGlobalIssueTs,
+						newVal.geGlobalForecastTs
 					)
 					break
 				case ForecastProductTypeEnum.SURGE_MAX:
-					this.initMaxSurgeLayer(
-						val.getScalarType,
-						val.getForecastArea,
-						val.geGlobalIssueTs,
-						val.geGlobalForecastTs
-					)
+					// TODO:[-] 25-03-25 此处应加入判断，若为最大增水场，则不需要预报时间戳——若新旧 val 的发布时间戳一致则不需要多次加载
+					// 此处会导致 切换图层展示形式不会执行以下操作
+					if (
+						newVal.geGlobalIssueTs !== oldVal.geGlobalIssueTs ||
+						newVal.getScalarType !== oldVal.getScalarType
+					) {
+						this.$log.warn('发布时间不同执行加载最大增水场操作')
+						this.initMaxSurgeLayer(
+							newVal.getScalarType,
+							newVal.getForecastArea,
+							newVal.geGlobalIssueTs,
+							newVal.geGlobalForecastTs
+						)
+					}
 					break
+
 				default:
 					break
 			}
@@ -801,9 +848,109 @@ export default class GlobalForecastMapView extends Vue {
 	}
 
 	/** +23 -07-07-26 加载潮位栅格图层至地图
+	 * TODO:[*] 25-03-27 此处改为采用promise链式调用的写法
 	 * step1: * 加载指定的栅格tiff图层
+	 * 实际 forecastTs 未被使用!
+	 * 具体流程:
+	 * Step 1: 检查是否需要显示图层。
+	   Step 2: 清理已有图层。
+	   Step 3: 输出日志信息。
+	   Step 4: 判断是否加载栅格图层。
+	   Step 5: 调用 add2map 方法加载图层。
+	   Step 6: 根据动态范围生成色标数组。
+	   Step 7: 设置色标实例。
+	   Step 8: 保存图层 ID。
+	   Step 9: 处理非栅格图层的特殊逻辑。
+	   Step 10: 捕获异常并显示警告信息。
+	   Step 11: 执行清理逻辑（finally）。
 	 */
 	async addSurgeRasterLayer2Map(
+		issueTs: number,
+		forecastTs: number,
+		isShow: boolean,
+		rasterLayerType: RasterLayerEnum,
+		layerType: LayerTypeEnum,
+		surgeRasterInstance: ISurgeRasterLayer,
+		isosurfaceOpts: { colorScale?: string[]; valScale?: number[] } = {}
+	): Promise<void> {
+		const that = this
+		const mymap: L.Map = this.$refs.basemap['mapObject']
+		const forecastDt: Date = new Date(forecastTs)
+
+		/** 是否加载等 raster layer */
+		const isLoadingRasterLayer = rasterLayerType == RasterLayerEnum.RASTER_LAYER ? true : false
+
+		// TODO:[*] 25-03-27 此处修改为采用 Promise 链式的方式进行加载
+		return Promise.resolve()
+			.then(() => {
+				that.loading = true
+			})
+			.then(() => {
+				that.clearUniquerRasterLayer()
+				that.clearSosurfaceLayer()
+				that.clearGridTitlesLayer()
+			})
+			.then(() => {
+				// 若不显示 => 清除各个图层 => 结束
+				if (!isShow) {
+					return Promise.resolve()
+				}
+			})
+			.then(() => {
+				that.$log.info(
+					`执行addSurgeRasterLayer2Map:${issueTs},${forecastTs},${isShow},${rasterLayerType},${layerType}`
+				)
+			})
+			.then(() => {
+				return surgeRasterInstance.add2map(
+					mymap,
+					that.$message,
+					isLoadingRasterLayer,
+					forecastDt,
+					layerType
+				)
+			})
+			.then((layerId) => {
+				// TODO:[-] 23-08-09 根据 raster 的动态范围以及 scaleColorList 的长度切分
+				/** 根据 raster 的动态范围以及 scaleColorList 的长度生成色标数组 */
+				const customScaleRange: number[] = getIntegerList(
+					surgeRasterInstance.scaleRange[1],
+					DEFAULT_COLOR_SCALE.scaleColorList.length,
+					surgeRasterInstance.scaleRange[0]
+				)
+
+				/** 色标实例 */
+				const scaleRange: IScale = {
+					range: customScaleRange,
+					scaleColorList: DEFAULT_COLOR_SCALE.scaleColorList,
+				}
+				that.setRasterColorScaleRange(scaleRange)
+				// this.setScaleDesc(surgeRasterInstance.desc)
+				that.uniqueRasterLayerId = layerId
+			})
+			.catch((err) => {
+				that.$message({
+					message: err,
+					center: true,
+					type: 'warning',
+				})
+			})
+			.finally(() => {
+				that.loading = false
+			})
+	}
+
+	/**
+	 * @deprecated since 25-03-28
+	 * @param issueTs
+	 * @param forecastTs
+	 * @param isShow
+	 * @param rasterLayerType
+	 * @param layerType
+	 * @param surgeRasterInstance
+	 * @param isosurfaceOpts
+	 */
+	async addSurgeRasterLayer2Map_backup(
 		issueTs: number,
 		forecastTs: number,
 		isShow: boolean,
@@ -820,6 +967,10 @@ export default class GlobalForecastMapView extends Vue {
 			this.clearUniquerRasterLayer()
 			this.clearSosurfaceLayer()
 			this.clearGridTitlesLayer()
+
+			this.$log.info(
+				`执行addSurgeRasterLayer2Map:${issueTs},${forecastTs},${isShow},${rasterLayerType},${layerType}`
+			)
 
 			/** 是否加载等 raster layer */
 			const isLoadingRasterLayer =
@@ -869,7 +1020,14 @@ export default class GlobalForecastMapView extends Vue {
 		}
 	}
 
-	/** + 23-07-31 加载指定潮位栅格图层->等值面 -> 地图 */
+	/**
+	 * TODO:[*] 25-03-27 根据指定的 geotiff 路径加载等值面
+	 * @param issueTs 发布时间
+	 * @param forecastTs 预报时间
+	 * @param surgeRasterInstance 栅格图层实现
+	 * @param rasterLayerType 栅格图层类型枚举
+	 * @param isosurfaceOpts
+	 */
 	async addSurgeIsosurfaceLayer2Map(
 		issueTs: number,
 		forecastTs: number,
@@ -888,37 +1046,129 @@ export default class GlobalForecastMapView extends Vue {
 		this.clearSosurfaceLayer()
 		this.clearGridTitlesLayer()
 		const mymap: L.Map = this.$refs.basemap['mapObject']
-		// 获取tif路径
-		const tifUlr: string = await surgeRasterInstance.loadTifUrl(issueDt, rasterLayerType)
 
-		// TODO:[*] 22-06-02 添加等值面
-		const maxSosurface = new Sosurface(
-			tifUlr,
-			isosurfaceOpts
-			// sosurfaceOptions
-		)
-		// 此处会有可能出现错误，对于加载的地主不存在指定文件时会出现错误，但 catch 无法捕捉到
-		const sosurfaceOpts = await maxSosurface.addSosurface2MapbyScale(
-			mymap,
-			that.$message,
-			() => {},
-			true
-		)
+		return Promise.resolve()
+			.then(() => {
+				that.loading = true
+			})
+			.then(() => {
+				// 获取tif路径
+				// TODO:[*] 25-03-27 获取指定的geotiff路径地址
+				/** geotiff路径地址 */
+				return surgeRasterInstance.loadTifUrl(issueDt, rasterLayerType)
+			})
+			.then((tifUrl: string) => {
+				// [-] 22-06-02 添加等值面
+				const maxSosurface = new Sosurface(tifUrl, isosurfaceOpts)
+				// 此处会有可能出现错误，对于加载的地主不存在指定文件时会出现错误，但 catch 无法捕捉到
+				return maxSosurface
+					.addSosurface2MapbyScale(mymap, that.$message, () => {}, true)
+					.then((sosurfaceOpts) => {
+						// 采用链式表达式，由于后面的then还需要 maxSosurface 需要额外将 maxSosurface 返回
+						// 将 maxSosurface 和 sosurfaceOpts 一起返回
+						return { maxSosurface, sosurfaceOpts }
+					})
+			})
+			.then((val) => {
+				// 对于等值面在 加载 图层后通过 options获取等值面图例
+				const valScale =
+					isosurfaceOpts.valScale !== undefined
+						? isosurfaceOpts.valScale
+						: val.sosurfaceOpts.valScale
+				const colorScale =
+					isosurfaceOpts.colorScale !== undefined
+						? isosurfaceOpts.colorScale
+						: val.sosurfaceOpts.colorScale
+				this.setIsoSurgeColorScaleValRange(valScale)
+				this.setIsoSurgeColorScaleStrList(colorScale)
+				this.setIsShowRasterLayerLegend(true)
+				this.setScalarShowType(ScalarShowTypeEnum.ISOSURFACE)
+				// 返回 maxSosurface 以继续传递
+				return val.maxSosurface
+			})
+			.then((maxSosurface) => {
+				// 在后续的 then 中访问 maxSosurface
+				that.uniqueRasterLayerId = maxSosurface.getLayerId()
+				this.gridTitlesLayerId = maxSosurface.getPointsTitleLayerId()
+			})
+			.catch((error) => {
+				this.$log.error(`获取指定的geotiff路径地址失败:${error.message}`)
+				that.$message({
+					message: error,
+					center: true,
+					type: 'warning',
+				})
+			})
+			.finally(() => {
+				that.loading = false
+			})
+	}
 
-		// 对于等值面在 加载 图层后通过 options获取等值面图例
-		const valScale =
-			isosurfaceOpts.valScale !== undefined ? isosurfaceOpts.valScale : sosurfaceOpts.valScale
-		const colorScale =
-			isosurfaceOpts.colorScale !== undefined
-				? isosurfaceOpts.colorScale
-				: sosurfaceOpts.colorScale
+	/** @deprecated since 25-03-28
+	 * 23-07-31 加载指定潮位栅格图层->等值面 -> 地图 */
+	async addSurgeIsosurfaceLayer2Map_backup(
+		issueTs: number,
+		forecastTs: number,
+		surgeRasterInstance: ISurgeRasterLayer,
+		rasterLayerType: LayerTypeEnum,
+		isosurfaceOpts: {
+			colorScale?: string[]
+			valScale?: number[]
+			filterMin?: number
+			filterMax?: number
+		} = {}
+	) {
+		const that = this
+		const issueDt: Date = new Date(issueTs)
+		this.clearUniquerRasterLayer()
+		this.clearSosurfaceLayer()
+		this.clearGridTitlesLayer()
+		const mymap: L.Map = this.$refs.basemap['mapObject']
 
-		this.setIsoSurgeColorScaleValRange(valScale)
-		this.setIsoSurgeColorScaleStrList(colorScale)
-		this.setIsShowRasterLayerLegend(true)
-		this.setScalarShowType(ScalarShowTypeEnum.ISOSURFACE)
-		that.uniqueRasterLayerId = maxSosurface.getLayerId()
-		this.gridTitlesLayerId = maxSosurface.getPointsTitleLayerId()
+		try {
+			// 获取tif路径
+			// TODO:[*] 25-03-27 获取指定的geotiff路径地址
+			/** geotiff路径地址 */
+			const tifUlr: string = await surgeRasterInstance.loadTifUrl(issueDt, rasterLayerType)
+
+			// [-] 22-06-02 添加等值面
+			const maxSosurface = new Sosurface(
+				tifUlr,
+				isosurfaceOpts
+				// sosurfaceOptions
+			)
+			// 此处会有可能出现错误，对于加载的地主不存在指定文件时会出现错误，但 catch 无法捕捉到
+			const sosurfaceOpts = await maxSosurface.addSosurface2MapbyScale(
+				mymap,
+				that.$message,
+				() => {},
+				true
+			)
+
+			// 对于等值面在 加载 图层后通过 options获取等值面图例
+			const valScale =
+				isosurfaceOpts.valScale !== undefined
+					? isosurfaceOpts.valScale
+					: sosurfaceOpts.valScale
+			const colorScale =
+				isosurfaceOpts.colorScale !== undefined
+					? isosurfaceOpts.colorScale
+					: sosurfaceOpts.colorScale
+
+			this.setIsoSurgeColorScaleValRange(valScale)
+			this.setIsoSurgeColorScaleStrList(colorScale)
+			this.setIsShowRasterLayerLegend(true)
+			this.setScalarShowType(ScalarShowTypeEnum.ISOSURFACE)
+			that.uniqueRasterLayerId = maxSosurface.getLayerId()
+			this.gridTitlesLayerId = maxSosurface.getPointsTitleLayerId()
+		} catch (error) {
+			this.$log.error(`获取指定的geotiff路径地址失败:${error.message}`)
+			that.$message({
+				message: error,
+				center: true,
+				type: 'warning',
+			})
+		}
 	}
 
 	/** @deprecated

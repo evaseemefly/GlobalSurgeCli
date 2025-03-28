@@ -17,14 +17,17 @@
 						>
 						</el-option>
 					</el-select> -->
+					<div class="nav_item_icon nav_icon_operator" @click="subDt()">-</div>
 					<el-date-picker
 						v-model="issueDatetime"
 						:readonly="true"
 						:value-format="'yyyy-MM-dd HH'"
 						type="date"
 						placeholder="选择日期"
+						class="nav_item_dt_picker"
 					>
 					</el-date-picker>
+					<div class="nav_item_icon nav_icon_operator" @click="addDt()">+</div>
 				</div>
 			</div>
 		</el-tooltip>
@@ -95,6 +98,26 @@ export default class SubNavIssueTimeItem extends Vue {
 		this.issueDatetime = new Date(this.issueTS)
 	}
 
+	/**
+	 * TODO:[-] 25-03-25 注意 this.issueTsList 中的时间戳集合是降序排列的，所以若获取上一个时间戳，应该是当前时间戳的下一个
+	 * 对当前 issueDatetime 时间 +1 位移
+	 * */
+	subDt() {
+		let currentIndex = this.issueTsList.indexOf(this.issueTS) + 1
+		currentIndex =
+			currentIndex < this.issueTsList.length ? currentIndex : this.issueTsList.length - 1
+		this.issueTS = this.issueTsList[currentIndex]
+		this.issueDatetime = new Date(this.issueTS)
+	}
+
+	/** 对当前 issueDatetime 时间 -1 位移 */
+	addDt() {
+		let currentIndex = this.issueTsList.indexOf(this.issueTS) - 1
+		currentIndex = currentIndex >= 0 ? currentIndex : 0
+		this.issueTS = this.issueTsList[currentIndex]
+		this.issueDatetime = new Date(this.issueTS)
+	}
+
 	/** 设置当前的发布时间 */
 	@Mutation(SET_GLOBAL_SURGE_ISSUE_TS, { namespace: 'surge' })
 	setIssueTimeSpan: (val: number) => void
@@ -157,7 +180,19 @@ export default class SubNavIssueTimeItem extends Vue {
 	}
 }
 #issue_selecter_nav {
-	width: 140px;
+	width: 190px;
+	.nav_icon_operator {
+		flex-grow: 1;
+		display: flex;
+		align-items: center;
+		flex-wrap: nowrap;
+		flex-direction: row;
+		align-content: center;
+		justify-content: center;
+	}
+	.nav_item_dt_picker {
+		flex-grow: 4;
+	}
 	.el-select {
 		.el-input {
 			.el-inupt_inner {

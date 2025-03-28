@@ -13,6 +13,8 @@ import 'element-ui/lib/theme-chalk/index.css'
 import VueInteract from 'vue-interact'
 import 'vue-interact/dist/vue-interact.css'
 
+import consola from 'consola'
+
 // 配置 Animate.css
 // import 'animate.css'
 // @ts-ignore
@@ -23,6 +25,8 @@ import { faHatWizard } from '@fortawesome/free-solid-svg-icons'
 
 Vue.use(ElementUI)
 Vue.use(VueInteract)
+// 挂载 consola到vue原型
+Vue.prototype.$log = consola
 // Vue.use(animate)
 
 new Vue({

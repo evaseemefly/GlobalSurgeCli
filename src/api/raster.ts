@@ -131,7 +131,7 @@ const loadGlobalSurgeMaxCoverageTif = (
 	rasterType: RasterFileEnum
 ) => {
 	const url = `${host}${AREA}/target/max/url?`
-	return axios.get(url, {
+	const response = axios.get(url, {
 		params: {
 			area: area,
 			issue_ts: issueTs,
@@ -139,6 +139,7 @@ const loadGlobalSurgeMaxCoverageTif = (
 		},
 		headers: authHeader(),
 	})
+	return response
 }
 
 export {

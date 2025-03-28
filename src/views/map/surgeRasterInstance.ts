@@ -10,6 +10,7 @@ import { TifInfoType } from './types/types'
 import { IHttpResponse } from '@/interface/common'
 import { MS_UNIT } from '@/const/unit'
 import { RasterFileEnum } from '@/enum/common'
+import { consola } from 'consola'
 
 export interface IRasterTif<T> {
 	getGeoTifUrl(forecastDt: Date): Promise<T>
@@ -51,13 +52,13 @@ class SurgeMaxScalarRasterTifLayer<T> extends AbsSurgeRasterTifLayer<T> {
 	 */
 	async getGeoTifUrl(forecastDt: Date): Promise<T> {
 		// const tifUrl = null
-		try {
-			// 此处不使用异步
-			// // eg : {relative_path: '2022/01/01', file_name: 'global_ecmwf_det_wve_2022010112_18.tif', file_size: 8116.333984375}
-			// http://localhost:82/images/WAVE/2022/01/01/
-			/** 预报时间戳(s) */
-			const forecastTsByS: number = forecastDt.getTime() / MS_UNIT
-			/**
+
+		// 此处不使用异步
+		// // eg : {relative_path: '2022/01/01', file_name: 'global_ecmwf_det_wve_2022010112_18.tif', file_size: 8116.333984375}
+		// http://localhost:82/images/WAVE/2022/01/01/
+		/** 预报时间戳(s) */
+		const forecastTsByS: number = forecastDt.getTime() / MS_UNIT
+		/**
              * {
                 "forecast_ts": 1685620800,
                 "issue_ts": 1685620800,
@@ -67,19 +68,18 @@ class SurgeMaxScalarRasterTifLayer<T> extends AbsSurgeRasterTifLayer<T> {
                 "coverage_type": 2102
             }
              */
-			return loadMaxSurgeCoverageTifUlrByIssue(forecastTsByS).then(
-				(res: IHttpResponse<T>) => {
-					if (res.status === 200) {
-						return res.data
-					}
+		return loadMaxSurgeCoverageTifUlrByIssue(forecastTsByS)
+			.then((res: IHttpResponse<T>) => {
+				if (res.status === 200) {
+					return res.data
 				}
-			)
-			// const tifResp = await loadMaxSurgeCoverageInfoByIssue(forecastTs)
+			})
+			.catch((error) => {
+				throw error
+			})
+		// const tifResp = await loadMaxSurgeCoverageInfoByIssue(forecastTs)
 
-			// tifUrl = tifResp.data.remote_url
-		} catch (error) {
-			console.log(error)
-		}
+		// tifUrl = tifResp.data.remote_url
 
 		// return tifUrl
 	}
@@ -122,7 +122,8 @@ class SurgeHourlyScalarRasterLayer<T> extends AbsSurgeRasterTifLayer<T> {
 				}
 			})
 		} catch (error) {
-			console.log(error)
+			// console.log(error)
+			consola.error(error)
 		}
 	}
 }
@@ -144,16 +145,20 @@ class SurgeMaxScalarRasterLayer<T> extends AbsSurgeRasterTifLayer<T> {
 			const issueTs: number = parseInt(this.issueTimestamp)
 			const area: ForecastAreaEnum = this.area
 
-			return loadGlobalSurgeMaxCoverageTif(area, issueTs, RasterFileEnum.GEOTIFF).then(
-				(res) => {
+			return loadGlobalSurgeMaxCoverageTif(area, issueTs, RasterFileEnum.GEOTIFF)
+				.then((res) => {
 					if (res.status == 200) {
 						console.log(`加载geotiff文件:${res.data}成功!`)
 						return res.data
 					}
-				}
-			)
+				})
+				.catch((error) => {
+					// consola.error(`name:${error.name}|message:${error.message}`)
+					throw error
+				})
 		} catch (error) {
-			console.log(error)
+			// console.log(error)
+			consola.error(error)
 		}
 	}
 }

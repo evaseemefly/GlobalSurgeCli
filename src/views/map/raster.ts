@@ -43,6 +43,7 @@ import {
 	DEFAULT_TIMESTAMP_STR,
 	DEFAULT_URL,
 } from '@/const/default'
+import consola from 'consola'
 
 export interface IRaster {
 	rasterLayer: L.Layer
@@ -114,6 +115,15 @@ export interface ISurgeRasterLayer {
 	 */
 	desc: string
 
+	/**
+	 * @description 根据当前的时间戳获取对应的 geotiff 文件路径，若不存在则返回默认路径(外部调用接口)。注意此处会由于 Promise中的错误(服务器500)导致无法加载,需要此处进行捕获异常或处理异常
+	 * @author evaseemefly
+	 * @date 2025/03/27
+	 * @param {Date} forecastDt
+	 * @param {LayerTypeEnum} [coverageType]
+	 * @returns {*}  {Promise<string>}
+	 * @memberof ISurgeRasterLayer
+	 */
 	loadTifUrl(forecastDt: Date, coverageType?: LayerTypeEnum): Promise<string>
 }
 
@@ -507,7 +517,12 @@ class SurgeRasterGeoLayer implements ISurgeRasterLayer {
  * @class SurgeRasterLayer
  * @implements {ISurgeRasterLayer}
  */
-class SurgeRasterLayer implements ISurgeRasterLayer {
+class /* The above code appears to be a comment block in TypeScript. It mentions `SurgeRasterLayer` and
+poses a question about the code. However, the actual functionality or purpose of the code is
+not provided in the comment block. */
+	SurgeRasterLayer
+	implements ISurgeRasterLayer
+{
 	options: {
 		rasterLayer: L.Layer
 
@@ -643,21 +658,56 @@ class SurgeRasterLayer implements ISurgeRasterLayer {
 		this.options = { ...this.options, ...options }
 	}
 	scaleRange: number[]
+
+	/**
+	 * @description 根据当前的时间戳获取对应的 geotiff 文件路径，若不存在则返回默认路径(外部调用接口)。注意此处会由于 Promise中的错误(服务器500)导致无法加载,需要此处进行捕获异常或处理异常
+	 * @author evaseemefly
+	 * @date 2025/03/27
+	 * @param {Date} forecastDt
+	 * @param {LayerTypeEnum} [coverageType]
+	 * @returns {*}  {Promise<string>}
+	 * @memberof SurgeRasterLayer
+	 */
 	public async loadTifUrl(forecastDt: Date, coverageType?: LayerTypeEnum): Promise<string> {
 		let urlGeoTifUrl = ''
 		/** 时间戳转换(ms) */
 		const forecastTs: number = forecastDt.getTime()
-		urlGeoTifUrl = await this.getGeoTiff(forecastTs, coverageType)
+		try {
+			urlGeoTifUrl = await this.getGeoTiff(forecastTs, coverageType)
+		} catch (error) {
+			// 将异常抛出并记录
+			consola.error(error)
+			throw new Error(`获取 geotiff url 失败:${error.message}`)
+		}
+
 		return urlGeoTifUrl
 	}
 
-	public async getGeoTiff(forecastTs: number, coverageType?: LayerTypeEnum): Promise<string> {
+	/**
+	 * @description 获取指定时间的 geotiff 文件路径，若不存在则返回默认路径(本类内部使用)
+	 * @author evaseemefly
+	 * @date 2025/03/27
+	 * @private
+	 * @param {number} forecastTs
+	 * @param {LayerTypeEnum} [coverageType]
+	 * @returns {*}  {Promise<string>}
+	 * @memberof SurgeRasterLayer
+	 */
+	private async getGeoTiff(forecastTs: number, coverageType?: LayerTypeEnum): Promise<string> {
 		const issueTsStr: string = this.options.issueTs.toString()
 		const forecastDt: Date = new Date(forecastTs)
 		const layerType = this.options.layerType
 		const area = this.options.area
 		let storeUrl: string = DEFAULT_URL
 		let surgeTif: AbsSurgeRasterTifLayer<string> = null
+		// try {
+
+		// } catch (error) {
+		// 	// 将异常抛出并记录
+		// 	// consola.error(error)
+		// 	throw error
+		// }
+
 		switch (coverageType) {
 			case LayerTypeEnum.RASTER_LAYER_HOURLY_SURGE:
 				surgeTif = new SurgeHourlyScalarRasterLayer<string>(issueTsStr, layerType, area)
@@ -667,6 +717,7 @@ class SurgeRasterLayer implements ISurgeRasterLayer {
 				break
 		}
 		if (!surgeTif !== null) {
+			// TODO:[*] 25-03-27 此处需要接收由于后台500错误引发的异常
 			const awaitUrl = await surgeTif.getGeoTifUrl(forecastDt)
 			// TODO:[*] 24-09-20 动态获取全球风暴增水场tif url
 			storeUrl = awaitUrl
@@ -688,104 +739,115 @@ class SurgeRasterLayer implements ISurgeRasterLayer {
 		const that = this
 		// TODO:[-] 20-11-04 暂时注释掉，调取远程的文件会出现错误
 		// const urlGeoTifUrl = tifResp.data
-		const urlGeoTifUrl = await this.loadTifUrl(forecastDt, coverageType)
-		if (urlGeoTifUrl === '') {
-			throw new Error('不存在指定geotiff路径')
-		}
-		if (this._tiffUrl == null) {
-			this._tiffUrl = urlGeoTifUrl
-		}
-		if (isShowRasterLayer && urlGeoTifUrl != undefined) {
-			// 大体思路 获取 geotiff file 的路径，二进制方式读取 -> 使用 georaster 插件实现转换 -> 获取色标，
-			// TODO:[*] 24-11-05 此部分应封装为方法
-			// TODO:[-] 20-11-02 将之前的逻辑方式修改为 await 的方式
-			// TODO:[-] 20-11-05 在 fetch 请求头中加入跨域的部分
-			const fetchHeader = new Headers({
-				'Access-Control-Allow-Origin': '*',
-				'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8,',
-			})
-			const response = await fetch(urlGeoTifUrl, {
-				method: 'GET',
-				// headers: fetchHeader,
-				mode: 'cors',
-			})
-			const arrayBuffer = await response.arrayBuffer()
-			// 使用 import 'georaster' 的方式引入会出现没有智能提示的问题
-			// @ts-ignore
-			const georasterResponse: any = await parseGeoraster(arrayBuffer)
-			// TODO:[-] 22-04-14 加入 栅格的范围是否由 options.custom 定义
-			// TODO:[*] 24-11-05 此处若options 中定义了 customMin 则显示，若未配置则显示实际的最小值
-			const min: number = this.options.customMin
-				? this.options.customMin
-				: georasterResponse.mins[0]
-			// TODO:[-] 22-04-15 若增水大于1m，则整个场*0.8，所以对于max*0.8
-			const rasterMax = georasterResponse.maxs[0]
-			this.rasterMax = rasterMax
-			this.rasterMin = min
-			const max = rasterMax
-
-			// TODO:[-] 22-04-15 此处修改为 range 为色标要求的范围
-			// const range = georasterResponse.ranges[0]
-			const range: number = max - min
-			// const scale = chroma.scale('Viridis')
-			// TODO:[*] 21-08-19 error: chroma 错误
-			// chroma.js?6149:180 Uncaught (in promise) Error: unknown format: #ee4620,#ee462f,#ed4633,#ef6b6d,#f3a4a5,#f9dcdd,#dcdcfe
-			// TODO:[-] 22-04-15 手动设置色标
-			// TODO:[*] 22-04-20 注意此处需要对scaleList 进行修改加入最后一个色标
-			const scaleList = [...this.options.scaleList]
-			if (
-				that.options.customCoeffMax &&
-				that.options.customCoefficient &&
-				rasterMax > that.options.customCoeffMax
-			) {
-				scaleList.push(scaleList[scaleList.length - 1])
+		// TODO:[*] 25-03-26 注意此处会由于 Promise中的错误(服务器500)导致无法加载,需要此处进行捕获异常或处理异常
+		// 加入catch代码块
+		try {
+			const urlGeoTifUrl = await this.loadTifUrl(forecastDt, coverageType)
+			if (urlGeoTifUrl === '') {
+				throw new Error('不存在指定geotiff路径')
 			}
-			const scale = chroma.scale(scaleList)
-			this.scaleRange = [min, max * this.options.customCoefficient]
-			// scale.domain(this.scaleRange)
+			if (this._tiffUrl == null) {
+				this._tiffUrl = urlGeoTifUrl
+			}
+			if (isShowRasterLayer && urlGeoTifUrl != undefined) {
+				// 大体思路 获取 geotiff file 的路径，二进制方式读取 -> 使用 georaster 插件实现转换 -> 获取色标，
+				// TODO:[*] 24-11-05 此部分应封装为方法
+				// TODO:[-] 20-11-02 将之前的逻辑方式修改为 await 的方式
+				// TODO:[-] 20-11-05 在 fetch 请求头中加入跨域的部分
+				const fetchHeader = new Headers({
+					'Access-Control-Allow-Origin': '*',
+					'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8,',
+				})
+				const response = await fetch(urlGeoTifUrl, {
+					method: 'GET',
+					// headers: fetchHeader,
+					mode: 'cors',
+				})
+				const arrayBuffer = await response.arrayBuffer()
+				// 使用 import 'georaster' 的方式引入会出现没有智能提示的问题
+				// @ts-ignore
+				const georasterResponse: any = await parseGeoraster(arrayBuffer)
+				// TODO:[-] 22-04-14 加入 栅格的范围是否由 options.custom 定义
+				// TODO:[*] 24-11-05 此处若options 中定义了 customMin 则显示，若未配置则显示实际的最小值
+				const min: number = this.options.customMin
+					? this.options.customMin
+					: georasterResponse.mins[0]
+				// TODO:[-] 22-04-15 若增水大于1m，则整个场*0.8，所以对于max*0.8
+				const rasterMax = georasterResponse.maxs[0]
+				this.rasterMax = rasterMax
+				this.rasterMin = min
+				const max = rasterMax
 
-			// TODO:[*] 21-02-10 此处当加载全球风场的geotiff时，y不在实际范围内，需要手动处理
+				// TODO:[-] 22-04-15 此处修改为 range 为色标要求的范围
+				// const range = georasterResponse.ranges[0]
+				const range: number = max - min
+				// const scale = chroma.scale('Viridis')
+				// TODO:[*] 21-08-19 error: chroma 错误
+				// chroma.js?6149:180 Uncaught (in promise) Error: unknown format: #ee4620,#ee462f,#ed4633,#ef6b6d,#f3a4a5,#f9dcdd,#dcdcfe
+				// TODO:[-] 22-04-15 手动设置色标
+				// TODO:[*] 22-04-20 注意此处需要对scaleList 进行修改加入最后一个色标
+				const scaleList = [...this.options.scaleList]
+				if (
+					that.options.customCoeffMax &&
+					that.options.customCoefficient &&
+					rasterMax > that.options.customCoeffMax
+				) {
+					scaleList.push(scaleList[scaleList.length - 1])
+				}
+				const scale = chroma.scale(scaleList)
+				this.scaleRange = [min, max * this.options.customCoefficient]
+				// scale.domain(this.scaleRange)
 
-			// @ts-ignore
-			const layer = new GeoRasterLayer({
-				georaster: georasterResponse,
-				opacity: 0.6,
-				pixelValuesToColorFn: function (pixelValues) {
-					const pixelValue = pixelValues[0] // there's just one band in this raster
-					// TODO:[-] 22-04-15 此处加入对于极值大于1.0米的增水将像素值乘以一个系数0.8
-					// if (that.options.customCoeffMax && rasterMax > this.options.customCoeffMax) {
-					//     pixelValue = pixelValue * this.options.customCoefficient
-					// }
+				// TODO:[*] 21-02-10 此处当加载全球风场的geotiff时，y不在实际范围内，需要手动处理
 
-					// if there's zero wind, don't return a color
-					// TODO:[-] 22-01-20 由于最大增水场可能会出现 pixelValue 为 0 的情况，所以需要剔除掉===0的判断
-					// if (pixelValue === 0 || Number.isNaN(pixelValue)) return null
-					// 注意此处有出现 该值超过1的情况
-					const scaledPixelValue = (pixelValue - min) / range
+				// @ts-ignore
+				const layer = new GeoRasterLayer({
+					georaster: georasterResponse,
+					opacity: 0.6,
+					pixelValuesToColorFn: function (pixelValues) {
+						const pixelValue = pixelValues[0] // there's just one band in this raster
+						// TODO:[-] 22-04-15 此处加入对于极值大于1.0米的增水将像素值乘以一个系数0.8
+						// if (that.options.customCoeffMax && rasterMax > this.options.customCoeffMax) {
+						//     pixelValue = pixelValue * this.options.customCoefficient
+						// }
 
-					if (Number.isNaN(pixelValue)) return null
-					let color = ''
-					if (
-						that.options.customCoeffMax &&
-						that.options.customCoefficient &&
-						rasterMax > that.options.customCoeffMax
-					) {
-						color = scale(scaledPixelValue * (1 / that.options.customCoefficient)).hex()
-						// color = scale(scaledPixelValue).hex()
-					} else {
-						color = scale(scaledPixelValue).hex()
-					}
+						// if there's zero wind, don't return a color
+						// TODO:[-] 22-01-20 由于最大增水场可能会出现 pixelValue 为 0 的情况，所以需要剔除掉===0的判断
+						// if (pixelValue === 0 || Number.isNaN(pixelValue)) return null
+						// 注意此处有出现 该值超过1的情况
+						const scaledPixelValue = (pixelValue - min) / range
 
-					return color
-				},
-				resolution: 256,
-			})
-			const forecastDtStr: string = moment(forecastDt).format('MM-DD HH:mm')
-			pretreatmentCallBackFun({ message: `加载${forecastDtStr}预报时刻成功!` })
-			addedLayer = layer.addTo(map)
-			// @ts-ignore
-			layerId = addedLayer._leaflet_id
+						if (Number.isNaN(pixelValue)) return null
+						let color = ''
+						if (
+							that.options.customCoeffMax &&
+							that.options.customCoefficient &&
+							rasterMax > that.options.customCoeffMax
+						) {
+							color = scale(
+								scaledPixelValue * (1 / that.options.customCoefficient)
+							).hex()
+							// color = scale(scaledPixelValue).hex()
+						} else {
+							color = scale(scaledPixelValue).hex()
+						}
+
+						return color
+					},
+					resolution: 256,
+				})
+				const forecastDtStr: string = moment(forecastDt).format('MM-DD HH:mm')
+				pretreatmentCallBackFun({ message: `加载${forecastDtStr}预报时刻成功!` })
+				addedLayer = layer.addTo(map)
+				// @ts-ignore
+				layerId = addedLayer._leaflet_id
+			}
+		} catch (error) {
+			// 将异常抛出并记录
+			consola.error(error)
+			throw new Error(`加载 geotiff 图层失败,请检查是否存在指定的geotiff路径`)
 		}
+
 		return layerId
 	}
 }
