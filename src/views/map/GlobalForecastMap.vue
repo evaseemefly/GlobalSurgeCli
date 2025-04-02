@@ -40,7 +40,6 @@
 				:color="boxOptions.background"
 				:fillColor="boxOptions.background"
 				:fillOpacity="boxOptions.backgroundOpacity"
-				:visible="getSelectLoop"
 			></LCircle>
 		</l-map>
 		<!-- 不适用图层切换菜单 -->
@@ -304,7 +303,9 @@ export default class GlobalForecastMapView extends Vue {
 	/** 获取栅格图层的显示类型 */
 	@Getter(GET_SCALAR_SHOW_TYPE, { namespace: 'common' }) getScalarType: ScalarShowTypeEnum
 
-	created() {}
+	created() {
+		// TODO:[*] 25-04-01 页面准备加载时 需要通过 vuex 获取需要监听的变量，并执行加载栅格图层的操作. 注意可能存在监听变量并未加载的情况
+	}
 
 	mounted() {
 		const issueTs = this.getIssueTs
@@ -498,12 +499,13 @@ export default class GlobalForecastMapView extends Vue {
 				newVal.geGlobalForecastTs
 			)
 		) {
+			// TODO:[*] 25-03-31 页面首次渲染时，传入的 scalarType 为 0，导致后续加载有问题
 			this.$log.info(
 				`监听到surge相关配置项发生变化:scalarType:${newVal.getScalarType}|area:${newVal.getForecastArea}|issuets:${newVal.geGlobalIssueTs}|forecastTs:${newVal.geGlobalForecastTs}`
 			)
 			if (oldVal !== null) {
 				this.$log.info(
-					`旧值:issuets:${oldVal.geGlobalIssueTs}|forecastTs:${oldVal.geGlobalForecastTs}||新值:issuets:${newVal.geGlobalIssueTs}|forecastTs:${newVal.geGlobalForecastTs}`
+					`旧值:issuets:${oldVal.geGlobalIssueTs}|forecastTs:${oldVal.geGlobalForecastTs}|area:${oldVal.getForecastArea} || 新值:issuets:${newVal.geGlobalIssueTs}|forecastTs:${newVal.geGlobalForecastTs}|area:${newVal.getForecastArea}`
 				)
 			}
 
@@ -520,11 +522,16 @@ export default class GlobalForecastMapView extends Vue {
 				case ForecastProductTypeEnum.SURGE_MAX:
 					// TODO:[-] 25-03-25 此处应加入判断，若为最大增水场，则不需要预报时间戳——若新旧 val 的发布时间戳一致则不需要多次加载
 					// 此处会导致 切换图层展示形式不会执行以下操作
+					// 情况1:若切换图层展示形式，则需要执行以下操作
+					// 情况2:若切换预报时间戳，则需要执行以下操作
+					// TODO:[*] 25-04-01 首次页面加载时不加载栅格图层
 					if (
 						newVal.geGlobalIssueTs !== oldVal.geGlobalIssueTs ||
-						newVal.getScalarType !== oldVal.getScalarType
+						newVal.getScalarType !== oldVal.getScalarType ||
+						newVal.getForecastArea !== oldVal.getForecastArea ||
+						newVal.geGlobalForecastTs !== oldVal.geGlobalForecastTs
 					) {
-						this.$log.warn('发布时间不同执行加载最大增水场操作')
+						this.$log.warn('执行加载最大增水场操作')
 						this.initMaxSurgeLayer(
 							newVal.getScalarType,
 							newVal.getForecastArea,

@@ -210,6 +210,9 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 				? ScalarShowTypeEnum.RASTER
 				: ScalarShowTypeEnum.ISOSURFACE
 		}
+		this.$log.info(
+			`SubNavGlobalForecastMenuView|监听到标量场渲染方式发生变化:${scatterMenu},isShowRasterSwitchMenu:${this.isShowRasterSwitchMenu}`
+		)
 		this.setScalarShowType(scatterMenu)
 	}
 
