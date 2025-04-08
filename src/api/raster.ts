@@ -101,10 +101,10 @@ const loadForecastTsList = (
  * @description 获取全球逐时tif url
  * @author evaseemefly
  * @date 2024/11/01
- * @param {ForecastAreaEnum} area
- * @param {number} issueTs
- * @param {number} forecastTs
- * @param {RasterFileEnum} rasterType
+ * @param {ForecastAreaEnum} area 预报区域
+ * @param {number} issueTs 预报产品发布时间
+ * @param {number} forecastTs 预报时次
+ * @param {RasterFileEnum} rasterType 栅格图层类型
  * @returns {*}  {Promise<AxiosResponse<string>>}
  */
 const loadGlobalHourlyCoverageTif = (

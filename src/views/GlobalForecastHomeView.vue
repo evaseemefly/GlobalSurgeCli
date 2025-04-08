@@ -8,7 +8,7 @@
 			<SubNavGlobalForecastMenuView></SubNavGlobalForecastMenuView>
 		</div>
 		<!-- <WaveGridForecastDataFormView></WaveGridForecastDataFormView> -->
-		<StationSurgeDataFormView></StationSurgeDataFormView>
+		<StationGlobalSurgeDataFormView></StationGlobalSurgeDataFormView>
 		<!-- <div><StationTideFormView></StationTideFormView></div> -->
 		<!-- <StationLayoutView :tyNum="tyNum"></StationLayoutView> -->
 		<!-- <StationExtremumListView :tyNum="tyNum"></StationExtremumListView> -->
@@ -30,7 +30,7 @@ import ThumbListView from '@/components/thumbs/thumbListView.vue'
 import HeaderLogoView from '@/components/header/headerLogoView.vue'
 import LegendListView from '@/components/toolsBar/legendListView.vue'
 import WaveGridForecastDataFormView from '@/components/forms/WaveGridForecastDataForm.vue'
-import StationSurgeDataFormView from '@/components/forms/StationSurgeDataFormView.vue'
+import StationGlobalSurgeDataFormView from '@/components/forms/StationGlobalSurgeDataFormView.vue'
 import RegionStatisticsCard from '@/components/cards/regionStatisticsCard.vue'
 
 // 默认值
@@ -58,7 +58,7 @@ import moment from 'moment'
 		HeaderLogoView,
 		LegendListView,
 		WaveGridForecastDataFormView,
-		StationSurgeDataFormView,
+		StationGlobalSurgeDataFormView,
 		RegionStatisticsCard,
 	},
 })

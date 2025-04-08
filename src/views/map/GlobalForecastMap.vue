@@ -321,7 +321,65 @@ export default class GlobalForecastMapView extends Vue {
 		})
 	}
 
-	/** TODO:[*] 24-11-01 加载逐时增水场layer */
+	/**
+	 * TODO:[-] 25-04-08 整合 initHourlySurgeLayer 和 initMaxSurgeLayer 方法至本方法中
+	 * @param scalarLayerType
+	 * @param area
+	 * @param issueTs 产品发布时间
+	 * @param forecastTs 预报时间戳
+	 * @param layerType 图层类型枚举: RASTER_LAYER_HOURLY_SURGE|SURGE_MAX
+	 */
+	initSurgeLayer(
+		scalarLayerType: ScalarShowTypeEnum,
+		area: ForecastAreaEnum,
+		issueTs: number,
+		forecastTs: number,
+		layerType: LayerTypeEnum
+	): void {
+		this.$log.warn(
+			`执行initSurgeLayer:scalarLayerType:${scalarLayerType}|area:${area}|issueTs:${issueTs}|forecastTs:${forecastTs}|layerType:${layerType}`
+		)
+
+		const scalarList = DEFAULT_COLOR_SCALE.scaleColorList
+		const surgeRasterLayer = new SurgeRasterLayer({
+			issueTs: issueTs,
+			forecastTs: forecastTs,
+			scaleList: scalarList,
+			area: area,
+			layerType: layerType,
+		})
+
+		switch (scalarLayerType) {
+			case ScalarShowTypeEnum.RASTER:
+				this.addSurgeRasterLayer2Map(
+					issueTs,
+					forecastTs,
+					true,
+					RasterLayerEnum.RASTER_LAYER,
+					layerType,
+					surgeRasterLayer
+				)
+				break
+
+			case ScalarShowTypeEnum.ISOSURFACE:
+				// [-] 24-11-05 需要加入最小值的过滤条件
+				// [-] 24-12-17 surgeRasterLayer 为栅格实现类，应改为等值面实现类
+				const isosurfaceOpts = { filterMin: 0.2 }
+				this.addSurgeIsosurfaceLayer2Map(
+					issueTs,
+					forecastTs,
+					surgeRasterLayer,
+					layerType,
+					isosurfaceOpts
+				)
+				break
+			default:
+				break
+		}
+	}
+
+	/**@deprecated
+	 * [-] 24-11-01 加载逐时增水场layer */
 	initHourlySurgeLayer(
 		scalarLayerType: ScalarShowTypeEnum,
 		area: ForecastAreaEnum,
@@ -369,10 +427,10 @@ export default class GlobalForecastMapView extends Vue {
 		}
 	}
 
-	/**
+	/** @deprecated
 	 * 25-03-25
 	 * 加载最大增水场实际不需要预报时间戳
-	 * TODO:[*] 25-03-26
+	 * TODO:[-] 25-03-26
 	 * 1. 加入判断，若为最大增水场，则不需要预报时间戳——若新旧 val 的发布时间戳一致则不需要多次加载
 	 * eg: 执行initMaxSurgeLayer:0,5003,1742472000000,1742644800000
 	 * 	   执行initMaxSurgeLayer:0,5003,1742472000000,1742472000000
@@ -400,13 +458,6 @@ export default class GlobalForecastMapView extends Vue {
 
 		switch (scalarLayerType) {
 			case ScalarShowTypeEnum.RASTER:
-				// const surgeRasterLayer = new SurgeRasterLayer({
-				// 	issueTs: issueTs,
-				// 	forecastTs: forecastTs,
-				// 	scaleList: scalarList,
-				// 	area: area,
-				// 	layerType: LayerTypeEnum.RASTER_LAYER_MAX_SURGE,
-				// })
 				this.addSurgeRasterLayer2Map(
 					issueTs,
 					forecastTs,
@@ -499,7 +550,7 @@ export default class GlobalForecastMapView extends Vue {
 				newVal.geGlobalForecastTs
 			)
 		) {
-			// TODO:[*] 25-03-31 页面首次渲染时，传入的 scalarType 为 0，导致后续加载有问题
+			// [-] 25-03-31 页面首次渲染时，传入的 scalarType 为 0，导致后续加载有问题
 			this.$log.info(
 				`监听到surge相关配置项发生变化:scalarType:${newVal.getScalarType}|area:${newVal.getForecastArea}|issuets:${newVal.geGlobalIssueTs}|forecastTs:${newVal.geGlobalForecastTs}`
 			)
@@ -509,15 +560,18 @@ export default class GlobalForecastMapView extends Vue {
 				)
 			}
 
-			// TODO:[-] 24-12-19 加入switch执行 整点|最大增水场
+			/** 当前的 surge 图层类型——未选择则为 UN_LAYER */
+			let layerType: LayerTypeEnum = LayerTypeEnum.UN_LAYER
+			// [-] 24-12-19 加入switch执行 整点|最大增水场
 			switch (newVal.getGlobalForcastProduct) {
 				case ForecastProductTypeEnum.SURGE_HOURLY:
-					this.initHourlySurgeLayer(
-						newVal.getScalarType,
-						newVal.getForecastArea,
-						newVal.geGlobalIssueTs,
-						newVal.geGlobalForecastTs
-					)
+					layerType = LayerTypeEnum.RASTER_LAYER_HOURLY_SURGE
+					// this.initHourlySurgeLayer(
+					// 	newVal.getScalarType,
+					// 	newVal.getForecastArea,
+					// 	newVal.geGlobalIssueTs,
+					// 	newVal.geGlobalForecastTs
+					// )
 					break
 				case ForecastProductTypeEnum.SURGE_MAX:
 					// TODO:[-] 25-03-25 此处应加入判断，若为最大增水场，则不需要预报时间戳——若新旧 val 的发布时间戳一致则不需要多次加载
@@ -532,17 +586,27 @@ export default class GlobalForecastMapView extends Vue {
 						newVal.geGlobalForecastTs !== oldVal.geGlobalForecastTs
 					) {
 						this.$log.warn('执行加载最大增水场操作')
-						this.initMaxSurgeLayer(
-							newVal.getScalarType,
-							newVal.getForecastArea,
-							newVal.geGlobalIssueTs,
-							newVal.geGlobalForecastTs
-						)
+						layerType = LayerTypeEnum.RASTER_LAYER_MAX_SURGE
+						// this.initMaxSurgeLayer(
+						// 	newVal.getScalarType,
+						// 	newVal.getForecastArea,
+						// 	newVal.geGlobalIssueTs,
+						// 	newVal.geGlobalForecastTs
+						// )
 					}
 					break
 
 				default:
 					break
+			}
+			if (layerType !== LayerTypeEnum.UN_LAYER) {
+				this.initSurgeLayer(
+					newVal.getScalarType,
+					newVal.getForecastArea,
+					newVal.geGlobalIssueTs,
+					newVal.geGlobalForecastTs,
+					layerType
+				)
 			}
 		}
 	}
@@ -854,8 +918,9 @@ export default class GlobalForecastMapView extends Vue {
 		}
 	}
 
-	/** +23 -07-07-26 加载潮位栅格图层至地图
-	 * TODO:[*] 25-03-27 此处改为采用promise链式调用的写法
+	/**
+	 *  +23 -07-07-26 加载潮位栅格图层至地图
+	 * TODO:[-] 25-03-27 此处改为采用promise链式调用的写法
 	 * step1: * 加载指定的栅格tiff图层
 	 * 实际 forecastTs 未被使用!
 	 * 具体流程:
@@ -870,6 +935,13 @@ export default class GlobalForecastMapView extends Vue {
 	   Step 9: 处理非栅格图层的特殊逻辑。
 	   Step 10: 捕获异常并显示警告信息。
 	   Step 11: 执行清理逻辑（finally）。
+	 * @param issueTs 
+	 * @param forecastTs 
+	 * @param isShow 
+	 * @param rasterLayerType 
+	 * @param layerType 图层类型枚举: RASTER_LAYER_HOURLY_SURGE|SURGE_MAX
+	 * @param surgeRasterInstance 
+	 * @param isosurfaceOpts 
 	 */
 	async addSurgeRasterLayer2Map(
 		issueTs: number,
@@ -1028,11 +1100,11 @@ export default class GlobalForecastMapView extends Vue {
 	}
 
 	/**
-	 * TODO:[*] 25-03-27 根据指定的 geotiff 路径加载等值面
+	 * TODO:[-] 25-03-27 根据指定的 geotiff 路径加载等值面
 	 * @param issueTs 发布时间
 	 * @param forecastTs 预报时间
 	 * @param surgeRasterInstance 栅格图层实现
-	 * @param rasterLayerType 栅格图层类型枚举
+	 * @param rasterLayerType 图层类型枚举: RASTER_LAYER_HOURLY_SURGE|SURGE_MAX
 	 * @param isosurfaceOpts
 	 */
 	async addSurgeIsosurfaceLayer2Map(

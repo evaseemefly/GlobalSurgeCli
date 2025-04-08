@@ -87,6 +87,9 @@ export enum MapLayerEnum {
  * @enum {number}
  */
 export enum RasterLayerEnum {
+	/** 未选择图层等待赋值 */
+	UN_LAYER = -1,
+
 	/**
 	 * 栅格图层
 	 */
