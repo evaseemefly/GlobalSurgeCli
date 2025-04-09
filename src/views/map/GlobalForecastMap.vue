@@ -300,6 +300,14 @@ export default class GlobalForecastMapView extends Vue {
 	/** 海洋站基础信息 集合 */
 	stationBaseInfoList: StationBaseInfoMidModel[] = []
 
+	/** 存储异步任务队列
+	 * 注意存储异步任务方法的类型 为一个闭包函数，下次调用时不需要手动传入参数!
+	 */
+	asyncTasksQueue: (() => void)[] = []
+
+	/** 是否有正在处理的异步任务 */
+	isTaskProcessing = false
+
 	/** 获取栅格图层的显示类型 */
 	@Getter(GET_SCALAR_SHOW_TYPE, { namespace: 'common' }) getScalarType: ScalarShowTypeEnum
 
@@ -322,6 +330,49 @@ export default class GlobalForecastMapView extends Vue {
 	}
 
 	/**
+	 * 按顺序处理任务队列
+	 */
+	async processSurgeLayerQueue() {
+		// 如果当前正在处理任务，则直接返回
+		if (this.isTaskProcessing) return
+
+		// 标记为正在处理任务
+		this.isTaskProcessing = true
+
+		// 逐一取出队列中的任务并执行
+		while (this.asyncTasksQueue.length > 0) {
+			const currentTask = this.asyncTasksQueue.shift() // 取出队列中的第一个任务
+			try {
+				await currentTask() // 执行任务，并等待其完成
+			} catch (error) {
+				this.$log.error('调用 surgeLayerQueue 队列方法时出错:', error)
+			}
+		}
+
+		// 任务处理完成，重置状态
+		this.isTaskProcessing = false
+	}
+
+	enqueueSurgeLayerTask(
+		scalarLayerType: ScalarShowTypeEnum,
+		area: ForecastAreaEnum,
+		issueTs: number,
+		forecastTs: number,
+		layerType: LayerTypeEnum
+	) {
+		this.$log.info(
+			`向队列中推送参数化方法:scalarLayerType:${scalarLayerType}|area:${area}|issueTs:${issueTs}|forecastTs:${forecastTs}|layerType:${layerType}`
+		)
+		// 将任务添加到队列中
+		this.asyncTasksQueue.push(() =>
+			this.initSurgeLayer(scalarLayerType, area, issueTs, forecastTs, layerType)
+		)
+
+		// 开始处理队列
+		this.processSurgeLayerQueue()
+	}
+
+	/**
 	 * TODO:[-] 25-04-08 整合 initHourlySurgeLayer 和 initMaxSurgeLayer 方法至本方法中
 	 * @param scalarLayerType
 	 * @param area
@@ -329,13 +380,13 @@ export default class GlobalForecastMapView extends Vue {
 	 * @param forecastTs 预报时间戳
 	 * @param layerType 图层类型枚举: RASTER_LAYER_HOURLY_SURGE|SURGE_MAX
 	 */
-	initSurgeLayer(
+	async initSurgeLayer(
 		scalarLayerType: ScalarShowTypeEnum,
 		area: ForecastAreaEnum,
 		issueTs: number,
 		forecastTs: number,
 		layerType: LayerTypeEnum
-	): void {
+	): Promise<void> {
 		this.$log.warn(
 			`执行initSurgeLayer:scalarLayerType:${scalarLayerType}|area:${area}|issueTs:${issueTs}|forecastTs:${forecastTs}|layerType:${layerType}`
 		)
@@ -351,7 +402,7 @@ export default class GlobalForecastMapView extends Vue {
 
 		switch (scalarLayerType) {
 			case ScalarShowTypeEnum.RASTER:
-				this.addSurgeRasterLayer2Map(
+				await this.addSurgeRasterLayer2Map(
 					issueTs,
 					forecastTs,
 					true,
@@ -365,7 +416,7 @@ export default class GlobalForecastMapView extends Vue {
 				// [-] 24-11-05 需要加入最小值的过滤条件
 				// [-] 24-12-17 surgeRasterLayer 为栅格实现类，应改为等值面实现类
 				const isosurfaceOpts = { filterMin: 0.2 }
-				this.addSurgeIsosurfaceLayer2Map(
+				await this.addSurgeIsosurfaceLayer2Map(
 					issueTs,
 					forecastTs,
 					surgeRasterLayer,
@@ -526,6 +577,12 @@ export default class GlobalForecastMapView extends Vue {
 		}
 	}
 
+	/**
+	 * 监听 surge 相关配置项的变化，并执行 initSurgeLayer 加载操作(栅格图层|等值面)
+	 *
+	 * @param newVal
+	 * @param oldVal
+	 */
 	@Watch('forecastSurgeOpts')
 	onForecastSurgeOpts(
 		newVal: {
@@ -600,7 +657,15 @@ export default class GlobalForecastMapView extends Vue {
 					break
 			}
 			if (layerType !== LayerTypeEnum.UN_LAYER) {
-				this.initSurgeLayer(
+				// this.initSurgeLayer(
+				// 	newVal.getScalarType,
+				// 	newVal.getForecastArea,
+				// 	newVal.geGlobalIssueTs,
+				// 	newVal.geGlobalForecastTs,
+				// 	layerType
+				// )
+				// TODO:[-] 25-04-09 由于可能短时间会多次执行异步方法，所以采用管道队列的设计方式，顺序执行
+				this.enqueueSurgeLayerTask(
 					newVal.getScalarType,
 					newVal.getForecastArea,
 					newVal.geGlobalIssueTs,

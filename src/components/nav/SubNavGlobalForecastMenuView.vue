@@ -362,7 +362,7 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 	@Watch('AreaAndIssueTsOpts')
 	onAreaAndIssueTsOpts(getForecastArea: ForecastAreaEnum, getGlobalIssueTs: number): void {
 		if (getGlobalIssueTs !== DEFAULT_TIMESTAMP) {
-			console.log(`监听到预报区域和发布时间发生变化:${getForecastArea},${getGlobalIssueTs}`)
+			// console.log(`监听到预报区域和发布时间发生变化:${getForecastArea},${getGlobalIssueTs}`)
 		}
 	}
 
