@@ -568,23 +568,27 @@ export default class StationGlobalSurgeChartView extends Vue {
 	}
 
 	loadStationRegionCountry(code: string): void {
-		loadStaionRegionCountry(code).then(
-			(
-				res: IHttpResponse<{
-					station_code: string
-					station_name: string
-					lat: number
-					lon: number
-					rid: number
-					val_en: string
-					val_ch: string
-					cid: number
-					country_en: string
-				}>
-			) => {
-				this.stationBaseInfo = { ...res.data }
-			}
-		)
+		loadStaionRegionCountry(code)
+			.then(
+				(
+					res: IHttpResponse<{
+						station_code: string
+						station_name: string
+						lat: number
+						lon: number
+						rid: number
+						val_en: string
+						val_ch: string
+						cid: number
+						country_en: string
+					}>
+				) => {
+					this.stationBaseInfo = { ...res.data }
+				}
+			)
+			.catch((err) => {
+				this.$log.error(`执行 loadStaionRegionCountry 出错!:${err}`)
+			})
 	}
 
 	getLayerType(layerType: LayerTypeEnum): LayerTypeEnum {

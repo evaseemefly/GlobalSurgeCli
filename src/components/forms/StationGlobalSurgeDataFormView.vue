@@ -5,20 +5,6 @@
 	> -->
 	<div v-draggable id="station_surge_form" v-if="getIsShow" class="right-station-surge-form">
 		<div class="my-detail-form">
-			<div class="sub-titles">
-				<div
-					:class="[
-						index == subTitleIndex ? 'actived my-sub-title' : 'unactived my-sub-title',
-						item.disabled ? 'disabled' : '',
-					]"
-					:key="index"
-					@click="checkSubTitle(index)"
-					v-for="(item, index) in subTitles"
-				>
-					{{ item.title }}
-				</div>
-				<!-- <div class="my-sub-title right" @click="setExpanded()">最小化</div> -->
-			</div>
 			<div class="detail-content">
 				<StationGlobalSurgeChartView></StationGlobalSurgeChartView>
 			</div>

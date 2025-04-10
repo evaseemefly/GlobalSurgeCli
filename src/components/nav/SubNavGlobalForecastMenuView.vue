@@ -333,7 +333,7 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 	/** 监听预报区域 -> issue list */
 	@Watch('getForecastArea')
 	onForecastArea(val: ForecastAreaEnum) {
-		console.log(`监听到预报区域发生变化:${val}`)
+		// console.log(`监听到预报区域发生变化:${val}`)
 		loadLastIssueTsList(val, 5).then((result) => {
 			if (result.status == 200) {
 				// this.issueTsList = result.data.map((n) => n * this.MS)

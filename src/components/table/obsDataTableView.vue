@@ -141,7 +141,7 @@ export default class ObsDataTableView extends Vue {
 
 	/** 预报增水值列表 */
 	@Prop({ type: Array, default: [] })
-	forecastValList: number[] = []
+	forecastValList: number[]
 
 	/** 对应的预报时间戳集合 */
 	@Prop({ type: Array, default: [] })

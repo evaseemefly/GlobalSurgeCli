@@ -324,7 +324,7 @@ export default class GlobalForecastMapView extends Vue {
 		const mymap: L.Map = this.$refs.basemap['mapObject']
 		// 点击地图隐藏 station surge form
 		mymap.on('click', (el) => {
-			console.log(el)
+			// console.log(el)
 			that.setShowStationSurgeForm(false)
 		})
 	}
@@ -918,7 +918,8 @@ export default class GlobalForecastMapView extends Vue {
 	async loadBaseStationList(): Promise<void> {
 		this.stationBaseInfoList = []
 		const stationBaseInfo = new StationBaseInfo()
-		await stationBaseInfo.getAllInlandStationInfo()
+		// TODO:[-] 25-04-10 全球系统不需要加载大陆的站点(未共享)
+		// await stationBaseInfo.getAllInlandStationInfo()
 		this.stationBaseInfoList = stationBaseInfo.allStationBaseInfoList
 		this.setStationsBaseInfo(stationBaseInfo.allStationBaseInfoList)
 	}
