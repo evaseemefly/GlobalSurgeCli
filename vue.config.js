@@ -26,7 +26,7 @@ module.exports = defineConfig({
 	devServer: {
 		// 由之前的 'localhost'改为如下，端口默认8080
 		host: '0.0.0.0',
-		port: '8081',
+		port: '8085',
 		// options has an unknown property 'overlay'. These properties are valid:
 		// overlay: {
 		// 	warnings: false,

@@ -48,7 +48,7 @@ import { ForecastAreaEnum } from '@/enum/map'
 })
 export default class SubNavForecastAreaItem extends Vue {
 	/** 选择的预报区域 */
-	selectedArea: ForecastAreaEnum = ForecastAreaEnum.INDIA_OCEAN
+	selectedArea: ForecastAreaEnum = ForecastAreaEnum.WNP
 
 	/** 预报区域选项 */
 	areasOptions: { key: ForecastAreaEnum; val: string }[] = [

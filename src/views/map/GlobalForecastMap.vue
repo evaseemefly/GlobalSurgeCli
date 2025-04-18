@@ -235,8 +235,8 @@ const checkSurgeOpts = (area: ForecastAreaEnum, issueTs: number, forecastTs: num
 	mixins: [WMSMixin, MapMixin],
 })
 export default class GlobalForecastMapView extends Vue {
-	zoom = 5
-	center: number[] = [29.45, 130.8833]
+	zoom = 4
+	center: number[] = [19.45, 120.8833]
 	rasterURL: string = null
 	url =
 		'https://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
@@ -979,7 +979,7 @@ export default class GlobalForecastMapView extends Vue {
 						StationIconShowTypeEnum.SHOW_STATION_STATUS,
 						that.now
 					)
-					that.zoom2Country()
+					//that.zoom2Country()
 				})
 		}
 	}
