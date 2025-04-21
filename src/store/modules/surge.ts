@@ -16,6 +16,7 @@ interface ISurgeOpts {
 	forecastArea: ForecastAreaEnum
 	/** 全球风暴潮预报时间戳 */
 	forecastTs: number
+	/** 最大增水场|逐时增水场 */
 	forecastProduct: ForecastProductTypeEnum
 	/** 预报产品发布时间 */
 	issueTs: number

@@ -33,17 +33,17 @@
 				:zIndex="worldLineWMS.options.zindex"
 			></l-wms-tile-layer>
 
-			<LCircle
+			<!-- <LCircle
 				:lat-lng="currentLatlng"
 				:radius="boxRadius * boxRadiusUnit"
 				:opacity="boxOptions.colorOpacity"
 				:color="boxOptions.background"
 				:fillColor="boxOptions.background"
 				:fillOpacity="boxOptions.backgroundOpacity"
-			></LCircle>
+			></LCircle> -->
 		</l-map>
 		<!-- 不适用图层切换菜单 -->
-		<LayersNavMenuView></LayersNavMenuView>
+		<!-- <LayersNavMenuView></LayersNavMenuView> -->
 	</div>
 </template>
 <script lang="ts">
@@ -235,14 +235,21 @@ const checkSurgeOpts = (area: ForecastAreaEnum, issueTs: number, forecastTs: num
 	mixins: [WMSMixin, MapMixin],
 })
 export default class GlobalForecastMapView extends Vue {
-	zoom = 5
-	center: number[] = [29.45, 130.8833]
+	zoom = 4
+	center: number[] = [47.41322, -1.219482]
 	rasterURL: string = null
 	url =
 		'https://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
 	// url = 'http://tileserver.memomaps.de/tilegen/{z}/{x}/{y}.png'
 	// TODO:[-] 20-11-09 新加入的 map 相关的一些基础静态配置
-	mapOptions: { preferCanvas: boolean; minZoom: number; maxZoom: number; render: any } = {
+	mapOptions: {
+		center: number[]
+		preferCanvas: boolean
+		minZoom: number
+		maxZoom: number
+		render: any
+	} = {
+		center: [47.41322, -1.219482],
 		preferCanvas: true,
 		minZoom: 3,
 		// 可缩放的最大 level
@@ -255,7 +262,7 @@ export default class GlobalForecastMapView extends Vue {
 	/** 当前窗口正在加载 */
 	loading = false
 	/** 当前点击的位置 */
-	currentLatlng: L.LatLng = new L.LatLng(28, 130)
+	// currentLatlng: L.LatLng = new L.LatLng(28, 130)
 	/** 圈选半径 */
 	boxRadius = DEFAULT_BOX_LOOP_RADIUS
 	/** 圈选半径基础单位 */
@@ -549,7 +556,7 @@ export default class GlobalForecastMapView extends Vue {
 	geGlobalForecastTs: number
 
 	/**
-	 * TODO:[-] 24-12-19
+	 * [-] 24-12-19
 	 * 全球预报产品类型(SURGE_MAX|SURGE_HOURLY) */
 	@Getter(GET_GLOBAL_SURGE_FORECAST_PRODUCT, { namespace: 'surge' })
 	getGlobalForcastProduct: ForecastProductTypeEnum
@@ -623,12 +630,6 @@ export default class GlobalForecastMapView extends Vue {
 			switch (newVal.getGlobalForcastProduct) {
 				case ForecastProductTypeEnum.SURGE_HOURLY:
 					layerType = LayerTypeEnum.RASTER_LAYER_HOURLY_SURGE
-					// this.initHourlySurgeLayer(
-					// 	newVal.getScalarType,
-					// 	newVal.getForecastArea,
-					// 	newVal.geGlobalIssueTs,
-					// 	newVal.geGlobalForecastTs
-					// )
 					break
 				case ForecastProductTypeEnum.SURGE_MAX:
 					// TODO:[-] 25-03-25 此处应加入判断，若为最大增水场，则不需要预报时间戳——若新旧 val 的发布时间戳一致则不需要多次加载
@@ -640,16 +641,11 @@ export default class GlobalForecastMapView extends Vue {
 						newVal.geGlobalIssueTs !== oldVal.geGlobalIssueTs ||
 						newVal.getScalarType !== oldVal.getScalarType ||
 						newVal.getForecastArea !== oldVal.getForecastArea ||
-						newVal.geGlobalForecastTs !== oldVal.geGlobalForecastTs
+						newVal.geGlobalForecastTs !== oldVal.geGlobalForecastTs ||
+						newVal.getGlobalForcastProduct !== oldVal.getGlobalForcastProduct
 					) {
 						this.$log.warn('执行加载最大增水场操作')
 						layerType = LayerTypeEnum.RASTER_LAYER_MAX_SURGE
-						// this.initMaxSurgeLayer(
-						// 	newVal.getScalarType,
-						// 	newVal.getForecastArea,
-						// 	newVal.geGlobalIssueTs,
-						// 	newVal.geGlobalForecastTs
-						// )
 					}
 					break
 
@@ -657,13 +653,6 @@ export default class GlobalForecastMapView extends Vue {
 					break
 			}
 			if (layerType !== LayerTypeEnum.UN_LAYER) {
-				// this.initSurgeLayer(
-				// 	newVal.getScalarType,
-				// 	newVal.getForecastArea,
-				// 	newVal.geGlobalIssueTs,
-				// 	newVal.geGlobalForecastTs,
-				// 	layerType
-				// )
 				// TODO:[-] 25-04-09 由于可能短时间会多次执行异步方法，所以采用管道队列的设计方式，顺序执行
 				this.enqueueSurgeLayerTask(
 					newVal.getScalarType,
@@ -678,7 +667,7 @@ export default class GlobalForecastMapView extends Vue {
 
 	/** 清除当前选定的圈选位置的中心点 */
 	private clearCurrentLatlng(): void {
-		this.currentLatlng = null
+		// this.currentLatlng = null
 	}
 
 	/** 清除当前的 标量场栅格图层 */

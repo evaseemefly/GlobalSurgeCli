@@ -48,6 +48,6 @@ class WMSMixin extends Vue {
 		'https://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
 	// leaflet 右下角的文字显示
 	attribution =
-		'powered by Ocean Flow © 2024 authors: <a href="https://github.com/evaseemefly">evaseemefly</a> | v3.0:24-10-25 加入加载并切换全球风暴潮区域预报产品功能 | nmefc '
+		'powered by Ocean Flow © 2025 authors: <a href="https://github.com/evaseemefly">evaseemefly</a> | v5.0:25-04-11 融合全球风暴潮模式+实况观测 | nmefc '
 }
 export { WMSMixin }

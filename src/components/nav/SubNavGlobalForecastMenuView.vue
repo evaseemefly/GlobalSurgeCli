@@ -1,5 +1,10 @@
 <template>
-	<nav id="sub_nav_menu">
+	<nav
+		id="sub_nav_menu"
+		v-loading="isLoading"
+		element-loading-spinner="el-icon-loading"
+		element-loading-background="rgba(49, 59, 89, 0.733)"
+	>
 		<!-- sub-nav-menu -->
 		<!-- <div class="nav_menu-item" v-for="menItem in menuList" :key="menItem.id">
 			{{ menItem.title }}
@@ -166,7 +171,10 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 	filterTyList: FilterTyMidModel[] = []
 	filterTyCount = 0
 	/** 是否在加载筛选后的台风集合 */
-	isLoadingTyList = false
+	// isLoadingTyList = false
+
+	/** 加载menu遮罩 */
+	isLoading = false
 
 	productType: ForecastProductTypeEnum = ForecastProductTypeEnum.SURGE_MAX
 	/** 是否为最大增水场 */
@@ -252,7 +260,7 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 
 	submit(): void {
 		const self = this
-		this.isLoadingTyList = true
+		// this.isLoadingTyList = true
 		// 按照当前获取的选中经纬度加载该经纬度对应的海浪时序数据
 		const waveOpts = this.waveOpts
 	}
@@ -334,24 +342,34 @@ export default class SubNavGlobalForecastMenuView extends Vue {
 	@Watch('getForecastArea')
 	onForecastArea(val: ForecastAreaEnum) {
 		// console.log(`监听到预报区域发生变化:${val}`)
-		loadLastIssueTsList(val, 5).then((result) => {
-			if (result.status == 200) {
-				// this.issueTsList = result.data.map((n) => n * this.MS)
-				this.issueTsList = result.data
-			}
-		})
+		this.isLoading = true
+		loadLastIssueTsList(val, 5)
+			.then((result) => {
+				if (result.status == 200) {
+					// this.issueTsList = result.data.map((n) => n * this.MS)
+					this.issueTsList = result.data
+				}
+			})
+			.finally(() => {
+				this.isLoading = false
+			})
 	}
 
 	/** 监听发布时间 -> forecast ts list */
 	@Watch('geGlobalIssueTs')
 	onGlobalIssueTs(val: number) {
 		const area = this.getForecastArea
-		loadForecastTsList(area, val).then((result) => {
-			if (result.status == 200) {
-				// this.forecastTsList = result.data.map((n) => n * this.MS)
-				this.forecastTsList = result.data
-			}
-		})
+		this.isLoading = true
+		loadForecastTsList(area, val)
+			.then((result) => {
+				if (result.status == 200) {
+					// this.forecastTsList = result.data.map((n) => n * this.MS)
+					this.forecastTsList = result.data
+				}
+			})
+			.finally(() => {
+				this.isLoading = false
+			})
 	}
 
 	get AreaAndIssueTsOpts(): { getForecastArea: ForecastAreaEnum; geGlobalIssueTs: number } {
