@@ -200,6 +200,7 @@ import { IScale } from '@/const/colorBar'
 import { getIntegerList } from '@/util/math'
 import { loadGlobalHourlyCoverageTif } from '@/api/raster'
 import { ForecastProductTypeEnum } from '@/enum/surge'
+import { getBoundsByArea } from '@/util/map'
 
 /** 判断本组件内的surge配置是否符合 */
 const checkSurgeOpts = (area: ForecastAreaEnum, issueTs: number, forecastTs: number): boolean => {
@@ -236,7 +237,7 @@ const checkSurgeOpts = (area: ForecastAreaEnum, issueTs: number, forecastTs: num
 })
 export default class GlobalForecastMapView extends Vue {
 	zoom = 4
-	center: number[] = [47.41322, -1.219482]
+	center: number[] = [19.45, 120.8833]
 	rasterURL: string = null
 	url =
 		'https://webrd04.is.autonavi.com/appmaptile?lang=zh_cn&size=1&scale=1&style=7&x={x}&y={y}&z={z}'
@@ -623,6 +624,9 @@ export default class GlobalForecastMapView extends Vue {
 					`旧值:issuets:${oldVal.geGlobalIssueTs}|forecastTs:${oldVal.geGlobalForecastTs}|area:${oldVal.getForecastArea} || 新值:issuets:${newVal.geGlobalIssueTs}|forecastTs:${newVal.geGlobalForecastTs}|area:${newVal.getForecastArea}`
 				)
 			}
+			// 若加载栅格图层时，根据当前 area 显示对应的预报区域
+			const center: L.LatLng = getBoundsByArea(newVal.getForecastArea)
+			this.center = [center.lat, center.lng]
 
 			/** 当前的 surge 图层类型——未选择则为 UN_LAYER */
 			let layerType: LayerTypeEnum = LayerTypeEnum.UN_LAYER
@@ -968,7 +972,7 @@ export default class GlobalForecastMapView extends Vue {
 						StationIconShowTypeEnum.SHOW_STATION_STATUS,
 						that.now
 					)
-					that.zoom2Country()
+					//that.zoom2Country()
 				})
 		}
 	}
