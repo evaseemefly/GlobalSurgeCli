@@ -28,6 +28,8 @@ Vue.use(VueInteract)
 // 挂载 consola到vue原型
 Vue.prototype.$log = consola
 // Vue.use(animate)
+// 强制开启
+Vue.config.devtools = true
 
 new Vue({
 	router,

@@ -46,7 +46,7 @@
 				<tr>
 					<td
 						scope="col"
-						v-for="(item, index) in totalSurgeList"
+						v-for="(item, index) in realSurgeList"
 						:key="index"
 						:class="index === hoverIndex ? 'activate' : 'un-activate'"
 						@mouseover="toSetHoverIndex(index)"
@@ -139,6 +139,10 @@ export default class ObsDataTableView extends Vue {
 	@Prop({ type: Array, default: [] })
 	surgeList: number[]
 
+	/** #TODO:[-] 25-12-29 新增属性：接收父组件传入的实况总潮位 */
+	@Prop({ type: Array, default: [] })
+	realSurgeList: number[]
+
 	/** 预报增水值列表 */
 	@Prop({ type: Array, default: [] })
 	forecastValList: number[]
@@ -173,6 +177,7 @@ export default class ObsDataTableView extends Vue {
 		this.hoverIndex = val
 	}
 
+	// TODO:[-] 25-12-29 计算属性：计算总潮位列表——实况增水 + 天文潮(暂时废弃)
 	get totalSurgeList(): (number | null)[] {
 		let total: (number | null)[] = this.surgeList.map((val, index) => {
 			if (val !== null && this.tideList[index] != null) {

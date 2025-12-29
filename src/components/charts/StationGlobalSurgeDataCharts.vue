@@ -43,12 +43,13 @@
 			<!-- 对于非集合路径才提供叠加天文潮位的选项 -->
 			<div id="surge_scalar_chart"></div>
 			<div class="down-section">
+				<!-- TODO:[*] 25-12-26 子组件中缺少surgeList的传入 -->
 				<ObsDataTableView
 					:forecastDtList="forecastDtList"
+					:realSurgeList="surgeList"
 					:surgeList="diffSurgeList"
 					:tideList="tideList"
 					:forecastValList="forecastValList"
-					:diffSurgeList="diffSurgeList"
 					:propHoverIndex="hoverDtIndex"
 				></ObsDataTableView>
 			</div>
@@ -321,6 +322,8 @@ export default class StationGlobalSurgeChartView extends Vue {
 
 		this.forecastDtList = dates
 		this.diffSurgeList = unifyData.alignedDiffSurgeList
+		// TODO:[-] 25-12-26 缺少为实况潮位的赋值——下面初始化chart时又有对实况潮位的使用
+		this.surgeList = unifyData.alignedSurgeList
 		this.tideList = unifyData.alignedTideList
 		this.forecastValList = unifyData.alignedForecastSurgeList
 		// TODO:[*] 24-12-10 缺少天文潮
