@@ -4,21 +4,30 @@
     // left: -6px;
     // top: -6px;
 }
-/* 中间的圆形icon */
+/* 中间的圆形icon 
+TODO:[-] 25-12-29 修改为水滴形状*/
+// .my-leaflet-pulsing-icon {
+//     // -22-03-08 测试时暂时注释
+//     border-radius: 100%;
+//     /* -webkit-box-shadow: 1px 1px 8px 0 rgba(0, 0, 0, 0.75); */
+//     box-shadow: 1px 1px 8px 0 rgba(0, 0, 0, 0.75);
+//     background: #76eec6;
+//     position: absolute;
+//     // TODO:[-] 21-06-02 暂时注释掉
+//     width: 12px;
+//     height: 12px;
+//     left: 4px;
+//     top: 4px;
+//     // TODO:[-] 23-03-29 加入一个边框
+//     border: 3px solid;
+
+// }
 .my-leaflet-pulsing-icon {
-    // -22-03-08 测试时暂时注释
-    border-radius: 100%;
-    /* -webkit-box-shadow: 1px 1px 8px 0 rgba(0, 0, 0, 0.75); */
-    box-shadow: 1px 1px 8px 0 rgba(0, 0, 0, 0.75);
-    background: #76eec6;
-    position: absolute;
-    // TODO:[-] 21-06-02 暂时注释掉
-    width: 12px;
-    height: 12px;
-    left: 4px;
-    top: 4px;
-    // TODO:[-] 23-03-29 加入一个边框
-    border: 3px solid;
+    background-color: #4cd964;
+    border: 2px solid #fff;
+    border-radius: 50% 50% 50% 0;
+    transform: rotate(-45deg);
+    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 
 }
 /* 需要给border一个大小，不然是0*0 */

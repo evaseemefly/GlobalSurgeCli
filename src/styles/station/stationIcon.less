@@ -34,7 +34,7 @@
 	.liner-default {
 		background: linear-gradient(to right, #32405c9e, rgba(50, 157, 150, 0.801));
 	}
-	.green-icon{
+	.green-icon {
 		background: #2bf7b3d6;
 	}
 	.green {
@@ -139,7 +139,9 @@
 	font-size: 13px;
 	font-weight: bold;
 	// 新加入的 text 的阴影
-	text-shadow: 1px 3px 4px black;
+	// text-shadow: 1px 3px 4px black;
+	/* 使用多重阴影模拟描边效果 */
+	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 };
 .station-surge-icon-onlytitle {
 	.my-station-title-surge-div {
@@ -200,7 +202,9 @@
 }
 
 .font-shadow {
-	text-shadow: 1px 3px 4px black;
+	// text-shadow: 1px 3px 4px black;
+	// TODO:[-] 25-12-29 修改了新的样式
+	text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
 }
 
 .font-default {
