@@ -282,10 +282,14 @@ class FixedIconCirle extends AbsIconCirle {
 	toHtml(): string {
 		// 固定宽度 cirle icon 半径和高度为固定值
 		const fixedRadius = 8
+		// TODO:[-] 26-03-02 25年12月修改为水滴形 icon,因此不在 FixedIconCirle 中修正left和top的偏移，而是在 my-leaflet-pulsing-icon 样式中修正
+		// const divHtml = `<div class="my-leaflet-pulsing-marker" >
+		//       <div class="my-leaflet-pulsing-icon ${this.getAlarmColor()}" style="width: ${fixedRadius}px;height:${fixedRadius}px;left:${
+		// 	-fixedRadius / 2
+		// }px;top:${-fixedRadius / 2}px"></div>
+		//     </div>`
 		const divHtml = `<div class="my-leaflet-pulsing-marker" >              
-              <div class="my-leaflet-pulsing-icon ${this.getAlarmColor()}" style="width: ${fixedRadius}px;height:${fixedRadius}px;left:${
-			-fixedRadius / 2
-		}px;top:${-fixedRadius / 2}px"></div>
+              <div class="my-leaflet-pulsing-icon ${this.getAlarmColor()}" style=""></div>
             </div>`
 		return divHtml
 	}
@@ -759,6 +763,7 @@ const addStationIcon2Map = (
 				})
 				break
 			// - 23-03-29 固定的圆形icon,需要传入gmt_realtime
+			// + TODO:[-] 26-03-02 25年12月修改为水滴形 icon,因此原先的 FixedIconCirle 已废弃，新增了 FixedStationSurgeIcon 来专门处理固定宽度且根据增水值分级的 station surge icon
 			case IconTypeEnum.FIXED_CIRCLE_ICON:
 				icon = new FixedIconCirle({
 					val: temp.surge,
@@ -835,8 +840,14 @@ const addStationIcon2Map = (
 			// 目前需要此部分，因为会造成 位置的位移
 			// 坐标，[相对于原点的水平位置（左加右减），相对原点的垂直位置（上加下减）]
 			// iconAnchor: [-20, 30]
+
+			// TODO:[*] 26-03-02 尝试修复💧型icon偏移的问题
+			// 强制声明尺寸，确保和 CSS 里的 12px 严丝合缝
+			iconSize: [12, 12],
+			// 强制声明锚点为容器正中心（因为我们在 CSS 中已经把水滴尖端拉回到了容器中心）
+			iconAnchor: [6, 6],
 		})
-		iconSurgeMinArr.forEach((temp) => {}) // 2- 台站 station data form icon
+		// iconSurgeMinArr.forEach((temp) => {}) // 2- 台站 station data form icon
 		const stationSurgeMinDivICOn = L.divIcon({
 			className: iconSurgeMinArr[index].getClassName(),
 			html: iconSurgeMinArr[index].toHtml(),

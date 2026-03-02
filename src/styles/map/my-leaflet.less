@@ -3,6 +3,10 @@
     position: relative;
     // left: -6px;
     // top: -6px;
+    /* TODO:[-] 26-03-02 修正水滴icon偏移的bug
+    新增下面两行，让它撑满 Leaflet 提供的 12x12 容器 */
+    width: 100%;
+    height: 100%;
 }
 /* 中间的圆形icon 
 TODO:[-] 25-12-29 修改为水滴形状*/
@@ -22,14 +26,42 @@ TODO:[-] 25-12-29 修改为水滴形状*/
 //     border: 3px solid;
 
 // }
+
+// TODO:[-] 25-12-29 修改为水滴形状——但导致了重心偏移的bug
+// .my-leaflet-pulsing-icon {
+//     background-color: #4cd964;
+//     border: 2px solid #fff;
+//     border-radius: 50% 50% 50% 0;
+//     transform: rotate(-45deg);
+//     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+
+// }
+
+// TODO:[*] 26-03-02 修复了水滴形状导致的重心偏移问题，主要是通过调整 transform 的 translate 部分来校准位置，同时设置 transform-origin 为 center 来避免多重 transform 之间的干扰
 .my-leaflet-pulsing-icon {
+    /* 1. 必须恢复的尺寸和绝对定位 */
+    position: absolute;
+    width: 12px;
+    height: 12px;
+    
+    /* 2. 你的水滴形状基础样式 */
     background-color: #4cd964;
     border: 2px solid #fff;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
+    border-radius: 50% 50% 50% 0; 
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
 
+    /* 3. 关键的对齐校准 */
+    /* top 和 left 将元素的左上角移动到父容器中心 */
+    top: 50%;
+    left: 50%;
+    /* 先将元素向左上方平移自身的一半（使中心点对齐），再额外向上移动一段距离让尖端指向中心，最后旋转 */
+    /* 将 -100% 改为 -120% 或 -125%，补偿旋转对角线产生的额外长度 */
+    transform: translate(-50%, -120%) rotate(-45deg);
+    
+    /* 设置旋转原点为中心，避免多重 transform 相互干扰 */
+    transform-origin: center center; 
 }
+
 /* 需要给border一个大小，不然是0*0 */
 .my-leaflet-icon-border {
     /* 最新的修改是外侧的border div 的长宽与兄弟 icon div 相同，这样不会再做偏移了 */
