@@ -843,9 +843,14 @@ const addStationIcon2Map = (
 
 			// TODO:[*] 26-03-02 尝试修复💧型icon偏移的问题
 			// 强制声明尺寸，确保和 CSS 里的 12px 严丝合缝
-			iconSize: [12, 12],
-			// 强制声明锚点为容器正中心（因为我们在 CSS 中已经把水滴尖端拉回到了容器中心）
-			iconAnchor: [6, 6],
+			// iconSize: [12, 12],
+			// // 强制声明锚点为容器正中心（因为我们在 CSS 中已经把水滴尖端拉回到了容器中心）
+			// iconAnchor: [6, 6],
+
+			// TODO:[-] 26-03-05 将icon整体缩小至约 2/3 大小 (8px)
+			iconSize: [8, 8],
+			// TODO:[-] 26-03-05 锚点必须严格保持为尺寸的一半，从 [6, 6] 改为 [4, 4]
+			iconAnchor: [4, 4],
 		})
 		// iconSurgeMinArr.forEach((temp) => {}) // 2- 台站 station data form icon
 		const stationSurgeMinDivICOn = L.divIcon({

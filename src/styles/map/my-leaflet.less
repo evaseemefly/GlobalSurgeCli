@@ -41,14 +41,22 @@ TODO:[-] 25-12-29 修改为水滴形状*/
 .my-leaflet-pulsing-icon {
     /* 1. 必须恢复的尺寸和绝对定位 */
     position: absolute;
-    width: 12px;
-    height: 12px;
+    // width: 12px;
+    // height: 12px;
+    /* TODO:[-] 26-03-05 将尺寸从 12px 缩小到 8px */
+    width: 8px;
+    height: 8px;
     
     /* 2. 你的水滴形状基础样式 */
     background-color: #4cd964;
-    border: 2px solid #fff;
+    // border: 2px solid #fff;
+    // box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    /* TODO:[-] 26-03-05 边框从 2px 缩小到 1px，避免挤占内部颜色空间；阴影也等比例缩小 */
+    border: 1px solid #fff;
+    box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+
     border-radius: 50% 50% 50% 0; 
-    box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+    
 
     /* 3. 关键的对齐校准 */
     /* top 和 left 将元素的左上角移动到父容器中心 */
