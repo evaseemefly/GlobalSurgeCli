@@ -47,6 +47,35 @@ const iconCircleDefaultOptions = {
 	iconType: IconTypeEnum.DYNAMIC_CIRCLE_ICON,
 }
 
+// 扩展 Leaflet 官方的 Map 接口
+declare module 'leaflet' {
+	/**
+	 * 	+ 26-03-10 扩展 leaflet 的 Map 接口，给它添加一个可选的属性 _stationTitleZoomHandler，这个属性是一个函数类型，专门用来存储我们之前定义的那个缩放事件处理函数。通过这种方式，我们就能在地图对象上有一个固定的地方来存储和访问这个函数。
+	 */
+	interface Map {
+		/**
+		 * 声明我们要往 map 对象上挂载一个可选的自定义函数
+		 * 随着map zoom 而决定是否加载站点 title的函数
+		 * @returns
+		 */
+		_stationTitleZoomHandler?: () => void
+	}
+
+	/**
+	 * TODO:[-] 26-03-18 如果需要在 Marker 上存储 customData 的话，
+	 * 也可以通过类似的方式扩展 Marker 的接口，给它添加一个 customData 属性，
+	 * 这样我们就能在创建 Marker 实例时直接赋值，
+	 * 并且在后续的事件处理函数中方便地访问这些自定义数据。
+	 */
+	interface MarkerOptions {
+		// 定义 customData 为可选属性，并明确它的内部结构
+		customData?: {
+			code: string
+			name: string
+		}
+	}
+}
+
 /**
  * @description 圆形ico的抽象父类
  * @author evaseemefly
@@ -746,6 +775,20 @@ const addStationIcon2Map = (
 	/** 海洋站 station titles icons */
 	const divMarkers: L.Marker[] = []
 
+	// TODO:[-] 26-03-18 提取公共的 marker 点击事件处理函数，避免在 icon 和 title 绑定时书写重复代码
+	const handleMarkerClick = (e: {
+		target: {
+			options: {
+				customData: { code: string; name: string }
+			}
+		}
+	}) => {
+		callbackFunc({
+			code: e.target.options.customData.code,
+			name: e.target.options.customData.name,
+		})
+	}
+
 	// 获取极值
 	stationList.forEach((temp) => {
 		/** 海洋站 icon */
@@ -860,39 +903,32 @@ const addStationIcon2Map = (
 			iconAnchor: [10, 30],
 		})
 
+		// TODO:[-] 26-03-18 解决太平洋中心地图跨界问题：将美洲的负经度平移到地图右侧
+		let targetLon = stationList[index].lon
+		// 以大西洋中部（约经度 -30）为界，将西边的美洲大陆平移到亚洲的东侧
+		// 这样既保留了欧洲和非洲西海岸在原位，又把美洲拉到了太平洋右侧
+		if (targetLon < -30) {
+			targetLon += 360
+		}
+
 		// TODO:[-] 22-10-23
-		const stationCirlePulsingMakrer: L.Marker = L.marker(
-			[stationList[index].lat, stationList[index].lon],
-			{
-				icon: stationDivIcon,
-			}
-		)
+		const stationCirlePulsingMakrer: L.Marker = L.marker([stationList[index].lat, targetLon], {
+			icon: stationDivIcon,
+			// TODO:[-] 26-03-18 为 icon 增加 customData 属性，以便在点击事件中传递站点的 code 和 name
+			// TODO:[-] 26-03-18 移除 @ts-ignore，直接利用扩展后的 MarkerOptions 强类型约束
+			customData: { code: tempCode, name: tempStationName },
+			// TODO:[-] 26-03-18 建议加上 riseOnHover: true，这样当两个图标重叠时，鼠标悬停的图标会浮到最上层
+			riseOnHover: true,
+		}).on('click', handleMarkerClick)
 		pulsingMarkers.push(stationCirlePulsingMakrer)
 
 		/** station title icon */
-		const stationDivIconMarker: L.Marker = L.marker(
-			[stationList[index].lat, stationList[index].lon],
-			{
-				icon: stationSurgeMinDivICOn,
-				// @ts-ignore
-				customData: { code: tempCode, name: tempStationName },
-				riseOnHover: true, // 鼠标移入zindex升级
-			}
-		).on(
-			'click',
-			(e: {
-				target: {
-					options: {
-						customData: { code: string; name: string }
-					}
-				}
-			}) => {
-				callbackFunc({
-					code: e.target.options.customData.code,
-					name: e.target.options.customData.name,
-				})
-			}
-		)
+		const stationDivIconMarker: L.Marker = L.marker([stationList[index].lat, targetLon], {
+			icon: stationSurgeMinDivICOn,
+			// TODO:[-] 26-03-18 移除 @ts-ignore，直接利用扩展后的 MarkerOptions 强类型约束
+			customData: { code: tempCode, name: tempStationName },
+			riseOnHover: true, // 鼠标移入zindex升级
+		}).on('click', handleMarkerClick)
 
 		divMarkers.push(stationDivIconMarker)
 		// const layerItem: IStationIcon = {
@@ -904,11 +940,59 @@ const addStationIcon2Map = (
 		// layerItemsList.push(layerItem)
 		index++
 	})
+
+	const pulsingLayerGroup = L.layerGroup(pulsingMarkers)
+	pulsingLayerGroup.addTo(mymap)
 	// @ts-ignore
-	const pulsingLayerGroupId: number = L.layerGroup(pulsingMarkers).addTo(mymap)._leaflet_id
+	const pulsingLayerGroupId: number = pulsingLayerGroup._leaflet_id
+
 	/** 海洋站 station status title icons */
+	const divLayerGroup = L.layerGroup(divMarkers)
+
+	// TODO:[-] 26-03-10 初始化判断：当缩放至level>6时才默认加载title的marker，<=6时不加载
+	if (mymap.getZoom() > 6) {
+		divLayerGroup.addTo(mymap)
+	}
 	// @ts-ignore
-	const divLayerGroupId: number = L.layerGroup(divMarkers).addTo(mymap)._leaflet_id
+	const divLayerGroupId: number = divLayerGroup._leaflet_id
+
+	// TODO:[-] 26-03-10 动态监听地图缩放：实时控制 title 层的显示与隐藏
+	// 先解绑可能存在的旧监听器，防止在重新请求接口加载站点数据时发生重复绑定导致性能问题
+	// 第一步：检查地图对象上是不是已经挂着之前绑定的老函数？
+	if (mymap._stationTitleZoomHandler) {
+		// 第二步：如果有，立刻使用 mymap.off() 把这个老函数从地图的 zoomend 事件监听列表里踢出去。
+		mymap.off('zoomend', mymap._stationTitleZoomHandler)
+	}
+
+	// 第三步：现在环境干净了，我们定义这次请求需要用的新函数，覆盖掉老变量。
+	// 定义并挂载新的缩放处理函数
+	// 注意此步骤是 存储（赋值） 而非 绑定（on/ addEventListener） 的时候的函数赋值，目的是为了在全局范围内（即 mymap 对象上）给这个函数起一个名字，让它有一个固定的内存地址，这样我们才能在下一步 off/ removeEventListener 的时候准确地找到它并解绑掉。
+	mymap._stationTitleZoomHandler = () => {
+		const currentZoom = mymap.getZoom()
+		if (currentZoom <= 6) {
+			// 如果层级<=6，且地图上存在 title 图层，则将其移除
+			if (mymap.hasLayer(divLayerGroup)) {
+				mymap.removeLayer(divLayerGroup)
+			}
+		} else {
+			// 如果层级>6，且地图上没有 title 图层，则将其添加回来
+			if (!mymap.hasLayer(divLayerGroup)) {
+				mymap.addLayer(divLayerGroup)
+			}
+		}
+	}
+
+	// 监听 zoomend 事件
+	// 第四步：把这个干干净净的新函数绑定给地图。
+	// 激活（注册事件）监听器，让它在 zoomend 事件发生时能够被调用。
+	/** 
+	 * zoomend 是 Leaflet 原生提供的事件名称（代表“缩放结束”的那一瞬间）。
+		_stationTitleZoomHandler 是我们自己手写的一个回调函数（Callback Function）。
+		mymap.on('zoomend', 函数) 的意思就是告诉地图：“当发生 zoomend 事件时，请执行我传给你的这个自定义函数。”
+		我们将这个函数挂载到 mymap 对象上（作为它的一个属性），是为了让它有一个全局且唯一的名字和内存地址，这就引出了你的第三个问题。
+	 */
+	mymap.on('zoomend', mymap._stationTitleZoomHandler)
+
 	return [pulsingLayerGroupId, divLayerGroupId]
 }
 

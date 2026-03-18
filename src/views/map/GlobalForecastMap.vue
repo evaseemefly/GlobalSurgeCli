@@ -236,7 +236,7 @@ const checkSurgeOpts = (area: ForecastAreaEnum, issueTs: number, forecastTs: num
 	mixins: [WMSMixin, MapMixin],
 })
 export default class GlobalForecastMapView extends Vue {
-	zoom = 4
+	zoom = 3
 	center: number[] = [19.45, 120.8833]
 	rasterURL: string = null
 	url =
@@ -249,6 +249,7 @@ export default class GlobalForecastMapView extends Vue {
 		minZoom: number
 		maxZoom: number
 		render: any
+		worldCopyJump: boolean
 	} = {
 		center: [47.41322, -1.219482],
 		preferCanvas: true,
@@ -257,6 +258,8 @@ export default class GlobalForecastMapView extends Vue {
 		maxZoom: 11,
 		// 目前已经使用了 canvas 渲染
 		render: L.canvas(),
+		// TODO:[-] 26-03-18 将无缝跳转配置直接放入原生 options 对象中，确保在地图实例化时生效
+		worldCopyJump: false,
 	}
 
 	isSelectLoop = false
